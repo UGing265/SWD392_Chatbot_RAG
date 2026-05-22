@@ -1,20 +1,44 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"swd392-chatbot-rag/internal/application/document-usecase"
+	"swd392-chatbot-rag/internal/application/indexing"
+	"swd392-chatbot-rag/internal/infrastructure/embedding"
+	"swd392-chatbot-rag/internal/infrastructure/filestorage"
+	"swd392-chatbot-rag/internal/infrastructure/fileparser"
+	"swd392-chatbot-rag/internal/infrastructure/repository/postgres"
 	"swd392-chatbot-rag/internal/interface/handler"
 	"swd392-chatbot-rag/internal/interface/middleware"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"swd392-chatbot-rag/pkg/config"
 )
 
 func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
-	// Initialize handlers (placeholder - will wire dependencies)
-	healthHandler := handler.NewHealthHandler()
+	// Initialize infrastructure
+	fileStorage := filestorage.NewLocalFileStorage(cfg.UPLOAD_DIR)
+	docRepo := postgres.NewDocumentRepository(db)
+	chunkRepo := postgres.NewChunkRepository(db)
+	parserFactory := fileparser.NewParserFactory()
+	embedClient := embedding.NewEmbeddingClient(cfg.GEMINI_API_KEY)
+
+	// Initialize indexing use case
+	indexer := indexing.NewIndexingUseCase(docRepo, chunkRepo, parserFactory, embedClient)
+
+	// Initialize document use cases
+	uploadUC := document_usecase.NewUploadDocumentUseCase(docRepo, fileStorage, indexer)
+	listUC := document_usecase.NewListDocumentsUseCase(docRepo)
+	getUC := document_usecase.NewGetDocumentUseCase(docRepo)
+	deleteUC := document_usecase.NewDeleteDocumentUseCase(docRepo, chunkRepo, fileStorage)
+	getChunksUC := document_usecase.NewGetChunksUseCase(chunkRepo)
+
+	// Initialize handlers
+	healthHandler := handler.NewHealthHandler(db)
 	authHandler := handler.NewAuthHandler(db)
-	documentHandler := handler.NewDocumentHandler(db)
+	documentHandler := handler.NewDocumentHandlerWithUseCase(db, uploadUC, listUC, getUC, deleteUC, getChunksUC, fileStorage)
 	chatHandler := handler.NewChatHandler(db)
 
 	// Health check (public)
@@ -34,6 +58,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		// Documents
 		protected.GET("/documents", documentHandler.List)
 		protected.GET("/documents/:id", documentHandler.GetByID)
+		protected.GET("/documents/:id/chunks", documentHandler.GetChunks)
 		protected.POST("/documents/upload", documentHandler.Upload)
 		protected.DELETE("/documents/:id", documentHandler.Delete)
 

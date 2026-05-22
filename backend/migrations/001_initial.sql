@@ -9,10 +9,54 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    "emailVerified" BOOLEAN NOT NULL DEFAULT FALSE,
+    "image" TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "username" TEXT UNIQUE,
+    "displayUsername" TEXT
+);
+
+-- Better Auth: Session table
+CREATE TABLE IF NOT EXISTS session (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "expiresAt" TIMESTAMP NOT NULL,
+    "token" TEXT NOT NULL UNIQUE,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Better Auth: Account table
+CREATE TABLE IF NOT EXISTS account (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "accountId" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "idToken" TEXT,
+    "accessTokenExpiresAt" TIMESTAMP,
+    "refreshTokenExpiresAt" TIMESTAMP,
+    "scope" TEXT,
+    "password" TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Better Auth: Verification table
+CREATE TABLE IF NOT EXISTS verification (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "identifier" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Courses table
