@@ -1,0 +1,54 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Backend - Go
+backend/vendor/
+backend/uploads/
+backend/*.exe
+backend/server
+backend/main
+
+# Frontend - Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.turbo/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.o
+*.a
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Environment files
+.env
+.env.local
+.env.production
+
+docs/bao/

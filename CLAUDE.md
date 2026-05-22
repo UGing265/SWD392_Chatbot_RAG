@@ -6,7 +6,7 @@
 - **Frontend**: Next.js
 - **Database**: PostgreSQL + pgvector (embeddings)
 - **LLM**: Google Gemini + Gemini Embedding 2
-- **Auth**: Simple email/password authentication (login/register with JWT)
+- **Auth**: Simple email/password + username authentication (Better Auth + JWT)
 
 ---
 
@@ -33,8 +33,9 @@
    - Answers grounded in source documents
 
 4. **Authentication**
-   - Simple email/password registration
-   - Login with JWT token
+   - Simple email/password + username registration (Better Auth)
+   - Login with email or username (Better Auth)
+   - JWT token validation in Go backend
    - Protected routes require valid JWT
 
 5. **API Endpoints (Go Backend)**
@@ -67,7 +68,7 @@
 ## What This Project SHOULD NOT Do
 
 ### Features NOT Included
-1. ~~**No Authentication**~~ → HAS simple email/password + JWT
+1. ~~**No Authentication**~~ → HAS Better Auth (email/password/username)
 2. **No Benchmark/Research Module** → Removed (no experiment runs, RAGAS metrics)
 3. **No Multi-tenancy** → Single user database
 4. **No Complex User Management** → User only, no admin panel
@@ -89,7 +90,33 @@
 |------|-------------|
 | `docs/ERD.txt` | Database schema with all tables |
 | `docs/Architecture.md` | Models, architecture, flows |
+| `docs/planing/` | Implementation plans |
 | `docs/bao/` | Reference documents (C# project) |
+
+---
+
+## Auth Architecture
+
+Better Auth runs in Next.js frontend. Go backend validates JWTs issued by Better Auth.
+
+```
+Browser ──► Next.js (Better Auth) ──► Go Backend (JWT validated)
+              │                            │
+              ├── Register/Login           ├── Business logic
+              ├── Session management       ├── RAG pipeline
+              └── Serves JWT to client     └── Chat/Documents
+```
+
+### Better Auth Setup (Frontend)
+- Server: `frontend/lib/auth.ts` - Better Auth instance with username plugin
+- Client: `frontend/lib/auth-client.ts` - Client SDK
+- API: `frontend/app/api/auth/[...all]/route.ts` - Auth endpoints
+- Env: `frontend/.env.local` - BETTER_AUTH_SECRET
+
+### JWT Validation (Backend)
+- Go validates Better Auth JWTs in middleware
+- Better Auth uses `sub` claim for user ID (not `user_id`)
+- JWT secret must match BETTER_AUTH_SECRET
 
 ---
 
@@ -102,7 +129,7 @@
 | Database | PostgreSQL + pgvector |
 | Embedding | Gemini Embedding 2 (768 dimensions) |
 | LLM | Google Gemini |
-| Auth | JWT (simple email/password) |
+| Auth | Better Auth (Next.js) + JWT validation (Go backend) |
 | Architecture | Clean Architecture |
 
 ---

@@ -69,6 +69,7 @@ This document describes:
 ```go
 type User struct {
     ID           uuid.UUID `json:"id" db:"id"`
+    Username     string    `json:"username" db:"username"` // used for login
     Email        string    `json:"email" db:"email"`
     PasswordHash string    `json:"-" db:"password_hash"` // never expose
     Name         string    `json:"name" db:"name"`

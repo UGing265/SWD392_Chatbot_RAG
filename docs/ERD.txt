@@ -28,6 +28,7 @@
 ```
 Table users {
   id uuid [pk, note: 'PK']
+  username varchar(50) [note: 'Unique username, used for login']
   email varchar(255) [note: 'Unique email']
   password_hash varchar(255) [note: 'bcrypt hash']
   name varchar(100) [note: 'Display name']
