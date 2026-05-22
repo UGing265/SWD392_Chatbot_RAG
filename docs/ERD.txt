@@ -1,0 +1,217 @@
+# ERD - SWD392 Chatbot RAG
+
+## Overview
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   users     │     │  courses    │     │  chapters   │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       │                   │                   │
+       ▼                   ▼                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│chat_sessions│────▶│  documents  │────▶│   chunks    │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                                     │
+       │                                     │
+       ▼                                     ▼
+┌─────────────┐                       ┌─────────────┐
+│  messages   │────────────────────▶│message_cita │
+└─────────────┘                       └─────────────┘
+```
+
+---
+
+## Tables
+
+### users
+```
+Table users {
+  id uuid [pk, note: 'PK']
+  email varchar(255) [note: 'Unique email']
+  password_hash varchar(255) [note: 'bcrypt hash']
+  name varchar(100) [note: 'Display name']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Simple user accounts for login/register'
+}
+```
+
+### courses
+```
+Table courses {
+  id uuid [pk, note: 'PK']
+  name varchar(255) [note: 'Tên môn học']
+  textbook varchar(255) [note: 'Tên giáo trình']
+  created_at timestamp
+
+  Note: 'Lưu môn học demo.'
+}
+```
+
+### chapters
+```
+Table chapters {
+  id uuid [pk, note: 'PK']
+  course_id uuid [ref: > courses.id, note: 'FK -> courses.id']
+  title varchar(255) [note: 'Ví dụ: Chương 4 - Mô hình hoá']
+  chapter_no int [null, note: 'Có thể null cho Tổng hợp']
+
+  Note: 'Lưu chương thuộc môn học.'
+}
+```
+
+### documents
+```
+Table documents {
+  id uuid [pk, note: 'PK']
+  user_id uuid [ref: > users.id, note: 'FK -> users.id - ai up tài liệu']
+  course_id uuid [ref: > courses.id, note: 'FK -> courses.id']
+  chapter_id uuid [ref: > chapters.id, null, note: 'FK -> chapters.id, nullable']
+  file_name varchar(255) [note: 'Tên file']
+  file_type varchar(10) [note: 'PDF/DOCX/PPTX/TXT/MD']
+  file_path text [note: 'Đường dẫn lưu file trên disk']
+  status varchar(20) [note: 'uploading/chunking/embedding/indexed/error']
+  chunk_count int [default: 0]
+  embedding_count int [default: 0]
+  error_message text [null]
+  uploaded_at timestamp
+  indexed_at timestamp [null]
+
+  Note: 'Lưu file tài liệu upload và trạng thái xử lý.'
+}
+```
+
+### chunks
+```
+Table chunks {
+  id uuid [pk, note: 'PK']
+  document_id uuid [ref: > documents.id, note: 'FK -> documents.id']
+  chapter_id uuid [ref: > chapters.id, null, note: 'FK -> chapters.id, nullable']
+  content text [note: 'Nội dung chunk']
+  page_label varchar(50) [note: 'Ví dụ: tr. 78 / Slide 12']
+  chunk_index int [note: 'Thứ tự chunk trong document']
+  embedding vector(768) [note: 'Vector embedding - pgvector']
+  created_at timestamp
+
+  Note: 'Lưu từng đoạn văn bản sau khi chunking + vector embedding.'
+}
+```
+
+### chat_sessions
+```
+Table chat_sessions {
+  id uuid [pk, note: 'PK']
+  user_id uuid [ref: > users.id, note: 'FK -> users.id']
+  course_id uuid [ref: > courses.id, note: 'FK -> courses.id']
+  title varchar(255) [note: 'Tên phiên hiển thị trên UI']
+  is_starred boolean [default: false]
+  status varchar(20) [note: 'active/done']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Lưu phiên hội thoại. Mỗi user sở hữu các session của họ.'
+}
+```
+
+### messages
+```
+Table messages {
+  id uuid [pk, note: 'PK']
+  session_id uuid [ref: > chat_sessions.id, note: 'FK -> chat_sessions.id']
+  role varchar(10) [note: 'user/bot']
+  content text [note: 'Câu hỏi hoặc câu trả lời hoàn chỉnh']
+  token_count int [null]
+  out_of_scope boolean [default: false, note: 'Bot không tìm thấy context']
+  created_at timestamp
+
+  Note: 'Lưu tin nhắn user/bot trong phiên.'
+}
+```
+
+### message_citations
+```
+Table message_citations {
+  id uuid [pk, note: 'PK']
+  message_id uuid [ref: > messages.id, note: 'FK -> messages.id']
+  chunk_id uuid [ref: > chunks.id, note: 'FK -> chunks.id']
+  relevance_score decimal(5,4) [note: 'Ví dụ: 0.9200']
+  excerpt text [note: 'Đoạn trích hiển thị']
+
+  Note: 'Lưu nguồn trích dẫn cho câu trả lời bot.'
+}
+```
+
+---
+
+## Relationships
+
+```
+users (1) ──┬── (N) chat_sessions
+           └── (N) documents
+
+courses (1) ──┬── (N) chapters
+             ├── (N) documents
+             └── (N) chat_sessions
+
+chapters (1) ──┬── (N) documents
+               └── (N) chunks
+
+documents (1) ─── (N) chunks
+
+chat_sessions (1) ─── (N) messages
+
+messages (1) ─── (N) message_citations
+
+chunks (1) ─── (N) message_citations
+```
+
+---
+
+## Key Changes from Original ERD
+
+| Change | Reason |
+|--------|--------|
+| Added `users` table | Login/register authentication |
+| Added `user_id` to `documents` | Track who uploaded each document |
+| Changed `chat_sessions.user_id` | Users can only see their own sessions |
+| `chunks.embedding` now explicit `vector(768)` | pgvector requires dimension specification |
+| Added `indexed_at` to `documents` | Track when indexing completed |
+| `file_type` supports TXT/MD | Simplified document support |
+
+---
+
+## Indexes (Recommended)
+
+```sql
+-- Performance indexes
+CREATE INDEX idx_documents_user_id ON documents(user_id);
+CREATE INDEX idx_documents_course_id ON documents(course_id);
+CREATE INDEX idx_chunks_document_id ON chunks(document_id);
+CREATE INDEX idx_chunks_embedding ON chunks USING ivfflat(embedding vector_cosine_ops);
+CREATE INDEX idx_messages_session_id ON messages(session_id);
+CREATE INDEX idx_message_citations_message_id ON message_citations(message_id);
+CREATE INDEX idx_chat_sessions_user_id ON chat_sessions(user_id);
+CREATE INDEX idx_chat_sessions_course_id ON chat_sessions(course_id);
+```
+
+---
+
+## pgvector Setup
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Example chunk table with vector
+CREATE TABLE chunks (
+  id UUID PRIMARY KEY,
+  document_id UUID REFERENCES documents(id),
+  chapter_id UUID REFERENCES chapters(id),
+  content TEXT NOT NULL,
+  page_label VARCHAR(50),
+  chunk_index INT NOT NULL,
+  embedding VECTOR(768),  -- Gemini Embedding 2 outputs 768 dimensions
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
