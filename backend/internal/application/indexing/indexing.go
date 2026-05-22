@@ -18,24 +18,24 @@ import (
 )
 
 var (
-	ErrDocumentNotFound = errors.New("document not found")
-	ErrNoParserFound    = errors.New("no parser found for document file type")
+	ErrDocumentNotFound  = errors.New("document not found")
+	ErrNoParserFound     = errors.New("no parser found for document file type")
 	ErrNoChunksGenerated = errors.New("no chunks generated from document")
 )
 
 const (
-	batchSize       = 50
-	embeddingDim    = 768
+	batchSize        = 50
+	embeddingDim     = 768
 	defaultChunkSize = 500
-	defaultOverlap  = 100
+	defaultOverlap   = 100
 )
 
 type IndexingUseCase struct {
-	docRepo     document.DocumentRepository
-	chunkRepo   chunkRepository
-	parser      *fileparser.ParserFactory
-	chunker     *chunker.TextChunker
-	embedding   embedding.EmbeddingClient
+	docRepo   document.DocumentRepository
+	chunkRepo chunkRepository
+	parser    *fileparser.ParserFactory
+	chunker   *chunker.TextChunker
+	embedding embedding.EmbeddingClient
 }
 
 type chunkRepository interface {
@@ -95,7 +95,7 @@ func (uc *IndexingUseCase) ProcessDocument(ctx context.Context, docID uuid.UUID)
 		return fmt.Errorf("failed to update document status to embedding: %w", err)
 	}
 
-	embeddings, err := uc.generateEmbeddings(ctx, chunks)
+	embeddings, err := uc.generateEmbeddings(ctx, chunks, doc)
 	if err != nil {
 		return uc.failDoc(doc, fmt.Errorf("failed to generate embeddings: %w", err))
 	}
@@ -140,13 +140,16 @@ func (uc *IndexingUseCase) chunkExtractions(extractions []fileparser.ExtractionR
 	var allChunks []*chunk.Chunk
 
 	for _, ext := range extractions {
-		textChunks := uc.chunker.ChunkText(ext.Content, ext.PageLabel)
+		// Sanitize extracted text to valid UTF-8 and remove null bytes to prevent Postgres SQLSTATE 22021 errors
+		cleanContent := strings.ToValidUTF8(ext.Content, "")
+		cleanContent = strings.ReplaceAll(cleanContent, "\x00", "")
+		textChunks := uc.chunker.ChunkText(cleanContent, ext.PageLabel)
 		for _, tc := range textChunks {
 			ch := &chunk.Chunk{
 				DocumentID: docID,
-				Content:   tc.Content,
-				PageLabel: tc.PageLabel,
-				CreatedAt: time.Now(),
+				Content:    tc.Content,
+				PageLabel:  tc.PageLabel,
+				CreatedAt:  time.Now(),
 			}
 			allChunks = append(allChunks, ch)
 		}
@@ -159,7 +162,7 @@ func (uc *IndexingUseCase) chunkExtractions(extractions []fileparser.ExtractionR
 	return allChunks
 }
 
-func (uc *IndexingUseCase) generateEmbeddings(ctx context.Context, chunks []*chunk.Chunk) ([][]float32, error) {
+func (uc *IndexingUseCase) generateEmbeddings(ctx context.Context, chunks []*chunk.Chunk, doc *document.Document) ([][]float32, error) {
 	texts := make([]string, len(chunks))
 	for i, ch := range chunks {
 		texts[i] = ch.Content
@@ -186,6 +189,17 @@ func (uc *IndexingUseCase) generateEmbeddings(ctx context.Context, chunks []*chu
 		}
 
 		allEmbeddings = append(allEmbeddings, batchEmbeddings...)
+
+		// Update progress in database so UI can see it jumping
+		if doc != nil {
+			doc.EmbeddingCount = len(allEmbeddings)
+			_ = uc.docRepo.Update(doc) // ignore error to not break the flow
+		}
+
+		// Throttle: We reduced this to 10 seconds per user request
+		if end < len(texts) {
+			time.Sleep(3 * time.Second)
+		}
 	}
 
 	return allEmbeddings, nil

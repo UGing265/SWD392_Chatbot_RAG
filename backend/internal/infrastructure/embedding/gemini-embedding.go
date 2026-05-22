@@ -3,6 +3,7 @@ package embedding
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -33,7 +34,7 @@ type embedRequest struct {
 			Text string `json:"text"`
 		} `json:"parts"`
 	} `json:"content"`
-	OutputDimensionality int `json:"output_dimensionality,omitempty"`
+	OutputDimensionality int `json:"outputDimensionality,omitempty"`
 }
 
 type embedResponse struct {
@@ -46,10 +47,7 @@ type embedResponse struct {
 }
 
 type batchEmbedRequest struct {
-	Model  string `json:"model"`
-	Inputs []struct {
-		Text string `json:"text"`
-	} `json:"inputs"`
+	Requests []embedRequest `json:"requests"`
 }
 
 type batchEmbedResponse struct {
@@ -96,8 +94,13 @@ func NewGeminiEmbeddingClient(apiKeysStr string) *GeminiEmbeddingClient {
 		apiKeys:       parseAPIKeys(apiKeysStr),
 		baseURL:       "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
 		model:         "models/gemini-embedding-2",
-		client:        &http.Client{Timeout: 30 * time.Second},
-		maxRetries:    3,
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+			},
+		},
+		maxRetries:    20,
 		semaphore:     semaphore.NewWeighted(10),
 		maxConcurrent: 10,
 	}
@@ -125,7 +128,12 @@ func NewGeminiEmbeddingClientWithConfig(apiKeysStr, baseURL, model string, timeo
 		apiKeys:       parseAPIKeys(apiKeysStr),
 		baseURL:       baseURL,
 		model:         model,
-		client:        &http.Client{Timeout: timeout},
+		client: &http.Client{
+			Timeout: timeout,
+			Transport: &http.Transport{
+				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+			},
+		},
 		maxRetries:    maxRetries,
 		semaphore:     semaphore.NewWeighted(int64(maxConcurrent)),
 		maxConcurrent: maxConcurrent,
@@ -141,6 +149,7 @@ func (c *GeminiEmbeddingClient) Embed(ctx context.Context, text string) ([]float
 
 	reqBody := embedRequest{
 		Model: c.model,
+		OutputDimensionality: 768,
 	}
 	reqBody.Content.Parts = []struct {
 		Text string `json:"text"`
@@ -190,13 +199,16 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 		processedTexts[i] = processed
 	}
 
-	reqBody := batchEmbedRequest{
-		Model: c.model,
-	}
+	var reqBody batchEmbedRequest
 	for _, text := range processedTexts {
-		reqBody.Inputs = append(reqBody.Inputs, struct {
+		singleReq := embedRequest{
+			Model: c.model,
+			OutputDimensionality: 768,
+		}
+		singleReq.Content.Parts = []struct {
 			Text string `json:"text"`
-		}{Text: text})
+		}{{Text: text}}
+		reqBody.Requests = append(reqBody.Requests, singleReq)
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
@@ -204,7 +216,9 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s?key=%s", c.baseURL, c.getNextKey())
+	// batchEmbedContents endpoint thay vì embedContent
+	batchURL := strings.Replace(c.baseURL, ":embedContent", ":batchEmbedContents", 1)
+	url := fmt.Sprintf("%s?key=%s", batchURL, c.getNextKey())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -250,9 +264,9 @@ func (c *GeminiEmbeddingClient) doRequest(req *http.Request, result interface{})
 		if lastErr != nil {
 			continue
 		}
-		defer resp.Body.Close()
 
 		body, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
 		if readErr != nil {
 			lastErr = fmt.Errorf("failed to read response body: %w", readErr)
 			continue
