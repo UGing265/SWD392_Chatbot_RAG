@@ -16,6 +16,14 @@ func NewChatHandler(db *pgxpool.Pool) *ChatHandler {
 	return &ChatHandler{db: db}
 }
 
+// ListSessions godoc
+// @Summary List chat sessions
+// @Description Get all chat sessions for the authenticated user
+// @Tags chat
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /api/chat/sessions [get]
 func (h *ChatHandler) ListSessions(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
@@ -44,6 +52,16 @@ func (h *ChatHandler) ListSessions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
+// CreateSession godoc
+// @Summary Create chat session
+// @Description Create a new chat session for a course
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body map[string]string true "Session info"
+// @Success 201 {object} map[string]interface{}
+// @Router /api/chat/sessions [post]
 func (h *ChatHandler) CreateSession(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
@@ -84,12 +102,30 @@ func (h *ChatHandler) CreateSession(c *gin.Context) {
 	})
 }
 
+// GetSession godoc
+// @Summary Get chat session
+// @Description Get a specific chat session
+// @Tags chat
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Session ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/chat/sessions/{id} [get]
 func (h *ChatHandler) GetSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Get session endpoint - to be implemented",
 	})
 }
 
+// GetMessages godoc
+// @Summary Get chat messages
+// @Description Get all messages in a chat session
+// @Tags chat
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Session ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/chat/sessions/{id}/messages [get]
 func (h *ChatHandler) GetMessages(c *gin.Context) {
 	sessionID := c.Param("id")
 
@@ -118,6 +154,17 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"messages": messages})
 }
 
+// SendMessage godoc
+// @Summary Send message
+// @Description Send a message and get AI response with RAG
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Session ID"
+// @Param request body map[string]string true "Message content"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/chat/sessions/{id}/messages [post]
 func (h *ChatHandler) SendMessage(c *gin.Context) {
 	sessionID := c.Param("id")
 

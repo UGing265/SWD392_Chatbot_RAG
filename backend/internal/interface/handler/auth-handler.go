@@ -42,6 +42,16 @@ type AuthResponse struct {
 	Token  string `json:"token"`
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new account with email, password, and username
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body handler.RegisterRequest true "Registration info"
+// @Success 201 {object} handler.AuthResponse
+// @Failure 400 {object} map[string]string
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -95,6 +105,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
+// Login godoc
+// @Summary Login
+// @Description Authenticate with email/username and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body handler.LoginRequest true "Credentials"
+// @Success 200 {object} handler.AuthResponse
+// @Failure 401 {object} map[string]string
+// @Router /api/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

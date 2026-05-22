@@ -28,6 +28,13 @@ type HealthResponse struct {
 	Memory   string            `json:"memory"`
 }
 
+// Health godoc
+// @Summary Health check
+// @Description Check if the service is running
+// @Tags health
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /api/health [get]
 func (h *HealthHandler) Health(c *gin.Context) {
 	resp := HealthResponse{
 		Status:   "ok",

@@ -13,10 +13,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"swd392-chatbot-rag/pkg/config"
+
+	_ "swd392-chatbot-rag/docs" // swag docs
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 )
 
 func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
+
+	// Swagger docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Initialize infrastructure
 	fileStorage := filestorage.NewLocalFileStorage(cfg.UPLOAD_DIR)

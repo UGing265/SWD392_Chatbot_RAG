@@ -57,6 +57,14 @@ func NewDocumentHandlerWithUseCase(
 	}
 }
 
+// List godoc
+// @Summary List documents
+// @Description Get all documents for the authenticated user
+// @Tags documents
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /api/documents [get]
 func (h *DocumentHandler) List(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	userIDUUID := userID.(uuid.UUID)
@@ -99,6 +107,16 @@ func (h *DocumentHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"documents": documents})
 }
 
+// GetByID godoc
+// @Summary Get document
+// @Description Get a specific document by ID
+// @Tags documents
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Document ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string
+// @Router /api/documents/{id} [get]
 func (h *DocumentHandler) GetByID(c *gin.Context) {
 	docIDStr := c.Param("id")
 	docID, err := uuid.Parse(docIDStr)
@@ -137,6 +155,16 @@ func (h *DocumentHandler) GetByID(c *gin.Context) {
 	})
 }
 
+// GetChunks godoc
+// @Summary Get document chunks
+// @Description Get all chunks for a document (for debugging/UI)
+// @Tags documents
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Document ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string
+// @Router /api/documents/{id}/chunks [get]
 func (h *DocumentHandler) GetChunks(c *gin.Context) {
 	docIDStr := c.Param("id")
 	docID, err := uuid.Parse(docIDStr)
@@ -221,6 +249,19 @@ func detectMIMEType(r io.Reader, filename string) string {
 	return mimeStr
 }
 
+// Upload godoc
+// @Summary Upload document
+// @Description Upload a PDF, DOCX, PPTX, TXT or MD file for indexing
+// @Tags documents
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param file formData file true "Document file"
+// @Param course_id formData string true "Course ID"
+// @Param chapter_id formData string false "Chapter ID"
+// @Success 201 {object} response.UploadResponse
+// @Failure 400 {object} map[string]string
+// @Router /api/documents/upload [post]
 func (h *DocumentHandler) Upload(c *gin.Context) {
 	if h.uploadUC == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload service not initialized"})
@@ -302,6 +343,15 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+// Delete godoc
+// @Summary Delete document
+// @Description Delete a document and its chunks
+// @Tags documents
+// @Security BearerAuth
+// @Param id path string true "Document ID"
+// @Success 204
+// @Failure 404 {object} map[string]string
+// @Router /api/documents/{id} [delete]
 func (h *DocumentHandler) Delete(c *gin.Context) {
 	docIDStr := c.Param("id")
 	docID, err := uuid.Parse(docIDStr)
