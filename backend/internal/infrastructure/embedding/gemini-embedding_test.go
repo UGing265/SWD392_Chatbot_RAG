@@ -63,7 +63,7 @@ func TestPreprocessText(t *testing.T) {
 func TestNewGeminiEmbeddingClient(t *testing.T) {
 	client := NewGeminiEmbeddingClient("test-api-key")
 	require.NotNil(t, client)
-	assert.Equal(t, "test-api-key", client.apiKey)
+	assert.Equal(t, "test-api-key", client.apiKeys[0])
 	assert.Equal(t, 3, client.maxRetries)
 	assert.Equal(t, 30*time.Second, client.client.Timeout)
 }
@@ -78,7 +78,7 @@ func TestNewGeminiEmbeddingClientWithConfig(t *testing.T) {
 		20,
 	)
 	require.NotNil(t, client)
-	assert.Equal(t, "test-api-key", client.apiKey)
+	assert.Equal(t, "test-api-key", client.apiKeys[0])
 	assert.Equal(t, "https://custom.api.com", client.baseURL)
 	assert.Equal(t, "models/custom-model", client.model)
 	assert.Equal(t, 60*time.Second, client.client.Timeout)

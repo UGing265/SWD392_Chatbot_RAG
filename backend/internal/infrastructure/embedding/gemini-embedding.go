@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/semaphore"
@@ -15,7 +16,8 @@ import (
 
 // GeminiEmbeddingClient is a thread-safe client for Gemini Embedding API
 type GeminiEmbeddingClient struct {
-	apiKey       string
+	apiKeys      []string
+	keyIndex     atomic.Uint32
 	baseURL      string
 	model        string
 	client       *http.Client
@@ -67,10 +69,31 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
+// parseAPIKeys splits a comma-separated string of API keys
+func parseAPIKeys(apiKeysStr string) []string {
+	var keys []string
+	for _, key := range strings.Split(apiKeysStr, ",") {
+		trimmed := strings.TrimSpace(key)
+		if trimmed != "" {
+			keys = append(keys, trimmed)
+		}
+	}
+	if len(keys) == 0 {
+		return []string{""} // Fallback to empty string to avoid panic
+	}
+	return keys
+}
+
+// getNextKey returns the next API key in a round-robin fashion
+func (c *GeminiEmbeddingClient) getNextKey() string {
+	idx := c.keyIndex.Add(1)
+	return c.apiKeys[int(idx)%len(c.apiKeys)]
+}
+
 // NewGeminiEmbeddingClient creates a new Gemini embedding client
-func NewGeminiEmbeddingClient(apiKey string) *GeminiEmbeddingClient {
+func NewGeminiEmbeddingClient(apiKeysStr string) *GeminiEmbeddingClient {
 	return &GeminiEmbeddingClient{
-		apiKey:        apiKey,
+		apiKeys:       parseAPIKeys(apiKeysStr),
 		baseURL:       "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
 		model:         "models/gemini-embedding-2",
 		client:        &http.Client{Timeout: 30 * time.Second},
@@ -81,7 +104,7 @@ func NewGeminiEmbeddingClient(apiKey string) *GeminiEmbeddingClient {
 }
 
 // NewGeminiEmbeddingClientWithConfig creates a client with custom configuration
-func NewGeminiEmbeddingClientWithConfig(apiKey, baseURL, model string, timeout time.Duration, maxRetries, maxConcurrent int) *GeminiEmbeddingClient {
+func NewGeminiEmbeddingClientWithConfig(apiKeysStr, baseURL, model string, timeout time.Duration, maxRetries, maxConcurrent int) *GeminiEmbeddingClient {
 	if baseURL == "" {
 		baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent"
 	}
@@ -99,7 +122,7 @@ func NewGeminiEmbeddingClientWithConfig(apiKey, baseURL, model string, timeout t
 	}
 
 	return &GeminiEmbeddingClient{
-		apiKey:        apiKey,
+		apiKeys:       parseAPIKeys(apiKeysStr),
 		baseURL:       baseURL,
 		model:         model,
 		client:        &http.Client{Timeout: timeout},
@@ -128,7 +151,7 @@ func (c *GeminiEmbeddingClient) Embed(ctx context.Context, text string) ([]float
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s?key=%s", c.baseURL, c.apiKey)
+	url := fmt.Sprintf("%s?key=%s", c.baseURL, c.getNextKey())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -181,7 +204,7 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s?key=%s", c.baseURL, c.apiKey)
+	url := fmt.Sprintf("%s?key=%s", c.baseURL, c.getNextKey())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
