@@ -44,23 +44,15 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 
 	// Initialize handlers
 	healthHandler := handler.NewHealthHandler(db)
-	authHandler := handler.NewAuthHandler(db)
 	documentHandler := handler.NewDocumentHandlerWithUseCase(db, uploadUC, listUC, getUC, deleteUC, getChunksUC, fileStorage)
 	chatHandler := handler.NewChatHandler(db)
 
 	// Health check (public)
 	r.GET("/api/health", healthHandler.Health)
 
-	// Auth routes (public)
-	auth := r.Group("/api/auth")
-	{
-		auth.POST("/register", authHandler.Register)
-		auth.POST("/login", authHandler.Login)
-	}
-
 	// Protected routes
 	protected := r.Group("/api")
-	protected.Use(middleware.AuthMiddleware(cfg.JWT_SECRET))
+	protected.Use(middleware.AuthMiddleware(db))
 	{
 		// Documents
 		protected.GET("/documents", documentHandler.List)

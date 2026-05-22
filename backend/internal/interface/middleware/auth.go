@@ -1,16 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"swd392-chatbot-rag/pkg/jwt"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
-	jwtService, _ := jwt.NewJWTService(jwtSecret, "24h")
-
+func AuthMiddleware(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -29,17 +28,26 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		tokenString := parts[1]
-		claims, err := jwtService.ValidateToken(tokenString)
+
+		// Query Better Auth session from database
+		var userID, email string
+		err := db.QueryRow(context.Background(), `
+			SELECT s."userId", u.email 
+			FROM session s 
+			JOIN users u ON s."userId" = u.id 
+			WHERE s.token = $1 AND s."expiresAt" > NOW()
+		`, tokenString).Scan(&userID, &email)
+
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid or expired token",
+				"error": "Invalid or expired session token",
 			})
 			return
 		}
 
 		// Store user info in context
-		c.Set("user_id", claims.UserID)
-		c.Set("email", claims.Email)
+		c.Set("user_id", userID)
+		c.Set("email", email)
 
 		c.Next()
 	}

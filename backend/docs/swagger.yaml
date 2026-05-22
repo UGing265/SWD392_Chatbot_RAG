@@ -1,40 +1,5 @@
 definitions:
-  handler.AuthResponse:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      token:
-        type: string
-      user_id:
-        type: string
-    type: object
-  handler.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  handler.RegisterRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        minLength: 6
-        type: string
-    required:
-    - email
-    - name
-    - password
-    type: object
-  response.UploadResponse:
+  swd392-chatbot-rag_internal_interface_dto_response.UploadResponse:
     properties:
       document_id:
         type: string
@@ -45,63 +10,10 @@ definitions:
     type: object
 info:
   contact: {}
+  description: API Server for SWD392 Chatbot RAG system.
+  title: SWD392 Chatbot RAG API
+  version: "1.0"
 paths:
-  /api/auth/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate with email/username and password
-      parameters:
-      - description: Credentials
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.AuthResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Login
-      tags:
-      - auth
-  /api/auth/register:
-    post:
-      consumes:
-      - application/json
-      description: Create a new account with email, password, and username
-      parameters:
-      - description: Registration info
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handler.AuthResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Register a new user
-      tags:
-      - auth
   /api/chat/sessions:
     get:
       description: Get all chat sessions for the authenticated user
@@ -339,7 +251,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/response.UploadResponse'
+            $ref: '#/definitions/swd392-chatbot-rag_internal_interface_dto_response.UploadResponse'
         "400":
           description: Bad Request
           schema:
@@ -365,4 +277,9 @@ paths:
       summary: Health check
       tags:
       - health
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

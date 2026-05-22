@@ -9,6 +9,14 @@ import (
 	"swd392-chatbot-rag/pkg/database"
 )
 
+// @title           SWD392 Chatbot RAG API
+// @version         1.0
+// @description     API Server for SWD392 Chatbot RAG system.
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
