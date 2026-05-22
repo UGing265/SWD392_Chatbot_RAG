@@ -9,8 +9,12 @@ import (
 )
 
 type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	Name     string    `json:"name,omitempty"`
+	Username string    `json:"username,omitempty"`
+	// Better Auth uses "sub" for user ID
+	Subject string `json:"sub,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -57,6 +61,12 @@ func (s *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		// Handle Better Auth tokens that use "sub" instead of "user_id"
+		if claims.UserID == uuid.Nil && claims.Subject != "" {
+			if userID, err := uuid.Parse(claims.Subject); err == nil {
+				claims.UserID = userID
+			}
+		}
 		return claims, nil
 	}
 
