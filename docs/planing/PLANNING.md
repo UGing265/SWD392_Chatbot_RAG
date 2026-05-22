@@ -87,16 +87,16 @@ When using `/plan` command, read this file for complete project context.
 ## Features Checklist
 
 ### MUST HAVE
-- [ ] Auth: register, login, JWT protection
-- [ ] Document: upload, list user's documents, delete
-- [ ] Chat: create session, send message (RAG), get history
-- [ ] Citations: show source (file, page, excerpt) for each bot answer
+- [x] Auth: register, login, JWT protection
+- [x] Document: upload, list user's documents, delete
+- [x] Chat: create session, send message (RAG), get history
+- [x] Citations: show source (file, page, excerpt) for each bot answer
 
 ### MUST NOT HAVE
-- [ ] Benchmark/research module (experiment_runs, RAGAS)
-- [ ] Multi-tenant isolation
-- [ ] WebSocket/real-time features
-- [ ] Admin panels for user management
+- [x] Benchmark/research module (experiment_runs, RAGAS) - NOT IMPLEMENTED
+- [x] Multi-tenant isolation - NOT IMPLEMENTED
+- [x] WebSocket/real-time features - NOT IMPLEMENTED
+- [x] Admin panels for user management - NOT IMPLEMENTED
 
 ---
 

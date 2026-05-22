@@ -582,6 +582,6 @@ This is appropriate for a **demo chatbot**, not a research tool.
 1. ✅ Create `docs/ERD.txt` - entity definitions
 2. ✅ Create `docs/Architecture.md` - this file
 3. ⬜ Create `docs/Flows.md` - detailed flow diagrams (optional)
-4. ⬜ Create folder structure
-5. ⬜ Implement backend
-6. ⬜ Implement frontend
+4. ✅ Create folder structure - backend follows Clean Architecture pattern
+5. ✅ Implement backend - upload, indexing, chat, auth, and RAG pipeline complete
+6. ⬜ Implement frontend - Next.js with Better Auth (pending)
