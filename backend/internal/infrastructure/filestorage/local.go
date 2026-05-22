@@ -51,12 +51,13 @@ func (s *LocalFileStorage) Save(reader io.Reader, courseID uuid.UUID, originalFi
 		return "", ErrInvalidMIMEType
 	}
 
-	if err := os.MkdirAll(s.basePath, 0755); err != nil {
-		return "", err
-	}
-
 	docID := uuid.New()
 	safePath := s.buildSafePath(courseID, docID.String(), ext)
+
+	// Tạo toàn bộ thư mục cha (bao gồm uploads/{courseID}/)
+	if err := os.MkdirAll(filepath.Dir(safePath), 0755); err != nil {
+		return "", err
+	}
 
 	file, err := os.Create(safePath)
 	if err != nil {

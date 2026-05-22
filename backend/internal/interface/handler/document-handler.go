@@ -268,7 +268,7 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("document")
+	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
 		return
@@ -284,9 +284,9 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
 		return
 	}
-	defer src.Close()
 
 	mimeType := detectMIMEType(src, file.Filename)
+	src.Close() // Đóng stream cũ (đã bị đọc mất header bởi MIME sniffing)
 
 	if !filestorage.ValidateMIMEType(mimeType) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
@@ -313,11 +313,19 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 
 	userID := c.MustGet("user_id").(uuid.UUID)
 
+	// Mở lại file stream mới (con trỏ ở đầu file)
+	freshSrc, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to re-read file"})
+		return
+	}
+	defer freshSrc.Close()
+
 	result, err := h.uploadUC.Execute(c.Request.Context(), document_usecase.UploadParams{
 		UserID:    userID,
 		CourseID:  courseID,
 		ChapterID: chapterID,
-		File:      src,
+		File:      freshSrc,
 		FileName:  file.Filename,
 		FileSize:  file.Size,
 		MIMEType:  mimeType,
@@ -331,7 +339,7 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload document"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload document", "details": err.Error()})
 		return
 	}
 
