@@ -1,0 +1,3 @@
+@echo off
+echo Starting SWD392 RAG Chatbot Backends in one terminal...
+npx concurrently --kill-others -n "Hono,Go" -c "yellow,green" "cd /d \"%~dp0better-auth\" && pnpm dev" "cd /d \"%~dp0go\" && go run ./cmd/server"

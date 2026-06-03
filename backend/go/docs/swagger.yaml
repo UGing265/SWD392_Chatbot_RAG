@@ -1,0 +1,1641 @@
+definitions:
+  application.AcademicTermDto:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+    type: object
+  application.DashboardRecentDocumentDto:
+    properties:
+      chunk_count:
+        type: integer
+      file_count:
+        type: integer
+      id:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      subject:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  application.DashboardSummaryDto:
+    properties:
+      active_upload_jobs:
+        items:
+          $ref: '#/definitions/application.UploadJobSummaryDto'
+        type: array
+      approved_documents:
+        type: integer
+      completed_upload_message:
+        type: string
+      pending_documents:
+        type: integer
+      recent_documents:
+        items:
+          $ref: '#/definitions/application.DashboardRecentDocumentDto'
+        type: array
+      rejected_documents:
+        type: integer
+      total_chunks:
+        type: integer
+      total_documents:
+        type: integer
+      total_files:
+        type: integer
+    type: object
+  application.DeleteDocumentViewData:
+    properties:
+      chunk_count:
+        type: integer
+      file_count:
+        type: integer
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  application.DocumentChapterDto:
+    properties:
+      chapter_order:
+        type: integer
+      confidence_score:
+        type: number
+      created_at:
+        type: string
+      document_id:
+        type: string
+      end_chunk_index:
+        type: integer
+      end_page:
+        type: integer
+      id:
+        type: string
+      is_ai_generated:
+        type: boolean
+      parent_chapter_id:
+        type: string
+      start_chunk_index:
+        type: integer
+      start_page:
+        type: integer
+      summary:
+        type: string
+      title:
+        type: string
+    type: object
+  application.DocumentChunkDto:
+    properties:
+      chapter_id:
+        type: string
+      chunk_hash:
+        type: string
+      chunk_order:
+        type: integer
+      content:
+        type: string
+      content_tokens:
+        type: integer
+      created_at:
+        type: string
+      document_id:
+        type: string
+      has_embedding:
+        type: boolean
+      id:
+        type: string
+      metadata:
+        type: string
+      page_number:
+        type: integer
+    type: object
+  application.DocumentCreateResultDto:
+    properties:
+      id:
+        type: string
+      slug:
+        type: string
+    type: object
+  application.DocumentDetailsDto:
+    properties:
+      academic_term_id:
+        type: string
+      academic_term_name:
+        type: string
+      approved_at:
+        type: string
+      chapters:
+        items:
+          $ref: '#/definitions/application.DocumentChapterDto'
+        type: array
+      chunks:
+        items:
+          $ref: '#/definitions/application.DocumentChunkDto'
+        type: array
+      description:
+        type: string
+      document_source_id:
+        type: string
+      document_source_name:
+        type: string
+      document_type_id:
+        type: string
+      document_type_name:
+        type: string
+      download_count:
+        type: integer
+      file_count:
+        type: integer
+      files:
+        items:
+          $ref: '#/definitions/application.DocumentFileDto'
+        type: array
+      id:
+        type: string
+      language_code:
+        type: string
+      language_id:
+        type: string
+      language_name:
+        type: string
+      owner_user_id:
+        type: string
+      status:
+        type: string
+      subject_code:
+        type: string
+      subject_id:
+        type: string
+      subject_name:
+        type: string
+      title:
+        type: string
+      total_chapters:
+        type: integer
+      total_chunks:
+        type: integer
+      view_count:
+        type: integer
+      visibility:
+        type: string
+    type: object
+  application.DocumentEditInput:
+    properties:
+      academic_term_id:
+        type: string
+      description:
+        type: string
+      document_source_id:
+        type: string
+      document_type_id:
+        type: string
+      language_id:
+        type: string
+      subject_id:
+        type: string
+      title:
+        type: string
+      visibility:
+        type: string
+    type: object
+  application.DocumentFileDto:
+    properties:
+      created_at:
+        type: string
+      document_id:
+        type: string
+      extraction_status:
+        type: string
+      file_size_bytes:
+        type: integer
+      file_url:
+        type: string
+      id:
+        type: string
+      mime_type:
+        type: string
+      original_filename:
+        type: string
+      page_count:
+        type: integer
+      s3_key:
+        type: string
+      storage_path:
+        type: string
+    type: object
+  application.DocumentListItemDto:
+    properties:
+      academic_term_name:
+        type: string
+      chunk_count:
+        type: integer
+      created_at:
+        type: string
+      document_type_id:
+        type: string
+      document_type_name:
+        type: string
+      file_count:
+        type: integer
+      id:
+        type: string
+      owner_email:
+        type: string
+      preview_text:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      subject_code:
+        type: string
+      subject_id:
+        type: string
+      subject_name:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      view_count:
+        type: integer
+      visibility:
+        type: string
+    type: object
+  application.DocumentReportDto:
+    properties:
+      created_at:
+        type: string
+      document_id:
+        type: string
+      document_slug:
+        type: string
+      document_title:
+        type: string
+      id:
+        type: string
+      reason:
+        type: string
+      reporter_email:
+        type: string
+      reporter_user_id:
+        type: string
+      status:
+        type: string
+    type: object
+  application.DocumentSourceDto:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  application.DocumentTypeDto:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  application.LanguageDto:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  application.MyDocumentsDto:
+    properties:
+      active_upload_jobs:
+        items:
+          $ref: '#/definitions/application.UploadJobSummaryDto'
+        type: array
+      approved_documents:
+        type: integer
+      documents:
+        items:
+          $ref: '#/definitions/application.DocumentListItemDto'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      pending_documents:
+        type: integer
+      rejected_documents:
+        type: integer
+      total_chunks:
+        type: integer
+      total_documents:
+        type: integer
+      total_files:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  application.SubjectDto:
+    properties:
+      academic_term_id:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  application.UploadJobSummaryDto:
+    properties:
+      created_at:
+        type: string
+      document_id:
+        type: string
+      file_name:
+        type: string
+      file_size_bytes:
+        type: integer
+      id:
+        type: string
+      message:
+        type: string
+      progress_percent:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handler.AcademicTermInput:
+    properties:
+      name:
+        type: string
+      order:
+        type: integer
+    required:
+    - name
+    type: object
+  handler.DocumentSourceInput:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.DocumentTypeInput:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.LanguageInput:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  handler.ReportInput:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  handler.SubjectInput:
+    properties:
+      academicTermId:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  user.User:
+    properties:
+      created_at:
+        type: string
+      created_at_ba:
+        type: string
+      display_username:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      id:
+        type: string
+      image:
+        type: string
+      is_active:
+        type: boolean
+      is_blocked:
+        type: boolean
+      name:
+        type: string
+      role_id:
+        type: integer
+      role_name:
+        description: Relation field
+        type: string
+      updated_at:
+        type: string
+      updated_at_ba:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API Server for SWD392 Chatbot RAG system.
+  title: SWD392 Chatbot RAG API
+  version: "1.0"
+paths:
+  /api/admin/academic-terms:
+    post:
+      consumes:
+      - application/json
+      description: Add a new academic term (Admin only)
+      parameters:
+      - description: Term details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AcademicTermInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.AcademicTermDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create academic term
+      tags:
+      - admin-metadata
+  /api/admin/academic-terms/{id}:
+    delete:
+      description: Remove academic term by ID (Admin only)
+      parameters:
+      - description: Term ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete academic term
+      tags:
+      - admin-metadata
+    put:
+      consumes:
+      - application/json
+      description: Update academic term name/order by ID (Admin only)
+      parameters:
+      - description: Term ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AcademicTermInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.AcademicTermDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update academic term
+      tags:
+      - admin-metadata
+  /api/admin/document-sources:
+    post:
+      consumes:
+      - application/json
+      description: Add a new document source (Admin only)
+      parameters:
+      - description: Source details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DocumentSourceInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.DocumentSourceDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create document source
+      tags:
+      - admin-metadata
+  /api/admin/document-sources/{id}:
+    delete:
+      description: Remove document source by ID (Admin only)
+      parameters:
+      - description: Source ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete document source
+      tags:
+      - admin-metadata
+    put:
+      consumes:
+      - application/json
+      description: Update source name by ID (Admin only)
+      parameters:
+      - description: Source ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Source details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DocumentSourceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DocumentSourceDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update document source
+      tags:
+      - admin-metadata
+  /api/admin/document-types:
+    post:
+      consumes:
+      - application/json
+      description: Add a new document type (Admin only)
+      parameters:
+      - description: Document Type details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DocumentTypeInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.DocumentTypeDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create document type
+      tags:
+      - admin-metadata
+  /api/admin/document-types/{id}:
+    delete:
+      description: Remove document type by ID (Admin only)
+      parameters:
+      - description: Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete document type
+      tags:
+      - admin-metadata
+    put:
+      consumes:
+      - application/json
+      description: Update document type details by ID (Admin only)
+      parameters:
+      - description: Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Type details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DocumentTypeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DocumentTypeDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update document type
+      tags:
+      - admin-metadata
+  /api/admin/documents:
+    get:
+      description: Get a paginated list of all system documents with status (Admin
+        only)
+      parameters:
+      - description: Search keyword
+        in: query
+        name: q
+        type: string
+      - description: Subject ID (UUID)
+        in: query
+        name: subjectId
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.MyDocumentsDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all documents (Admin view)
+      tags:
+      - admin-documents
+  /api/admin/documents/{id}/approve:
+    post:
+      description: Set document status to approved, making it public (Admin only)
+      parameters:
+      - description: Document ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Approve document
+      tags:
+      - admin-documents
+  /api/admin/documents/{id}/delete:
+    post:
+      description: Admin delete a document by ID (Admin only)
+      parameters:
+      - description: Document ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete document (Admin)
+      tags:
+      - admin-documents
+  /api/admin/documents/{id}/reject:
+    post:
+      description: Reject a pending document (Admin only)
+      parameters:
+      - description: Document ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reject document
+      tags:
+      - admin-documents
+  /api/admin/languages:
+    post:
+      consumes:
+      - application/json
+      description: Add a new language (Admin only)
+      parameters:
+      - description: Language details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LanguageInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.LanguageDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create language
+      tags:
+      - admin-metadata
+  /api/admin/languages/{id}:
+    delete:
+      description: Remove language by ID (Admin only)
+      parameters:
+      - description: Language ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete language
+      tags:
+      - admin-metadata
+    put:
+      consumes:
+      - application/json
+      description: Update language code/name by ID (Admin only)
+      parameters:
+      - description: Language ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Language details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LanguageInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.LanguageDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update language
+      tags:
+      - admin-metadata
+  /api/admin/reports:
+    get:
+      description: Get list of all pending document reports (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.DocumentReportDto'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List pending violation reports
+      tags:
+      - admin-reports
+  /api/admin/reports/{id}/resolve:
+    post:
+      description: Resolve a violation report by ignoring or deleting the document
+        (Admin only)
+      parameters:
+      - description: Report ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Resolution choice (delete or ignore)
+        in: query
+        name: resolution
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Resolve document report
+      tags:
+      - admin-reports
+  /api/admin/subjects:
+    post:
+      consumes:
+      - application/json
+      description: Add a new subject (Admin only)
+      parameters:
+      - description: Subject details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubjectInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.SubjectDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create metadata subject
+      tags:
+      - admin-metadata
+  /api/admin/subjects/{id}:
+    delete:
+      description: Remove subject by ID (Admin only)
+      parameters:
+      - description: Subject ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete metadata subject
+      tags:
+      - admin-metadata
+    put:
+      consumes:
+      - application/json
+      description: Update subject code/name/term by ID (Admin only)
+      parameters:
+      - description: Subject ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subject details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubjectInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.SubjectDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update metadata subject
+      tags:
+      - admin-metadata
+  /api/admin/users:
+    get:
+      description: Get a list of all users in the system (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - admin-users
+  /api/admin/users/{id}/block:
+    post:
+      description: Block a user's account by ID (Admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Block user
+      tags:
+      - admin-users
+  /api/admin/users/{id}/unblock:
+    post:
+      description: Unblock a user's account by ID (Admin only)
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Unblock user
+      tags:
+      - admin-users
+  /api/documents:
+    get:
+      description: Get a paginated list of all public documents with optional filtering
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by subject ID (UUID)
+        in: query
+        name: subjectId
+        type: string
+      - description: Filter by document type ID (UUID)
+        in: query
+        name: documentTypeId
+        type: string
+      - description: Filter by language ID (UUID)
+        in: query
+        name: languageId
+        type: string
+      - description: Filter by source ID (UUID)
+        in: query
+        name: documentSourceId
+        type: string
+      - description: Sort order (date_desc, date_asc, title_asc, title_desc, views_asc,
+          views_desc)
+        in: query
+        name: sortBy
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 6)
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.MyDocumentsDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List public documents
+      tags:
+      - documents
+  /api/documents/{slug}:
+    get:
+      description: Get detailed information of a document including files, chapters,
+        and paginated chunks
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Chunk page number (default 1)
+        in: query
+        name: chunkPage
+        type: integer
+      - description: Chunk page size (default 10, range 8-10)
+        in: query
+        name: chunkPageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DocumentDetailsDto'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get document details by slug
+      tags:
+      - documents
+  /api/documents/{slug}/delete:
+    post:
+      description: Delete document from database and S3 (only owner lecturer can delete)
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete document
+      tags:
+      - documents
+  /api/documents/{slug}/delete-view:
+    get:
+      description: View statistics of files and chunks that will be deleted prior
+        to confirmation
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DeleteDocumentViewData'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get delete document preview stats
+      tags:
+      - documents
+  /api/documents/{slug}/edit:
+    post:
+      consumes:
+      - application/json
+      description: Update metadata info of a document owned by the lecturer
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Edit details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/application.DocumentEditInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Edit document details
+      tags:
+      - documents
+  /api/documents/{slug}/report:
+    post:
+      consumes:
+      - application/json
+      description: Send a violation report for a document
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Report Reason
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ReportInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DocumentReportDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Report document violation
+      tags:
+      - documents
+  /api/documents/dashboard:
+    get:
+      description: Get document, file, and chunk count statistics for the logged-in
+        lecturer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.DashboardSummaryDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Lecturer dashboard statistics
+      tags:
+      - lecturer
+  /api/documents/lookups:
+    get:
+      description: Get dropdown listings of academic terms, subjects, types, sources,
+        languages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get metadata lookups
+      tags:
+      - metadata
+  /api/documents/my:
+    get:
+      description: Get a list of documents owned by the logged-in lecturer
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by subject ID (UUID)
+        in: query
+        name: subjectId
+        type: string
+      - description: Filter by term ID (UUID)
+        in: query
+        name: termId
+        type: string
+      - description: Filter by document type ID (UUID)
+        in: query
+        name: documentTypeId
+        type: string
+      - description: Filter by language ID (UUID)
+        in: query
+        name: languageId
+        type: string
+      - description: Filter by source ID (UUID)
+        in: query
+        name: documentSourceId
+        type: string
+      - description: Sort order
+        in: query
+        name: sortBy
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.MyDocumentsDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List owned documents
+      tags:
+      - documents
+  /api/documents/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a document file (PDF/DOC/DOCX/PPT/PPTX) and start indexing
+      parameters:
+      - description: Document file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Title
+        in: formData
+        name: title
+        type: string
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: Subject ID (UUID)
+        in: formData
+        name: subject_id
+        type: string
+      - description: Document Type ID (UUID)
+        in: formData
+        name: document_type_id
+        type: string
+      - description: Academic Term ID (UUID)
+        in: formData
+        name: academic_term_id
+        type: string
+      - description: Language ID (UUID)
+        in: formData
+        name: language_id
+        type: string
+      - description: Document Source ID (UUID)
+        in: formData
+        name: document_source_id
+        type: string
+      - description: Visibility (public, school_wide, private)
+        in: formData
+        name: visibility
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/application.DocumentCreateResultDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload document file
+      tags:
+      - documents
+  /api/health:
+    get:
+      description: Check if the service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - health
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
