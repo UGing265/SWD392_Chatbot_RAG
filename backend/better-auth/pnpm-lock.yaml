@@ -11,6 +11,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.11.0
         version: 1.19.14(hono@4.12.23)
+      '@hono/swagger-ui':
+        specifier: ^0.6.1
+        version: 0.6.1(hono@4.12.23)
       better-auth:
         specifier: ^1.6.11
         version: 1.6.14(pg@8.21.0)
@@ -279,6 +282,11 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/swagger-ui@0.6.1':
+    resolution: {integrity: sha512-sJTvldu1GPeEPfyeLG7gRj+W4vEuD+JDi+JjJ3TJs/DvMUtBLs0KJO5yokGegWWdy5qrbdnQGekbhgNRmPmYKQ==}
+    peerDependencies:
+      hono: '>=4.0.0'
 
   '@noble/ciphers@2.2.0':
     resolution: {integrity: sha512-Z6pjIZ/8IJcCGzb2S/0Px5J81yij85xASuk1teLNeg75bfT07MV3a/O2Mtn1I2se43k3lkVEcFaR10N4cgQcZA==}
@@ -615,6 +623,10 @@ snapshots:
     optional: true
 
   '@hono/node-server@1.19.14(hono@4.12.23)':
+    dependencies:
+      hono: 4.12.23
+
+  '@hono/swagger-ui@0.6.1(hono@4.12.23)':
     dependencies:
       hono: 4.12.23
 

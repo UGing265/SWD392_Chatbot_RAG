@@ -1,12 +1,21 @@
-# SWD392 Chatbot RAG - Project Overview
+# SWD392 Chatbot RAG - Project Overview & Agent Rules
+
+## LLM-Friendly Documentation Links
+
+Always consult the following `llms.txt` references before writing code for UI or Authentication:
+
+- **Mantine (v7+) Components**: https://mantine.dev/llms.txt
+- **Better Auth Integration**: https://better-auth.com/llms.txt
+
+---
 
 ## Project Type
-- **Architecture**: Full-stack Monolith (Clean Architecture)
-- **Backend**: Go (Golang)
-- **Frontend**: Next.js
+- **Architecture**: Decoupled (Next.js Frontend + Node/Hono Auth Backend + Go RAG Backend)
+- **Backend RAG**: Go (Golang) on Port `8080`
+- **Backend Auth**: Node.js Hono (Better Auth) on Port `5000`
+- **Frontend**: Next.js (React) on Port `3000` (Pure client-side, no direct DB access)
 - **Database**: PostgreSQL + pgvector (embeddings)
 - **LLM**: Google Gemini + Gemini Embedding 2
-- **Auth**: Simple email/password + username authentication (Better Auth + JWT)
 
 ---
 
@@ -38,11 +47,9 @@
    - JWT token validation in Go backend
    - Protected routes require valid JWT
 
-5. **API Endpoints (Go Backend)**
-   - Auth: register, login
-   - Document upload/management
-   - Chat/query endpoints
-   - Health check
+5. **API Endpoints**
+   - Go Backend: Chat, Query, Document upload/management, Health check
+   - Hono Backend: All `/api/auth/*` registration, login, and session endpoints
 
 ### Architecture & Quality
 6. **Clean Architecture** (Go backend)
@@ -57,9 +64,8 @@
    - Error handling with meaningful messages
    - Configuration via environment variables
 
-### Structure
 8. **Project Structure**
-   - Monorepo-style: `/backend` (Go) + `/frontend` (Next.js)
+   - Monorepo-style: `/backend/go` + `/backend/better-auth` + `/frontend`
    - Go follows Clean Architecture conventions
    - Folder structure defined in `docs/Architecture.md`
 
@@ -74,13 +80,13 @@
 4. **No Complex User Management** → User only, no admin panel
 5. **No Heavy File Processing** → PDF text extraction only, no OCR
 6. **No Real-time/WebSocket** → Standard request/response only
-7. **No Microservices** → Single monolith deployment
 
 ### Architecture Mistakes to Avoid
-8. **Not Layered MVC** → Must use Clean Architecture dependency rules
-9. **No God Files** → Files under 200 lines, focused purpose
-10. **No Direct DB Access in Handlers** → Always through use cases
-11. **No Hardcoded Config** → Use environment variables
+7. **Not Layered MVC** → Must use Clean Architecture dependency rules
+8. **No God Files** → Files under 200 lines, focused purpose
+9. **No Direct DB Access in Handlers** → Always through use cases
+10. **No Hardcoded Config** → Use environment variables
+11. **No Direct DB Connection in Next.js Frontend** → Frontend must request through backends.
 
 ---
 
@@ -97,25 +103,30 @@
 
 ## Auth Architecture
 
-Better Auth runs in Next.js frontend. Go backend validates JWTs issued by Better Auth.
+Better Auth runs in a dedicated Hono (Node.js) service on Port 5000. Go backend (Port 8080) validates JWTs issued by Better Auth.
 
 ```
-Browser ──► Next.js (Better Auth) ──► Go Backend (JWT validated)
-              │                            │
-              ├── Register/Login           ├── Business logic
-              ├── Session management       ├── RAG pipeline
-              └── Serves JWT to client     └── Chat/Documents
+Browser ──► Hono Backend (Better Auth - Port 5000)
+             │
+             ├── Register/Login/Session
+             └── Connected directly to DB
+
+Browser ──► Next.js (Better Auth Client - Port 3000) ──► Go Backend (Port 8080)
+                                                           │
+                                                           └── Validates JWTs
 ```
 
-### Better Auth Setup (Frontend)
-- Server: `frontend/lib/auth.ts` - Better Auth instance with username plugin
-- Client: `frontend/lib/auth-client.ts` - Client SDK
-- API: `frontend/app/api/auth/[...all]/route.ts` - Auth endpoints
-- Env: `frontend/.env.local` - BETTER_AUTH_SECRET
+### Better Auth Setup (Hono)
+- Server: `backend/better-auth/auth.ts` - Better Auth instance
+- Port: `5000`
+- API Swagger UI: Available at `http://localhost:5000/swagger` (spec at `http://localhost:5000/swagger.json`)
+
+### Better Auth Client (Frontend)
+- Client: `frontend/lib/auth-client.ts` - Client SDK (points to `http://localhost:5000`)
 
 ### JWT Validation (Backend)
 - Go validates Better Auth JWTs in middleware
-- Better Auth uses `sub` claim for user ID (not `user_id`)
+- Better Auth uses `sub` claim for user ID
 - JWT secret must match BETTER_AUTH_SECRET
 
 ---
@@ -124,13 +135,14 @@ Browser ──► Next.js (Better Auth) ──► Go Backend (JWT validated)
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Go (Golang) |
+| Backend RAG | Go (Golang) |
+| Backend Auth | Node.js Hono (Better Auth) |
 | Frontend | Next.js (React) |
 | Database | PostgreSQL + pgvector |
 | Embedding | Gemini Embedding 2 (768 dimensions) |
 | LLM | Google Gemini |
-| Auth | Better Auth (Next.js) + JWT validation (Go backend) |
-| Architecture | Clean Architecture |
+| Auth | Better Auth (Hono) + JWT validation (Go backend) |
+| Architecture | Clean Architecture (Go) / Decoupled |
 
 ---
 
@@ -142,9 +154,9 @@ Browser ──► Next.js (Better Auth) ──► Go Backend (JWT validated)
 
 ---
 
-## Next Steps
-- [ ] Create folder structure for backend + frontend
-- [ ] Implement Go backend with Clean Architecture
-- [ ] Implement Next.js frontend
-- [ ] Write unit tests
-- [ ] Integration testing
+## Startup Guide
+
+Run both backend servers concurrently using:
+```cmd
+backend\start-backends.bat
+```
