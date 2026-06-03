@@ -1,0 +1,26 @@
+name: Claude Code Analysis
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  claude-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@v1
+        env:
+          # Point Claude Code to the Minimax adapter URL
+          ANTHROPIC_BASE_URL: https://api.minimax.chat/v1/adapters/anthropic
+          # Pass the API key securely from GitHub Secrets
+          ANTHROPIC_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
