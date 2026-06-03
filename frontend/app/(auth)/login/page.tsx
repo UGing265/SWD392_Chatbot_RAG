@@ -32,7 +32,7 @@ export default function LoginPage() {
       );
 
       if (error) {
-        setError(error.message);
+        setError(error.message || "An error occurred");
       }
     } catch (err) {
       setError("An unexpected error occurred");
