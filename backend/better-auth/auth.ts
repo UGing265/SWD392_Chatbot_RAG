@@ -26,9 +26,7 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
   plugins: [
-    username({
-      allowUsernameOrEmail: true,
-    }),
+    username(),
   ],
   secret: process.env.BETTER_AUTH_SECRET!,
 });

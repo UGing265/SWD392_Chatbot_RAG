@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
-import { auth } from "./auth";
+import { auth } from "./auth.js";
 
 const app = new Hono();
 
