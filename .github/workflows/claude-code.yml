@@ -12,16 +12,25 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run Claude Code Action
-        uses: anthropics/claude-code-action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code CLI
         env:
-          # Point Claude Code to the Minimax adapter URL
           ANTHROPIC_BASE_URL: https://api.minimax.chat/v1/adapters/anthropic
-          # Pass the API key securely from GitHub Secrets
           ANTHROPIC_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+        run: |
+          claude -p "Review code of the last commit or PR changes and identify any potential bugs or security issues" \
+                 --allowedTools "Read,GrepTool"
