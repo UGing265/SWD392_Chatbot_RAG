@@ -32,5 +32,5 @@ jobs:
           ANTHROPIC_BASE_URL: https://api.minimax.chat/v1/adapters/anthropic
           ANTHROPIC_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
         run: |
-          claude -p "Review code of the last commit or PR changes and identify any potential bugs or security issues" \
+          claude --model claude-3-5-sonnet-20241022 -p "Review code of the last commit or PR changes and identify any potential bugs or security issues" \
                  --allowedTools "Read,GrepTool"
