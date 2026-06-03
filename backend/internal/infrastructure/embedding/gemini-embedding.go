@@ -100,7 +100,7 @@ func NewGeminiEmbeddingClient(apiKeysStr string) *GeminiEmbeddingClient {
 				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 			},
 		},
-		maxRetries:    20,
+		maxRetries:    3,
 		semaphore:     semaphore.NewWeighted(10),
 		maxConcurrent: 10,
 	}
@@ -149,7 +149,7 @@ func (c *GeminiEmbeddingClient) Embed(ctx context.Context, text string) ([]float
 
 	reqBody := embedRequest{
 		Model: c.model,
-		OutputDimensionality: 768,
+		OutputDimensionality: 3072,
 	}
 	reqBody.Content.Parts = []struct {
 		Text string `json:"text"`
@@ -172,8 +172,8 @@ func (c *GeminiEmbeddingClient) Embed(ctx context.Context, text string) ([]float
 		return nil, err
 	}
 
-	if len(result.Embedding.Values) != 768 {
-		return nil, fmt.Errorf("expected 768 dimensions, got %d", len(result.Embedding.Values))
+	if len(result.Embedding.Values) != 3072 {
+		return nil, fmt.Errorf("expected 3072 dimensions, got %d", len(result.Embedding.Values))
 	}
 
 	return result.Embedding.Values, nil
@@ -203,7 +203,7 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 	for _, text := range processedTexts {
 		singleReq := embedRequest{
 			Model: c.model,
-			OutputDimensionality: 768,
+			OutputDimensionality: 3072,
 		}
 		singleReq.Content.Parts = []struct {
 			Text string `json:"text"`
@@ -216,7 +216,7 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	// batchEmbedContents endpoint thay vì embedContent
+	// batchEmbedContents endpoint thay thế
 	batchURL := strings.Replace(c.baseURL, ":embedContent", ":batchEmbedContents", 1)
 	url := fmt.Sprintf("%s?key=%s", batchURL, c.getNextKey())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
@@ -236,8 +236,8 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 
 	embeddings := make([][]float32, len(result.Embeddings))
 	for i, emb := range result.Embeddings {
-		if len(emb.Values) != 768 {
-			return nil, fmt.Errorf("embedding at index %d has %d dimensions, expected 768", i, len(emb.Values))
+		if len(emb.Values) != 3072 {
+			return nil, fmt.Errorf("embedding at index %d has %d dimensions, expected 3072", i, len(emb.Values))
 		}
 		embeddings[i] = emb.Values
 	}

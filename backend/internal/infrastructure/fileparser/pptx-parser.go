@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"regexp"
 	"sort"
 	"strings"
@@ -110,34 +111,32 @@ func extractSlideText(reader **zip.ReadCloser, slideName string) (string, error)
 	}
 	defer rc.Close()
 
-	// Decode the XML content
-	var slideXML slideXML
-	decoder := xml.NewDecoder(rc)
-	if err := decoder.Decode(&slideXML); err != nil {
-		return "", fmt.Errorf("failed to decode slide XML: %w", err)
-	}
-
-	return slideXML.ExtractText(), nil
-}
-
-// slideXML represents the XML structure of a PowerPoint slide.
-type slideXML struct {
-	XMLName xml.Name    `xml:"p:sld"`
-	Text    []string    `xml:"p:spTree>p:sp>p:txBody>a:t"`
-	Notes   *notesXML   `xml:"p:notes"`
-}
-
-// notesXML represents the notes XML structure.
-type notesXML struct {
-	Text []string `xml:"p:spTree>p:sp>p:txBody>a:t"`
-}
-
-// ExtractText concatenates all text content from the slide.
-func (s *slideXML) ExtractText() string {
+	// Parse using token loop to collect all text inside <a:t> elements recursively
 	var sb strings.Builder
-	for _, t := range s.Text {
-		sb.WriteString(t)
-		sb.WriteString("\n")
+	decoder := xml.NewDecoder(rc)
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", fmt.Errorf("failed to read XML token: %w", err)
+		}
+
+		switch se := token.(type) {
+		case xml.StartElement:
+			if se.Name.Local == "t" {
+				var t string
+				if err := decoder.DecodeElement(&t, &se); err == nil {
+					t = strings.TrimSpace(t)
+					if t != "" {
+						sb.WriteString(t)
+						sb.WriteString("\n")
+					}
+				}
+			}
+		}
 	}
-	return strings.TrimSpace(sb.String())
+
+	return strings.TrimSpace(sb.String()), nil
 }

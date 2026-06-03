@@ -7,25 +7,43 @@ import (
 )
 
 type Document struct {
-	ID             uuid.UUID  `json:"id" db:"id"`
-	UserID         uuid.UUID  `json:"user_id" db:"user_id"`
-	CourseID       uuid.UUID  `json:"course_id" db:"course_id"`
-	ChapterID      *uuid.UUID `json:"chapter_id" db:"chapter_id"`
-	FileName       string     `json:"file_name" db:"file_name"`
-	FileType       string     `json:"file_type" db:"file_type"`
-	FilePath       string     `json:"-" db:"file_path"`
-	Status         string     `json:"status" db:"status"`
-	ChunkCount     int        `json:"chunk_count" db:"chunk_count"`
-	EmbeddingCount int        `json:"embedding_count" db:"embedding_count"`
-	ErrorMessage   *string    `json:"error_message,omitempty" db:"error_message"`
-	UploadedAt     time.Time  `json:"uploaded_at" db:"uploaded_at"`
-	IndexedAt      *time.Time `json:"indexed_at,omitempty" db:"indexed_at"`
+	ID               uuid.UUID  `json:"id" db:"id"`
+	OwnerUserID      uuid.UUID  `json:"owner_user_id" db:"owner_user_id"`
+	Title            string     `json:"title" db:"title"`
+	Description      *string    `json:"description" db:"description"`
+	SubjectID        *uuid.UUID `json:"subject_id" db:"subject_id"`
+	Status           string     `json:"status" db:"status"`
+	Visibility       string     `json:"visibility" db:"visibility"`
+	PageCount        *int       `json:"page_count" db:"page_count"`
+	TotalChunks      int        `json:"total_chunks" db:"total_chunks"`
+	TotalChapters    int        `json:"total_chapters" db:"total_chapters"`
+	ViewCount        int        `json:"view_count" db:"view_count"`
+	DownloadCount    int        `json:"download_count" db:"download_count"`
+	SearchText       *string    `json:"search_text" db:"search_text"`
+	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
+	ApprovedAt       *time.Time `json:"approved_at,omitempty" db:"approved_at"`
+	Slug             *string    `json:"slug" db:"slug"`
+	DocumentTypeID   *uuid.UUID `json:"document_type_id" db:"document_type_id"`
+	LanguageID       *uuid.UUID `json:"language_id" db:"language_id"`
+	Md5Hash          *string    `json:"md5_hash" db:"md5_hash"`
+	AcademicTermID   *uuid.UUID `json:"academic_term_id" db:"academic_term_id"`
+	DocumentSourceID *uuid.UUID `json:"document_source_id" db:"document_source_id"`
+
+	// Relation names
+	SubjectName        *string `json:"subject_name,omitempty" db:"subject_name"`
+	SubjectCode        *string `json:"subject_code,omitempty" db:"subject_code"`
+	DocumentTypeName   *string `json:"document_type_name,omitempty" db:"document_type_name"`
+	LanguageName       *string `json:"language_name,omitempty" db:"language_name"`
+	LanguageCode       *string `json:"language_code,omitempty" db:"language_code"`
+	AcademicTermName   *string `json:"academic_term_name,omitempty" db:"academic_term_name"`
+	DocumentSourceName *string `json:"document_source_name,omitempty" db:"document_source_name"`
+	OwnerEmail         *string `json:"owner_email,omitempty" db:"owner_email"`
 }
 
 const (
-	StatusUploading  = "uploading"
-	StatusChunking   = "chunking"
-	StatusEmbedding  = "embedding"
-	StatusIndexed    = "indexed"
-	StatusError      = "error"
+	StatusPending    = "pending"
+	StatusProcessing = "processing"
+	StatusCompleted  = "completed"
+	StatusRejected   = "rejected"
 )

@@ -1,9 +1,15 @@
 package user
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type UserRepository interface {
-	Create(user *User) error
-	FindByEmail(email string) (*User, error)
-	FindByID(id uuid.UUID) (*User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*User, error)
+	FindByEmail(ctx context.Context, email string) (*User, error)
+	FindAll(ctx context.Context) ([]*User, error)
+	Update(ctx context.Context, user *User) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }

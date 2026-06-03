@@ -1,9 +1,14 @@
 package chapter
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type ChapterRepository interface {
-	Create(chapter *Chapter) error
-	FindByID(id uuid.UUID) (*Chapter, error)
-	FindByCourseID(courseID uuid.UUID) ([]*Chapter, error)
+	Create(ctx context.Context, chapter *Chapter) error
+	CreateBatch(ctx context.Context, chapters []*Chapter) error
+	FindByDocumentID(ctx context.Context, docID uuid.UUID) ([]*Chapter, error)
+	DeleteByDocumentID(ctx context.Context, docID uuid.UUID) error
 }
