@@ -1,5 +1,6 @@
 {
   "name": "studymate-ui",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",

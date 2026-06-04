@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 
 import {
 
@@ -44,14 +44,13 @@ import { useAuth } from "@/hooks/use-auth";
 
 
 const nav = [
-  { to: "/documents", label: "Tài liệu", icon: FileText, badge: "12" },
-
+  { to: "/chat", label: "Trò chuyện AI", icon: MessageSquareText, badge: undefined, studentOnly: true },
+  { to: "/upload", label: "Tải lên", icon: Upload, badge: undefined, lecturerOnly: true },
+  { to: "/documents/my", label: "Tài liệu của tôi", icon: FileText, badge: "12", lecturerOnly: true },
+  { to: "/documents/shared", label: "Tài liệu", icon: FileText, badge: undefined },
   { to: "/practice", label: "Luyện Tập", icon: BookOpen, badge: "Mới" },
-
-  { to: "/sessions", label: "Phiên hội thoại", icon: History, badge: "6" },
-
+  { to: "/sessions", label: "Phiên hội thoại", icon: History, badge: "6", studentOnly: true },
   { to: "/settings", label: "Cài đặt", icon: Settings },
-
 ];
 
 
@@ -141,9 +140,11 @@ function SidebarItem({
 export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const params = useParams();
-  const role = params?.role as string || ""; // 'student' or 'teacher'
+  // Extract role from pathname as fallback
+  const pathRole = pathname.split("/")[1] || "";
+  const role = (params?.role as string) || pathRole;
   const basePath = role ? `/${role}` : "";
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
 
 
 
@@ -218,19 +219,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
 
         <nav className="flex flex-col gap-0.5 px-3">
-          {nav.map((n) => {
-            const fullPath = n.to === "/" ? basePath : `${basePath}${n.to}`;
-            return (
-              <SidebarItem
-                key={n.to}
-                to={fullPath}
-                label={n.label}
-                icon={n.icon}
-                badge={n.badge}
-                active={pathname.startsWith(fullPath)}
-              />
-            );
-          })}
+          {nav
+            .filter((n) => {
+              if (n.studentOnly && role !== "student") return false;
+              if (n.lecturerOnly && role !== "lecturer" && role !== "teacher") return false;
+              return true;
+            })
+            .map((n) => {
+              const fullPath = n.to === "/" ? basePath : `${basePath}${n.to}`;
+              return (
+                <SidebarItem
+                  key={n.to}
+                  to={fullPath}
+                  label={n.label}
+                  icon={n.icon}
+                  badge={n.badge}
+                  active={pathname.startsWith(fullPath)}
+                />
+              );
+            })}
         </nav>
 
 
@@ -240,14 +247,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-accent to-primary text-xs font-semibold text-primary-foreground">
-                {role === "teacher" ? "MA" : "SV"}
+                {role === "lecturer" || role === "teacher" ? "GV" : "SV"}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">
-                  {role === "teacher" ? "Minh An" : "Sinh Viên"}
+                  {session?.user?.name || (role === "lecturer" || role === "teacher" ? "Giảng Viên" : "Sinh Viên")}
                 </div>
                 <div className="truncate text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {role === "teacher" ? "Teacher" : "Student"}
+                  {role === "lecturer" || role === "teacher" ? "Lecturer" : "Student"}
                 </div>
               </div>
               <button
@@ -279,19 +286,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </span>
               <span className="whitespace-nowrap font-medium text-foreground">Sẵn sàng</span>
             </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              href={basePath || "/"}
-              className="group inline-flex h-9 items-center gap-2 rounded-full bg-primary pl-2 pr-4 text-[13px] font-medium text-primary-foreground shadow-soft transition-all hover:shadow-pop"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform group-hover:rotate-90">
-                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-              </span>
-              <span className="whitespace-nowrap">Phiên mới</span>
-            </Link>
-
           </div>
 
         </header>

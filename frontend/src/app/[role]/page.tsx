@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { AdminDashboardView } from "@/components/features/admin-dashboard-view";
-import { DocumentsView as TeacherDocumentsView } from "@/components/features/teacher-documents-view";
+import { DocumentsView as LecturerDocumentsView } from "@/components/features/teacher-documents-view";
 import { StudentDocumentsView } from "@/components/features/student-documents-view";
 
 export default function Page() {
@@ -13,8 +13,8 @@ export default function Page() {
     return <AdminDashboardView />;
   }
 
-  if (role === "teacher") {
-    return <TeacherDocumentsView />;
+  if (role === "lecturer") {
+    return <LecturerDocumentsView />;
   }
 
   return <StudentDocumentsView />;

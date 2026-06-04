@@ -50,7 +50,7 @@ function QuizContent() {
   const rolePrefix = params?.role ? `/${params.role}` : "";
 
   const { session } = useAuth();
-  const isTeacher = session?.role === "teacher";
+  const isLecturer = session?.role === "lecturer";
 
   const countParam = searchParams.get('count');
   const count = countParam ? parseInt(countParam) : 10;
@@ -64,7 +64,7 @@ function QuizContent() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(isTeacher); // Teachers see answers immediately
+  const [isAnswered, setIsAnswered] = useState(isLecturer); // Lecturers see answers immediately
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -97,14 +97,14 @@ function QuizContent() {
       <div className="w-full max-w-3xl mx-auto py-12 animate-fade-in-up text-center space-y-8">
         <div className="relative inline-block">
           <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full"></div>
-          {isTeacher ? <Eye className="w-32 h-32 text-primary mx-auto relative z-10 animate-fade-in-up" /> : <Trophy className="w-32 h-32 text-warning mx-auto relative z-10 animate-fade-in-up" />}
+          {isLecturer ? <Eye className="w-32 h-32 text-primary mx-auto relative z-10 animate-fade-in-up" /> : <Trophy className="w-32 h-32 text-warning mx-auto relative z-10 animate-fade-in-up" />}
         </div>
         <div>
           <h1 className="text-4xl font-extrabold gradient-text mb-4">
-            {isTeacher ? "Xem lại bài tập" : "Hoàn thành bài tập!"}
+            {isLecturer ? "Xem lại bài tập" : "Hoàn thành bài tập!"}
           </h1>
           <p className="text-xl text-muted-foreground">
-            {isTeacher 
+            {isLecturer
               ? `Bạn đang xem nội dung của ${activeQuiz.length} câu hỏi.`
               : <>Bạn đã trả lời đúng <span className="font-bold text-foreground text-2xl">{score}/{activeQuiz.length}</span> câu hỏi.</>
             }
@@ -114,7 +114,7 @@ function QuizContent() {
           <Button variant="outline" size="lg" className="rounded-xl h-14 px-8 text-base shadow-sm" onClick={() => router.push(`${rolePrefix}/practice`)}>
             Về danh sách
           </Button>
-          {!isTeacher && (
+          {!isLecturer && (
             <Button size="lg" className="rounded-xl h-14 px-8 text-base shadow-soft hover:shadow-pop transition-all group" onClick={() => {
               setCurrentIndex(0);
               setScore(0);
@@ -214,9 +214,9 @@ function QuizContent() {
                 <div>
                   <h3 className={cn(
                     "text-xl font-bold mb-2",
-                    isTeacher ? "text-primary" : (selectedAnswer === currentQuestion.correct_answer ? "text-emerald-700" : "text-warning-foreground")
+                    isLecturer ? "text-primary" : (selectedAnswer === currentQuestion.correct_answer ? "text-emerald-700" : "text-warning-foreground")
                   )}>
-                    {isTeacher ? "Nội dung giải thích:" : (selectedAnswer === currentQuestion.correct_answer ? "Chính xác tuyệt đối!" : "Sai rồi, hãy cố gắng học hỏi từ lỗi sai nhé!")}
+                    {isLecturer ? "Nội dung giải thích:" : (selectedAnswer === currentQuestion.correct_answer ? "Chính xác tuyệt đối!" : "Sai rồi, hãy cố gắng học hỏi từ lỗi sai nhé!")}
                   </h3>
                   <p className="text-base text-muted-foreground font-medium leading-relaxed">
                     {currentQuestion.explanation}

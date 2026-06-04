@@ -35,7 +35,7 @@ export function useAuth() {
       const emailLower = email.toLowerCase();
       if (emailLower.includes("admin")) {
         role = "admin";
-      } else if (emailLower.includes("teacher") || emailLower === "minhan@studymate.vn") {
+      } else if (emailLower.includes("lecturer") || emailLower.includes("teacher") || emailLower === "minhan@studymate.vn") {
         role = "teacher";
       } else {
         role = "student";
@@ -79,7 +79,7 @@ export function useAuth() {
 
         setTimeout(() => {
 
-          router.push(`/${role}`);
+          router.push(`/${role}/documents/my`);
 
         }, 500);
 

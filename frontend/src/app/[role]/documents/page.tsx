@@ -10,6 +10,6 @@ export default function Page() {
   const urlRole = params?.role as string;
 
   if (urlRole === "admin") return <AdminDocumentsView />;
-  if (urlRole === "teacher") return <DocumentsView />;
+  if (urlRole === "lecturer") return <DocumentsView />;
   return <StudentDocumentsView />;
 }
