@@ -15,15 +15,18 @@ import {
   LayoutGrid,
   Crown,
   Command,
+  ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 const nav = [
-  { to: "", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/documents", label: "Documents", icon: FileText },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "", label: "Bảng điều khiển", icon: LayoutDashboard, end: true },
+  { to: "/users", label: "Quản lý tài khoản", icon: Users },
+  { to: "/assignment", label: "Phân công môn học", icon: Command },
+  { to: "/curriculum", label: "Quản lý học kỳ", icon: BookOpen },
+  { to: "/moderation", label: "Kiểm duyệt tài liệu", icon: ShieldCheck },
 ];
 
 function SidebarItem({
@@ -112,15 +115,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="mt-6 px-4">
-          <Link
-            href={`${basePath}/documents`}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Document
-          </Link>
-        </div>
 
         <div className="mt-auto p-4">
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
@@ -164,16 +158,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
             {(pathname === '/admin' || pathname === '/admin/') && (
               <div className="ml-4 hidden h-14 items-center gap-6 lg:flex">
-                <button className="relative flex h-full items-center text-sm font-semibold text-primary">
-                  Overview
-                  <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
-                </button>
-                <button className="flex h-full items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                  Analytics
-                </button>
-                <button className="flex h-full items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                  Activity
-                </button>
               </div>
             )}
           </div>

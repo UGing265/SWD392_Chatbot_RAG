@@ -50,6 +50,7 @@
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
@@ -105,6 +106,7 @@
 
   --success: oklch(0.88 0.08 150);
   --success-foreground: oklch(0.32 0.06 150);
+  --success-soft: oklch(0.96 0.03 150);
   --warning: oklch(0.88 0.1 80);
   --warning-foreground: oklch(0.42 0.1 70);
 
