@@ -20,6 +20,23 @@ export const auth = betterAuth({
   },
   user: {
     modelName: "users",
+    fields: {
+      roleId: {
+        type: "number",
+        fieldName: "role_id",
+        defaultValue: 3,
+      },
+      isActive: {
+        type: "boolean",
+        fieldName: "is_active",
+        defaultValue: true,
+      },
+      isBlocked: {
+        type: "boolean",
+        fieldName: "is_blocked",
+        defaultValue: false,
+      },
+    },
   },
   emailAndPassword: {
     enabled: true,

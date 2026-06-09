@@ -33,17 +33,9 @@ export default function DocumentDetailPage() {
   const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
-    // Get user role from URL
     const role = params.role as string;
     setUserRole(role);
 
-    // Permission check: students can only view public documents
-    if (role === "student") {
-      // In real implementation, check document visibility from API
-      // For now, we'll allow access to all documents in mock mode
-    }
-
-    // Mock document data
     const mockDocument: Document = {
       id: documentId,
       title: "Giáo trình Lập trình Web - Chương 1-5",
@@ -61,17 +53,66 @@ export default function DocumentDetailPage() {
       language_name: "Tiếng Việt",
     };
 
-    // Simulate API call
-    setTimeout(() => {
-      setDocument(mockDocument);
-      setLoading(false);
-    }, 500);
+    const fetchDocument = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:8080/api/documents/${documentId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const mappedDoc: Document = {
+            id: data.id,
+            title: data.title,
+            description: data.description || "Không có mô tả",
+            subject_name: data.subject_name || "Không có môn học",
+            academic_term_name: data.academic_term_name || "Không có kỳ học",
+            visibility: data.visibility,
+            owner_email: data.owner_email || "lecturer@studymate.vn",
+            owner_name: data.owner_name || "Giảng viên",
+            file_name: data.files && data.files.length > 0 ? data.files[0].original_filename : "document.pdf",
+            file_size: data.files && data.files.length > 0 ? data.files[0].file_size_bytes : 0,
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || new Date().toISOString(),
+            document_type_name: data.document_type_name || "Tài liệu",
+            language_name: data.language_name || "Chưa xác định",
+          };
+          setDocument(mappedDoc);
+        } else {
+          console.warn("Failed to fetch document details, using mock data");
+          setDocument(mockDocument);
+        }
+      } catch (err) {
+        console.error("Error fetching document details:", err);
+        setDocument(mockDocument);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocument();
   }, [documentId, params.role]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) {
-      // Implement delete logic
-      router.back();
+      try {
+        const response = await fetch(`http://localhost:8080/api/documents/${documentId}/delete`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (response.ok) {
+          router.back();
+        } else {
+          alert("Xóa tài liệu thất bại");
+        }
+      } catch (err) {
+        console.error("Error deleting document:", err);
+        alert("Xóa tài liệu thất bại");
+      }
     }
   };
 

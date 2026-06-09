@@ -17,6 +17,7 @@ interface Document {
   visibility: string;
   status: string;
   created_at: string;
+  slug?: string;
 }
 
 export function MyDocumentsView() {
@@ -29,8 +30,7 @@ export function MyDocumentsView() {
   const [sortBy, setSortBy] = useState<"date" | "subject" | "term">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  useEffect(() => {
-    // Mock data for development
+  const useMockData = () => {
     const mockDocuments: Document[] = [
       {
         id: "1",
@@ -63,15 +63,15 @@ export function MyDocumentsView() {
         created_at: "2024-02-01T09:15:00Z",
       },
     ];
-
     setDocuments(mockDocuments);
-    setLoading(false);
+  };
 
-    // Uncomment to use real API
-    // fetchDocuments();
+  useEffect(() => {
+    fetchDocuments();
   }, []);
 
   const fetchDocuments = async () => {
+    setLoading(true);
     try {
       const response = await fetch("http://localhost:8080/api/documents/my", {
         headers: {
@@ -81,9 +81,15 @@ export function MyDocumentsView() {
       if (response.ok) {
         const data = await response.json();
         setDocuments(data.documents || []);
+      } else {
+        console.warn("Failed to fetch documents, falling back to mock data");
+        useMockData();
       }
     } catch (error) {
       console.error("Failed to fetch documents:", error);
+      useMockData();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -194,7 +200,7 @@ export function MyDocumentsView() {
             {filteredDocuments.map((doc) => (
               <div
                 key={doc.id}
-                onClick={() => router.push(`/${role}/documents/${doc.id}`)}
+                onClick={() => router.push(`/${role}/documents/${doc.slug || doc.id}`)}
                 className="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-4">

@@ -168,11 +168,11 @@ function QuizContent() {
               return (
                 <button
                   key={idx}
-                  onClick={() => !isTeacher && handleSelect(idx)}
-                  disabled={isAnswered && !isTeacher}
+                  onClick={() => !isLecturer && handleSelect(idx)}
+                  disabled={isAnswered && !isLecturer}
                   className={cn(
                     "relative flex items-center p-5 text-left w-full h-full rounded-2xl border-2 transition-all duration-300",
-                    !isAnswered && !isTeacher && "cursor-pointer active:scale-[0.98]",
+                    !isAnswered && !isLecturer && "cursor-pointer active:scale-[0.98]",
                     stateStyles
                   )}
                 >
