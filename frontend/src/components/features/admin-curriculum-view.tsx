@@ -1,222 +1,326 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Plus, 
-  ChevronRight, 
-  BookOpen, 
-  FileText, 
-  Trash2, 
-  ChevronDown, 
-  Upload, 
-  MoreVertical,
+import { useState, useEffect, useCallback } from "react";
+import {
+  Plus,
+  BookOpen,
+  FileText,
+  Trash2,
   Layers,
-  Pencil
+  Pencil,
+  Loader2,
+  Check,
+  X,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 
-const mockCurriculum = [
-  {
-    id: "sem-1",
-    name: "Kỳ tiếng Anh dự bị",
-    subjects: [
-      {
-        id: "sub-1-1",
-        name: "English Foundation 1",
-        documents: ["Syllabus_ENG1.pdf", "Grammar_Rules.docx"]
-      }
-    ]
-  },
-  {
-    id: "sem-2",
-    name: "Kỳ 1",
-    subjects: [
-      {
-        id: "sub-2-1",
-        name: "Introduction to Computing",
-        documents: ["Week1_Introduction.pdf"]
-      },
-      {
-        id: "sub-2-2",
-        name: "C Programming",
-        documents: []
-      }
-    ]
-  }
-];
+const API = "http://localhost:8080";
+const token = () => localStorage.getItem("token");
+const authHeaders = () => ({ "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" });
+
+interface AcademicTerm {
+  id: string;
+  name: string;
+  term_order: number;
+}
+
+interface Subject {
+  id: string;
+  code: string;
+  name: string;
+  academic_term_id: string | null;
+}
 
 export function AdminCurriculumView() {
-  const [curriculum, setCurriculum] = useState<any[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState("");
+  const [terms, setTerms] = useState<AcademicTerm[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedTerms, setExpandedTerms] = useState<Set<string>>(new Set());
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("studymate_curriculum");
-    if (saved) {
-      try {
-        setCurriculum(JSON.parse(saved));
-      } catch (e) {
-        setCurriculum(mockCurriculum);
+  // Inline editing state
+  const [editingTermId, setEditingTermId] = useState<string | null>(null);
+  const [editingTermValue, setEditingTermValue] = useState("");
+  const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
+  const [editingSubjectCode, setEditingSubjectCode] = useState("");
+  const [editingSubjectName, setEditingSubjectName] = useState("");
+
+  // Add new term / subject state
+  const [addingTerm, setAddingTerm] = useState(false);
+  const [newTermName, setNewTermName] = useState("");
+  const [addingSubjectForTerm, setAddingSubjectForTerm] = useState<string | null>(null);
+  const [newSubjectCode, setNewSubjectCode] = useState("");
+  const [newSubjectName, setNewSubjectName] = useState("");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/api/documents/lookups`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTerms(
+          (data.academicTerms || []).sort((a: AcademicTerm, b: AcademicTerm) => a.term_order - b.term_order)
+        );
+        setSubjects(data.subjects || []);
+      } else {
+        console.warn("Failed to load lookups, using empty state");
       }
-    } else {
-      setCurriculum(mockCurriculum);
+    } catch (err) {
+      console.error("Failed to fetch curriculum data:", err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // Save to localStorage whenever curriculum changes
   useEffect(() => {
-    if (curriculum.length > 0) {
-      localStorage.setItem("studymate_curriculum", JSON.stringify(curriculum));
+    fetchData();
+  }, [fetchData]);
+
+  const toggleTerm = (termId: string) => {
+    setExpandedTerms((prev) => {
+      const next = new Set(prev);
+      if (next.has(termId)) next.delete(termId);
+      else next.add(termId);
+      return next;
+    });
+  };
+
+  // --- Academic Term CRUD ---
+  const handleCreateTerm = async () => {
+    if (!newTermName.trim()) return;
+    try {
+      const res = await fetch(`${API}/api/admin/academic-terms`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newTermName.trim(), order: terms.length }),
+      });
+      if (res.ok) {
+        setNewTermName("");
+        setAddingTerm(false);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Tạo học kỳ thất bại");
+      }
+    } catch {
+      alert("Đã xảy ra lỗi");
     }
-  }, [curriculum]);
-
-  const addSemester = () => {
-    const newSem = {
-      id: `sem-${Date.now()}`,
-      name: `Học kỳ mới ${curriculum.length + 1}`,
-      subjects: []
-    };
-    setCurriculum([...curriculum, newSem]);
   };
 
-  const startEditing = (id: string, currentValue: string) => {
-    setEditingId(id);
-    setEditingValue(currentValue);
-  };
-
-  const saveEdit = (id: string, type: 'semester' | 'subject') => {
-    if (!editingValue.trim()) return;
-
-    if (type === 'semester') {
-      setCurriculum(curriculum.map(sem => 
-        sem.id === id ? { ...sem, name: editingValue } : sem
-      ));
-    } else {
-      setCurriculum(curriculum.map(sem => ({
-        ...sem,
-        subjects: sem.subjects.map((sub: any) => 
-          sub.id === id ? { ...sub, name: editingValue } : sub
-        )
-      })));
+  const handleUpdateTerm = async (term: AcademicTerm) => {
+    if (!editingTermValue.trim()) return;
+    try {
+      const res = await fetch(`${API}/api/admin/academic-terms/${term.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: editingTermValue.trim(), order: term.term_order }),
+      });
+      if (res.ok) {
+        setEditingTermId(null);
+        fetchData();
+      } else {
+        alert("Cập nhật học kỳ thất bại");
+      }
+    } catch {
+      alert("Đã xảy ra lỗi");
     }
-    setEditingId(null);
   };
 
-  const addSubject = (semesterId: string) => {
-    const newSubject = {
-      id: `sub-${Date.now()}`,
-      name: "Môn học mới",
-      documents: []
-    };
-    setCurriculum(curriculum.map(sem => 
-      sem.id === semesterId 
-        ? { ...sem, subjects: [...sem.subjects, newSubject] }
-        : sem
-    ));
+  const handleDeleteTerm = async (termId: string) => {
+    if (!confirm("Xóa học kỳ này? Các môn học trong kỳ sẽ bị gỡ liên kết.")) return;
+    try {
+      const res = await fetch(`${API}/api/admin/academic-terms/${termId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) fetchData();
+      else alert("Xóa học kỳ thất bại");
+    } catch {
+      alert("Đã xảy ra lỗi");
+    }
   };
 
-  const addDocument = (semesterId: string, subjectId: string) => {
-    const docName = "New_Document.pdf";
-    setCurriculum(curriculum.map(sem => 
-      sem.id === semesterId 
-        ? {
-            ...sem,
-            subjects: sem.subjects.map((sub: any) => 
-              sub.id === subjectId 
-                ? { ...sub, documents: [...sub.documents, docName] }
-                : sub
-            )
-          }
-        : sem
-    ));
+  // --- Subject CRUD ---
+  const handleCreateSubject = async (termId: string) => {
+    if (!newSubjectCode.trim() || !newSubjectName.trim()) return;
+    try {
+      const res = await fetch(`${API}/api/admin/subjects`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          code: newSubjectCode.trim(),
+          name: newSubjectName.trim(),
+          academic_term_id: termId,
+        }),
+      });
+      if (res.ok) {
+        setNewSubjectCode("");
+        setNewSubjectName("");
+        setAddingSubjectForTerm(null);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Tạo môn học thất bại");
+      }
+    } catch {
+      alert("Đã xảy ra lỗi");
+    }
   };
 
-  const removeSemester = (id: string) => {
-    setCurriculum(curriculum.filter(sem => sem.id !== id));
+  const handleUpdateSubject = async (sub: Subject) => {
+    if (!editingSubjectCode.trim() || !editingSubjectName.trim()) return;
+    try {
+      const res = await fetch(`${API}/api/admin/subjects/${sub.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          code: editingSubjectCode.trim(),
+          name: editingSubjectName.trim(),
+          academic_term_id: sub.academic_term_id,
+        }),
+      });
+      if (res.ok) {
+        setEditingSubjectId(null);
+        fetchData();
+      } else {
+        alert("Cập nhật môn học thất bại");
+      }
+    } catch {
+      alert("Đã xảy ra lỗi");
+    }
   };
 
-  const removeSubject = (semesterId: string, subjectId: string) => {
-    setCurriculum(curriculum.map(sem => 
-      sem.id === semesterId 
-        ? { ...sem, subjects: sem.subjects.filter((sub: any) => sub.id !== subjectId) }
-        : sem
-    ));
+  const handleDeleteSubject = async (subjectId: string) => {
+    if (!confirm("Xóa môn học này?")) return;
+    try {
+      const res = await fetch(`${API}/api/admin/subjects/${subjectId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) fetchData();
+      else alert("Xóa môn học thất bại");
+    } catch {
+      alert("Đã xảy ra lỗi");
+    }
   };
+
+  const subjectsForTerm = (termId: string) =>
+    subjects.filter((s) => s.academic_term_id === termId);
 
   return (
     <div className="p-4 md:p-6 lg:p-8">
+      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Quản lý học kỳ & Chương trình học
+            Quản lý học kỳ &amp; Môn học
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Thiết lập cấu trúc học tập và quản lý tài liệu theo từng học kỳ (Tự động lưu)
+            Thêm, sửa, xóa học kỳ và môn học trong hệ thống
           </p>
         </div>
-        <Button 
-          onClick={addSemester}
-          className="rounded-2xl bg-primary px-6 py-2 shadow-soft hover:bg-primary/90 transition-all font-semibold text-white"
+        <Button
+          onClick={() => { setAddingTerm(true); setNewTermName(""); }}
+          className="rounded-2xl bg-primary px-6 shadow-soft hover:bg-primary/90 font-semibold text-white"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Thêm học kỳ mới
+          Thêm học kỳ
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {curriculum.map((semester) => (
-          <div key={semester.id} className="overflow-hidden rounded-3xl border border-border/60 bg-white shadow-soft transition-all hover:shadow-pop">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value={semester.id} className="border-none">
-                <div className="flex items-center pr-6">
-                  <div className="flex-1">
-                    {editingId === semester.id ? (
-                      <div className="flex items-center gap-4 px-6 py-5">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <Layers className="h-5 w-5" />
-                        </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Add new term form */}
+          {addingTerm && (
+            <div className="rounded-3xl border-2 border-dashed border-primary/40 bg-primary/5 p-5">
+              <p className="mb-3 text-sm font-semibold text-primary">Học kỳ mới</p>
+              <div className="flex items-center gap-3">
+                <input
+                  autoFocus
+                  placeholder="Tên học kỳ (ví dụ: HK1 2024-2025)"
+                  value={newTermName}
+                  onChange={(e) => setNewTermName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateTerm(); if (e.key === "Escape") setAddingTerm(false); }}
+                  className="flex-1 rounded-xl border border-border bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <button onClick={handleCreateTerm} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white hover:bg-primary/90">
+                  <Check className="h-4 w-4" />
+                </button>
+                <button onClick={() => setAddingTerm(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {terms.length === 0 && !addingTerm && (
+            <div className="rounded-3xl border border-dashed border-border/60 bg-white p-12 text-center">
+              <Layers className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Chưa có học kỳ nào. Nhấn &ldquo;Thêm học kỳ&rdquo; để bắt đầu.</p>
+            </div>
+          )}
+
+          {terms.map((term) => {
+            const termSubjects = subjectsForTerm(term.id);
+            const isExpanded = expandedTerms.has(term.id);
+
+            return (
+              <div key={term.id} className="overflow-hidden rounded-3xl border border-border/60 bg-white shadow-soft">
+                {/* Term header */}
+                <div className="flex items-center gap-4 px-6 py-4">
+                  <button
+                    onClick={() => toggleTerm(term.id)}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0"
+                  >
+                    {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    {editingTermId === term.id ? (
+                      <div className="flex items-center gap-2">
                         <input
                           autoFocus
-                          className="flex-1 bg-transparent border-b border-primary text-lg font-semibold text-foreground focus:outline-none"
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          onBlur={() => saveEdit(semester.id, 'semester')}
-                          onKeyDown={(e) => e.key === 'Enter' && saveEdit(semester.id, 'semester')}
+                          value={editingTermValue}
+                          onChange={(e) => setEditingTermValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleUpdateTerm(term); if (e.key === "Escape") setEditingTermId(null); }}
+                          className="flex-1 rounded-xl border border-primary bg-white px-3 py-1.5 text-base font-semibold focus:outline-none"
                         />
+                        <button onClick={() => handleUpdateTerm(term)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/90">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setEditingTermId(null)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     ) : (
-                      <AccordionTrigger className="w-full px-6 py-5 hover:no-underline group">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <Layers className="h-5 w-5" />
-                          </div>
-                          <div className="text-left flex-1 min-w-0">
-                            <h2 className="text-lg font-semibold text-foreground truncate">{semester.name}</h2>
-                            <p className="text-xs text-muted-foreground">{semester.subjects.length} môn học</p>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
+                      <div>
+                        <button onClick={() => toggleTerm(term.id)} className="text-left">
+                          <h2 className="text-lg font-semibold text-foreground hover:text-primary transition-colors">{term.name}</h2>
+                        </button>
+                        <p className="text-xs text-muted-foreground">{termSubjects.length} môn học</p>
+                      </div>
                     )}
                   </div>
-                  
-                  {!editingId && (
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => startEditing(semester.id, semester.name)}
+
+                  {editingTermId !== term.id && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => { setEditingTermId(term.id); setEditingTermValue(term.name); }}
                         className="p-2 text-muted-foreground hover:text-primary transition-colors"
                         title="Sửa tên học kỳ"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button 
-                        onClick={() => removeSemester(semester.id)}
+                      <button
+                        onClick={() => handleDeleteTerm(term.id)}
                         className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                         title="Xóa học kỳ"
                       >
@@ -225,97 +329,126 @@ export function AdminCurriculumView() {
                     </div>
                   )}
                 </div>
-                <AccordionContent className="px-6 pb-6 pt-2">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Danh sách môn học</h3>
-                      <button 
-                        onClick={() => addSubject(semester.id)}
+
+                {/* Subjects list (collapsible) */}
+                {isExpanded && (
+                  <div className="border-t border-border/40 px-6 pb-6 pt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Danh sách môn học
+                      </h3>
+                      <button
+                        onClick={() => { setAddingSubjectForTerm(term.id); setNewSubjectCode(""); setNewSubjectName(""); }}
                         className="text-xs font-bold text-primary hover:underline"
                       >
                         + Thêm môn học
                       </button>
                     </div>
-                    
-                    {semester.subjects.length > 0 ? (
-                      semester.subjects.map((subject: any) => (
-                        <div key={subject.id} className="rounded-2xl border border-border/40 bg-muted/20 p-5">
-                          <div className="mb-4 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-card text-foreground shadow-sm ring-1 ring-border/20">
-                                <BookOpen className="h-4 w-4" />
-                              </div>
-                              {editingId === subject.id ? (
+
+                    {/* Add subject form */}
+                    {addingSubjectForTerm === term.id && (
+                      <div className="mb-4 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                        <p className="mb-3 text-xs font-semibold text-primary">Môn học mới</p>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <input
+                            autoFocus
+                            placeholder="Mã môn (ví dụ: SWD392)"
+                            value={newSubjectCode}
+                            onChange={(e) => setNewSubjectCode(e.target.value)}
+                            className="w-full sm:w-36 rounded-xl border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                          <input
+                            placeholder="Tên môn học"
+                            value={newSubjectName}
+                            onChange={(e) => setNewSubjectName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleCreateSubject(term.id); if (e.key === "Escape") setAddingSubjectForTerm(null); }}
+                            className="flex-1 rounded-xl border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                          <div className="flex gap-2">
+                            <button onClick={() => handleCreateSubject(term.id)} className="flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90">
+                              <Check className="h-3.5 w-3.5" /> Lưu
+                            </button>
+                            <button onClick={() => setAddingSubjectForTerm(null)} className="flex h-9 items-center gap-1.5 rounded-xl border border-border px-4 text-xs text-muted-foreground hover:bg-muted">
+                              <X className="h-3.5 w-3.5" /> Hủy
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {termSubjects.length === 0 && addingSubjectForTerm !== term.id ? (
+                      <div className="rounded-2xl border border-dashed border-border/40 bg-muted/10 py-8 text-center">
+                        <p className="text-sm text-muted-foreground">Chưa có môn học nào trong kỳ này</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {termSubjects.map((sub) => (
+                          <div key={sub.id} className="rounded-2xl border border-border/40 bg-muted/20 p-4">
+                            {editingSubjectId === sub.id ? (
+                              <div className="flex flex-col gap-2 sm:flex-row">
                                 <input
                                   autoFocus
-                                  className="w-full bg-transparent border-b border-primary font-semibold text-foreground focus:outline-none px-1"
-                                  value={editingValue}
-                                  onChange={(e) => setEditingValue(e.target.value)}
-                                  onBlur={() => saveEdit(subject.id, 'subject')}
-                                  onKeyDown={(e) => e.key === 'Enter' && saveEdit(subject.id, 'subject')}
+                                  placeholder="Mã môn"
+                                  value={editingSubjectCode}
+                                  onChange={(e) => setEditingSubjectCode(e.target.value)}
+                                  className="w-full sm:w-32 rounded-xl border border-primary bg-white px-3 py-2 text-sm focus:outline-none"
                                 />
-                              ) : (
-                                <h4 className="font-semibold text-foreground truncate">{subject.name}</h4>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                               <button 
-                                 onClick={() => addDocument(semester.id, subject.id)}
-                                 className="flex items-center gap-1.5 rounded-lg bg-white border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-all"
-                               >
-                                  <Upload className="h-3.5 w-3.5" />
-                                  Tải lên
-                               </button>
-                               <button 
-                                 onClick={() => startEditing(subject.id, subject.name)}
-                                 className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
-                                 title="Sửa tên môn học"
-                               >
-                                  <Pencil className="h-4 w-4" />
-                               </button>
-                               <button 
-                                 onClick={() => removeSubject(semester.id, subject.id)}
-                                 className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
-                                 title="Xóa môn học"
-                               >
-                                  <Trash2 className="h-4 w-4" />
-                               </button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            {subject.documents.length > 0 ? (
-                              subject.documents.map((doc: string, idx: number) => (
-                                <div key={idx} className="flex items-center justify-between rounded-xl bg-white p-3 ring-1 ring-border/20 shadow-sm transition-all hover:ring-primary/20">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <FileText className="h-4 w-4 text-primary shrink-0" />
-                                    <span className="truncate text-xs font-medium text-foreground">{doc}</span>
-                                  </div>
-                                  <button className="text-muted-foreground hover:text-destructive transition-colors">
-                                    <Trash2 className="h-3 w-3" />
+                                <input
+                                  placeholder="Tên môn học"
+                                  value={editingSubjectName}
+                                  onChange={(e) => setEditingSubjectName(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") handleUpdateSubject(sub); if (e.key === "Escape") setEditingSubjectId(null); }}
+                                  className="flex-1 rounded-xl border border-primary bg-white px-3 py-2 text-sm focus:outline-none"
+                                />
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleUpdateSubject(sub)} className="flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90">
+                                    <Check className="h-3.5 w-3.5" /> Lưu
+                                  </button>
+                                  <button onClick={() => setEditingSubjectId(null)} className="flex h-9 items-center gap-1.5 rounded-xl border border-border px-4 text-xs text-muted-foreground hover:bg-muted">
+                                    <X className="h-3.5 w-3.5" /> Hủy
                                   </button>
                                 </div>
-                              ))
+                              </div>
                             ) : (
-                              <div className="col-span-full py-4 text-center">
-                                <p className="text-xs text-muted-foreground italic">Chưa có tài liệu nào trong môn học này</p>
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-border/20 shrink-0">
+                                    <BookOpen className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="block text-xs font-bold text-muted-foreground">{sub.code}</span>
+                                    <h4 className="font-semibold text-foreground truncate">{sub.name}</h4>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    onClick={() => { setEditingSubjectId(sub.id); setEditingSubjectCode(sub.code); setEditingSubjectName(sub.name); }}
+                                    className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                                    title="Sửa môn học"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSubject(sub.id)}
+                                    className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                                    title="Xóa môn học"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="py-8 text-center ring-1 ring-border/20 rounded-2xl bg-muted/10">
-                        <p className="text-sm text-muted-foreground">Chưa có môn học nào được tạo</p>
+                        ))}
                       </div>
                     )}
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        ))}
-      </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
