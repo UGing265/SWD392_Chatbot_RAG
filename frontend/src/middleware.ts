@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-<<<<<<< HEAD
+const ADMIN_HOME = "/admin";
+const LECTURER_HOME = "/lecturer/documents/my";
+const STUDENT_HOME = "/student/documents/shared";
+
+function getHomePath(role: string) {
+  if (role === "admin") return ADMIN_HOME;
+  if (role === "lecturer") return LECTURER_HOME;
+  return STUDENT_HOME;
+}
+
 function decodeJwt(token: string) {
   try {
     const base64Url = token.split('.')[1];
@@ -16,99 +25,62 @@ function decodeJwt(token: string) {
 }
 
 export function middleware(request: NextRequest) {
-  const tokenCookie = request.cookies.get("access_token");
-  const isAuth = !!tokenCookie;
+  const pathname = request.nextUrl.pathname;
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/login") || 
-                     request.nextUrl.pathname.startsWith("/forgot-password") ||
-                     request.nextUrl.pathname.startsWith("/reset-password");
+  // Resolve Auth and Role strictly from JWT (access_token)
+  const tokenCookie = request.cookies.get("access_token");
+  
+  let isAuth = false;
+  let role = "student";
+
+  if (tokenCookie) {
+    const payload = decodeJwt(tokenCookie.value);
+    if (payload && payload.role && ["admin", "lecturer", "student"].includes(payload.role)) {
+      isAuth = true;
+      role = payload.role;
+    }
+  }
+
+  const isAuthPage = pathname.startsWith("/login") || 
+                     pathname.startsWith("/forgot-password") ||
+                     pathname.startsWith("/reset-password");
 
   // Allow access to auth pages
   if (isAuthPage) {
-  // If already logged in, redirect to role-based home
-    if (isAuth) {
-      const payload = decodeJwt(tokenCookie.value);
-      if (payload && payload.role && ["admin", "lecturer", "student"].includes(payload.role)) {
-        return NextResponse.redirect(new URL(`/${payload.role}/documents/my`, request.url));
-      } else {
-        // Invalid token or missing role, let them stay on auth page
-        const response = NextResponse.next();
-        response.cookies.delete("access_token");
-        return response;
-      }
-=======
-const ADMIN_HOME = "/admin";
-const LECTURER_HOME = "/lecturer/documents/my";
-const STUDENT_HOME = "/student/documents/shared";
-
-function getHomePath(role: string) {
-  if (role === "admin") return ADMIN_HOME;
-  if (role === "lecturer") return LECTURER_HOME;
-  return STUDENT_HOME;
-}
-
-export function middleware(request: NextRequest) {
-  const isAuth = request.cookies.has("mock_auth");
-
-  const role = request.cookies.get("mock_role")?.value || "student";
-  const pathname = request.nextUrl.pathname;
-
-  // Allow access to login page
-  if (pathname.startsWith("/login")) {
+    // If already logged in, redirect to role-based home
     if (isAuth) {
       return NextResponse.redirect(new URL(getHomePath(role), request.url));
->>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
     }
     return NextResponse.next();
   }
 
   // Redirect to login if unauthenticated
   if (!isAuth) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-<<<<<<< HEAD
-  // Validate JWT payload for protected routes
-  const payload = decodeJwt(tokenCookie.value);
-  if (!payload || !payload.role || !["admin", "lecturer", "student"].includes(payload.role)) {
     const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete("access_token");
+    // Clean token if it was invalid
+    if (tokenCookie) {
+      response.cookies.delete("access_token");
+    }
     return response;
   }
 
-  const userRole = payload.role;
-
-  // Check if the route is a role-specific protected route
-  // The paths are in the format /[role]/...
-  const match = request.nextUrl.pathname.match(/^\/([^/]+)/);
+  // Route Guards: Prevent cross-role access
+  const match = pathname.match(/^\/([^/]+)/);
   if (match) {
     const routeRole = match[1];
     const validRoles = ["student", "lecturer", "admin"];
     
     if (validRoles.includes(routeRole)) {
       // If the user's role doesn't match the route's role, redirect them to their own dashboard
-      if (routeRole !== userRole) {
-        return NextResponse.redirect(new URL(`/${userRole}/documents/my`, request.url));
+      if (routeRole !== role) {
+        return NextResponse.redirect(new URL(getHomePath(role), request.url));
       }
     }
-=======
-  // Route Guards: Prevent cross-role access
-  if (pathname.startsWith("/student") && role !== "student") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
-  }
-
-  if (pathname.startsWith("/lecturer") && role !== "lecturer") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
-  }
-
-  if (pathname.startsWith("/admin") && role !== "admin") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
   }
 
   // Root path routing
   if (pathname === "/") {
     return NextResponse.redirect(new URL(getHomePath(role), request.url));
->>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
   }
 
   return NextResponse.next();

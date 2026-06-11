@@ -52,3 +52,6 @@ logs/
 .env.production
 
 docs/bao/
+
+# TypeScript build cache
+*.tsbuildinfo

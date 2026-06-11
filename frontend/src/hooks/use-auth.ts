@@ -74,7 +74,6 @@ export function useAuth() {
       .then((role) => {
         if (cancelled) return;
         setResolvedRole(role);
-        document.cookie = `mock_role=${role}; path=/; max-age=3600`;
       })
       .catch((err) => {
         console.error("Failed to resolve user role:", err);
@@ -89,41 +88,38 @@ export function useAuth() {
     };
   }, [sessionData]);
 
-<<<<<<< HEAD
-  let currentRole: UserRole = "student";
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token") || document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
-    if (token) {
-      const payload = decodeJwt(token);
-      if (payload && payload.role) {
-        currentRole = payload.role as UserRole;
-      }
-    }
-  }
-
-  if (sessionData && (sessionData.user as any).roleId) {
-     currentRole = (sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student");
-  }
-
-  const session = sessionData ? {
-    user: sessionData.user,
-    role: currentRole
-  } : null;
-=======
   const session = sessionData
     ? (() => {
-      const userObj = sessionData.user as any;
-      const rId = userObj.roleId || userObj.role_id;
-      const roleStr =
-        resolvedRole ??
-        (Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student");
-      return {
-        user: sessionData.user,
-        role: roleStr as UserRole,
-      };
-    })()
+        let currentRole: UserRole = "student";
+        
+        // 1. Try to get role from JWT token
+        if (typeof window !== "undefined") {
+          const token = localStorage.getItem("token") || document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
+          if (token) {
+            const payload = decodeJwt(token);
+            if (payload && payload.role) {
+              currentRole = payload.role as UserRole;
+              return { user: sessionData.user, role: currentRole };
+            }
+          }
+        }
+
+        // 2. Try to get role from resolvedRole (async check)
+        if (resolvedRole) {
+          return { user: sessionData.user, role: resolvedRole };
+        }
+
+        // 3. Fallback to roleId/role_id mapping in sessionData.user
+        const userObj = sessionData.user as any;
+        const rId = userObj.roleId || userObj.role_id;
+        currentRole = Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student";
+        
+        return {
+          user: sessionData.user,
+          role: currentRole,
+        };
+      })()
     : null;
->>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -143,7 +139,6 @@ export function useAuth() {
       }
 
       if (data) {
-<<<<<<< HEAD
         // Retrieve the JWT token
         const client = authClient as any;
         let jwtToken;
@@ -163,37 +158,30 @@ export function useAuth() {
         if (!jwtToken) {
           jwtToken = data.token;
         }
-=======
-        const token = data.token;
-        localStorage.setItem("token", token);
-
-        let loginRId = (data.user as any).roleId || (data.user as any).role_id;
-
-        // Fallback for testing if database doesn't have the role correctly set
-        if (!loginRId) {
-          if (email.toLowerCase().includes('admin')) loginRId = 1;
-          else if (email.toLowerCase().includes('lecturer') || email.toLowerCase().includes('gv')) loginRId = 2;
-          else loginRId = 3;
-        }
-
-        const role = Number(loginRId) === 1 ? "admin" : (Number(loginRId) === 2 ? "lecturer" : "student");
->>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
 
         if (jwtToken) {
           localStorage.setItem("token", jwtToken);
           document.cookie = `access_token=${jwtToken}; path=/; max-age=3600`;
         }
 
-        let role = "student";
+        let role: UserRole = "student";
         if (jwtToken) {
           const payload = decodeJwt(jwtToken);
           console.log("Decoded JWT payload:", payload);
           if (payload && payload.role) {
-            role = payload.role;
+            role = payload.role as UserRole;
           }
         }
-        if (role === "student" && data.user && (data.user as any).roleId) {
-          role = (data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student");
+
+        // Fallback for role resolution from data.user or email if not resolved via JWT
+        if (role === "student") {
+          let loginRId = (data.user as any).roleId || (data.user as any).role_id;
+          if (!loginRId) {
+            if (email.toLowerCase().includes('admin')) loginRId = 1;
+            else if (email.toLowerCase().includes('lecturer') || email.toLowerCase().includes('gv')) loginRId = 2;
+            else loginRId = 3;
+          }
+          role = Number(loginRId) === 1 ? "admin" : (Number(loginRId) === 2 ? "lecturer" : "student");
         }
 
         toast.success("Đăng nhập thành công!", {
@@ -203,10 +191,11 @@ export function useAuth() {
         await refetch();
         setIsLoading(false);
 
+        const currentRole = role;
         setTimeout(() => {
-          if (role === "student") {
+          if (currentRole === "student") {
             router.push(`/student/documents/shared`);
-          } else if (role === "admin") {
+          } else if (currentRole === "admin") {
             router.push(`/admin`);
           } else {
             // Lecturer
