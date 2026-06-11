@@ -2,6 +2,8 @@
 -- Integrates Better Auth tables with C# .NET business logic tables
 
 -- Enable Extensions
+CREATE SCHEMA IF NOT EXISTS public;
+SET search_path TO public;
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 

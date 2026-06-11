@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
 
 import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({
+const sansFont = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const serifFont = Newsreader({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -27,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="vi" className={`${sansFont.variable} ${serifFont.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

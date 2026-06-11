@@ -3,6 +3,19 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
+function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export type UserRole = "student" | "lecturer" | "admin";
 
 export function useAuth() {
@@ -20,9 +33,24 @@ export function useAuth() {
     }
   }, [sessionData]);
 
+  let currentRole: UserRole = "student";
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token") || document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.role) {
+        currentRole = payload.role as UserRole;
+      }
+    }
+  }
+
+  if (sessionData && (sessionData.user as any).roleId) {
+     currentRole = (sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student");
+  }
+
   const session = sessionData ? {
     user: sessionData.user,
-    role: (sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student") as UserRole
+    role: currentRole
   } : null;
 
   const signIn = useCallback(
@@ -43,13 +71,42 @@ export function useAuth() {
       }
 
       if (data) {
-        const token = data.token;
-        localStorage.setItem("token", token);
+        // Retrieve the JWT token
+        const client = authClient as any;
+        let jwtToken;
+        try {
+          if (client.$fetch) {
+            const res = await client.$fetch("/token", { method: "GET" });
+            if (res.data) jwtToken = res.data.token;
+          } else {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:5000'}/api/auth/token`);
+            const tokenData = await res.json();
+            jwtToken = tokenData?.token;
+          }
+        } catch (e) {
+          console.error("Failed to fetch JWT token:", e);
+        }
         
-        const role = (data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student");
+        if (!jwtToken) {
+          jwtToken = data.token;
+        }
 
-        document.cookie = "mock_auth=true; path=/; max-age=3600";
-        document.cookie = `mock_role=${role}; path=/; max-age=3600`;
+        if (jwtToken) {
+          localStorage.setItem("token", jwtToken);
+          document.cookie = `access_token=${jwtToken}; path=/; max-age=3600`;
+        }
+
+        let role = "student";
+        if (jwtToken) {
+          const payload = decodeJwt(jwtToken);
+          console.log("Decoded JWT payload:", payload);
+          if (payload && payload.role) {
+            role = payload.role;
+          }
+        }
+        if (role === "student" && data.user && (data.user as any).roleId) {
+          role = (data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student");
+        }
 
         toast.success("Đăng nhập thành công!", {
           description: "Đang chuyển hướng...",
@@ -79,15 +136,41 @@ export function useAuth() {
       console.error("Failed to sign out from Better Auth:", err);
     }
     localStorage.removeItem("token");
-    document.cookie = "mock_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "mock_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setIsLoading(false);
     router.push("/login");
   }, [router]);
 
+  const forgetPassword = useCallback(async (email: string) => {
+    setIsLoading(true);
+    try {
+      // @ts-ignore - Better Auth types might not include forgetPassword if plugin isn't typed
+      const { data, error } = await authClient.forgetPassword({
+        email,
+        redirectTo: "/reset-password",
+      });
+      if (error) {
+        toast.error("Gửi yêu cầu thất bại", {
+          description: error.message || "Không thể gửi email khôi phục.",
+        });
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+      toast.success("Đã gửi email khôi phục", {
+        description: "Vui lòng kiểm tra hộp thư của bạn.",
+      });
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err?.message || "Lỗi không xác định" };
+    }
+  }, []);
+
   return {
     signIn,
     signOut,
+    forgetPassword,
     session,
     isLoading: isLoading || isSessionPending,
   };
