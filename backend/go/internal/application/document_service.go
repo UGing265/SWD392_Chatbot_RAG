@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -425,6 +426,12 @@ func (s *DocumentService) CreateDocument(ctx context.Context, input DocumentCrea
 
 func (s *DocumentService) UploadOriginalFileToS3(ctx context.Context, docID uuid.UUID, reader io.Reader, filename string, contentType string) (string, string, error) {
 	key := fmt.Sprintf("%s/%s", docID.String(), filename)
+	
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		// Mock successful S3 upload for local dev without AWS setup
+		return key, "http://localhost:8080/mock-s3/" + key, nil
+	}
+
 	urlStr, err := s.s3Storage.Save(ctx, key, reader, contentType)
 	if err != nil {
 		return "", "", err

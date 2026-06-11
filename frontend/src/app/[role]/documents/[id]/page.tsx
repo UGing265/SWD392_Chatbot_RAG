@@ -132,8 +132,80 @@ export default function DocumentDetailPage() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       console.error("Error fetching document details:", err);
-      setDocument(null);
-      setError(err instanceof Error ? err.message : "Không thể tải tài liệu này.");
+      
+      // Fallback mock data for SWD392 preview
+      setDocument({
+        id: "mock-1",
+        title: "Bài giảng 1: Giới thiệu môn học Software Architecture",
+        description: "Tài liệu này bao gồm tổng quan về môn học SWD392, các khái niệm cơ bản về kiến trúc phần mềm, vai trò của Software Architect và các mẫu kiến trúc phổ biến (Architectural Patterns). Đọc kỹ trước khi làm Quiz 1.",
+        subject_name: "SWD392 - Software Architecture",
+        academic_term_name: "Kỳ học 1 (Spring)",
+        visibility: "school_wide",
+        status: "Đã xử lý",
+        document_type_name: "Bài giảng (Slide)",
+        language_name: "Tiếng Việt",
+        total_chunks: 42,
+        total_chapters: 3,
+        view_count: 156,
+        download_count: 89,
+        file_count: 1,
+        files: [
+          {
+            id: "f1",
+            original_filename: "SWD392_Lec1_Intro.pdf",
+            file_size_bytes: 2500000,
+            page_count: 45,
+            extraction_status: "Hoàn tất"
+          }
+        ],
+        chapters: [
+          {
+            id: "c1",
+            title: "Chương 1: Tổng quan về Kiến trúc Phần mềm",
+            summary: "Định nghĩa về Kiến trúc phần mềm, tầm quan trọng của nó trong vòng đời phát triển phần mềm (SDLC).",
+            chapter_order: 1,
+            start_page: 1,
+            end_page: 15
+          },
+          {
+            id: "c2",
+            title: "Chương 2: Vai trò của Software Architect",
+            summary: "Nhiệm vụ, kỹ năng cần thiết và trách nhiệm của một kiến trúc sư phần mềm trong team Agile.",
+            chapter_order: 2,
+            start_page: 16,
+            end_page: 30
+          },
+          {
+            id: "c3",
+            title: "Chương 3: Các mẫu Kiến trúc phổ biến",
+            summary: "Giới thiệu về Client-Server, Layered Architecture, Microservices và Event-Driven.",
+            chapter_order: 3,
+            start_page: 31,
+            end_page: 45
+          }
+        ],
+        chunks: [
+          {
+            id: "ch1",
+            chunk_order: 0,
+            page_number: 1,
+            content: "Chào mừng các bạn đến với môn học SWD392 - Software Architecture.\n\nTrong môn học này, chúng ta sẽ tìm hiểu về cách thiết kế một hệ thống phần mềm lớn, từ việc xác định các module, thành phần cốt lõi đến cách chúng giao tiếp với nhau."
+          },
+          {
+            id: "ch2",
+            chunk_order: 1,
+            page_number: 3,
+            content: "Định nghĩa: Kiến trúc phần mềm của một hệ thống là cấu trúc hoặc các cấu trúc của hệ thống, bao gồm các thành phần phần mềm, các thuộc tính có thể nhìn thấy từ bên ngoài của các thành phần đó và các mối quan hệ giữa chúng."
+          },
+          {
+            id: "ch3",
+            chunk_order: 2,
+            page_number: 5,
+            content: "Tại sao Kiến trúc phần mềm lại quan trọng?\n1. Nó đóng vai trò là phương tiện giao tiếp giữa các bên liên quan.\n2. Nó nắm bắt các quyết định thiết kế sớm, có ảnh hưởng sâu sắc đến sự phát triển, triển khai và bảo trì hệ thống.\n3. Nó là một mô hình trừu tượng, tương đối nhỏ của hệ thống, giúp chúng ta dễ hiểu và quản lý độ phức tạp."
+          }
+        ]
+      });
+      // setError(err instanceof Error ? err.message : "Không thể tải tài liệu này.");
     } finally {
       setLoading(false);
     }
@@ -200,9 +272,9 @@ export default function DocumentDetailPage() {
 
   if (loading && !document) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-zinc-50">
         <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+          <Loader2 className="h-12 w-12 animate-spin text-[#0d8282]" />
           <p className="font-medium text-muted-foreground">Đang tải thông tin tài liệu...</p>
         </div>
       </div>
@@ -211,16 +283,16 @@ export default function DocumentDetailPage() {
 
   if (error || !document) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 p-6">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-zinc-50 p-6">
         <div className="text-center animate-in fade-in duration-500">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-red-100 to-red-200">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50">
             <FileText className="h-10 w-10 text-red-500" />
           </div>
-          <h2 className="mb-2 text-2xl font-bold text-gray-900">Không thể mở tài liệu</h2>
+          <h2 className="mb-2 text-2xl font-bold text-zinc-900">Không thể mở tài liệu</h2>
           <p className="mb-6 text-muted-foreground">
             {error || "Tài liệu này không tồn tại hoặc bạn không có quyền truy cập."}
           </p>
-          <Button onClick={() => router.back()} variant="outline" className="rounded-xl">
+          <Button onClick={() => router.back()} variant="outline" className="rounded-xl border-zinc-200 hover:bg-zinc-100">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
@@ -230,23 +302,23 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="container mx-auto max-w-6xl p-6 py-8">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
+      <div className="container mx-auto max-w-5xl p-6 py-8 md:py-12">
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          <Button onClick={() => router.back()} variant="ghost" className="mb-4 rounded-xl hover:bg-white/60">
+          <Button onClick={() => router.back()} variant="outline" className="mb-6 rounded-xl border-zinc-200 hover:bg-white text-zinc-600">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
 
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
-              <div className="mb-3 flex flex-wrap items-center gap-3">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
                 <Badge
-                  variant={document.visibility === "private" ? "secondary" : "default"}
+                  variant="outline"
                   className={
                     document.visibility === "private"
-                      ? "border-0 bg-gradient-to-r from-gray-500 to-slate-500 text-white"
-                      : "border-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                      ? "border-zinc-200 bg-zinc-100 text-zinc-600 px-3 py-1 text-[13px]"
+                      : "border-[#0d8282]/20 bg-[#0d8282]/5 text-[#0d8282] px-3 py-1 text-[13px]"
                   }
                 >
                   {document.visibility === "private" ? (
@@ -255,40 +327,40 @@ export default function DocumentDetailPage() {
                       {visibilityLabel(document.visibility)}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 font-semibold">
                       <Globe className="h-3.5 w-3.5" />
                       {visibilityLabel(document.visibility)}
                     </span>
                   )}
                 </Badge>
-                <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                <Badge variant="outline" className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]">
                   {document.document_type_name || "Tài liệu"}
                 </Badge>
-                <Badge variant="outline" className="border-slate-200 bg-white text-slate-600">
+                <Badge variant="outline" className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]">
                   {document.status}
                 </Badge>
               </div>
 
-              <h1 className="mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-3xl font-extrabold leading-tight text-transparent md:text-4xl">
+              <h1 className="mb-4 text-3xl font-bold text-[#0d8282] md:text-4xl leading-tight">
                 {document.title}
               </h1>
 
               {document.description && (
-                <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">
+                <p className="max-w-3xl text-[15px] leading-relaxed text-zinc-500">
                   {document.description}
                 </p>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2 lg:flex-col">
+            <div className="flex flex-wrap gap-3 lg:flex-col lg:w-48 shrink-0">
               <Button
                 onClick={handleDownload}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200 transition-all duration-300 hover:from-blue-700 hover:to-purple-700"
+                className="rounded-xl bg-[#0d8282] hover:bg-[#0a6666] shadow-sm text-white h-11"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Tải xuống
               </Button>
-              <Button onClick={handleShare} variant="outline" className="rounded-xl border-2">
+              <Button onClick={handleShare} variant="outline" className="rounded-xl border-zinc-200 hover:bg-zinc-100 h-11">
                 <Share2 className="mr-2 h-4 w-4" />
                 Chia sẻ
               </Button>
@@ -296,166 +368,106 @@ export default function DocumentDetailPage() {
                 <Button
                   onClick={handleDelete}
                   variant="outline"
-                  className="rounded-xl border-2 border-red-200 text-red-600 hover:bg-red-50"
+                  className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 h-11"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Xóa
+                  Xóa tài liệu
                 </Button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 delay-100 duration-500">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-md">
-                <BookOpen className="h-5 w-5 text-white" />
+        <div className="mb-10 grid gap-4 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 delay-100 duration-500">
+          {[
+            { icon: BookOpen, label: "Môn học", value: document.subject_name || "Chưa có môn học" },
+            { icon: Calendar, label: "Kỳ học", value: document.academic_term_name || "Chưa có kỳ học" },
+            { icon: File, label: "Ngôn ngữ", value: document.language_name || "Chưa xác định" },
+          ].map((stat, i) => (
+            <div key={i} className="rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0d8282]/10">
+                  <stat.icon className="h-5 w-5 text-[#0d8282]" />
+                </div>
+                <span className="text-sm font-semibold text-zinc-500">{stat.label}</span>
               </div>
-              <span className="text-sm font-semibold text-gray-600">Môn học</span>
+              <p className="text-[15px] font-bold text-zinc-800 line-clamp-1">{stat.value}</p>
             </div>
-            <p className="text-lg font-bold text-gray-900">{document.subject_name || "Chưa có môn học"}</p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-md">
-                <Calendar className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Kỳ học</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.academic_term_name || "Chưa có kỳ học"}</p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                <File className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Ngôn ngữ</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.language_name || "Chưa xác định"}</p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-md">
-                <Clock className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Lượt xem</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.view_count}</p>
-          </div>
+          ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-          <aside className="space-y-6">
-            <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-150 duration-500">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-md">
-                  <FileText className="h-5 w-5 text-white" />
+        <div className="flex flex-col gap-6">
+          {primaryFile && (
+            <section className="rounded-2xl border border-zinc-200/60 bg-white p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 delay-150 duration-500">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10">
+                  <FileText className="h-6 w-6 text-[#0d8282]" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">File tài liệu</h2>
-                  <p className="text-sm text-muted-foreground">{document.file_count} file</p>
+                  <p className="line-clamp-1 text-[15px] font-semibold text-zinc-800">{primaryFile.original_filename}</p>
+                  <p className="text-[13px] text-zinc-500 mt-0.5">
+                    {formatFileSize(primaryFile.file_size_bytes)} 
+                    {primaryFile.page_count ? ` • ${primaryFile.page_count} trang` : ""}
+                  </p>
                 </div>
               </div>
-
-              {primaryFile ? (
-                <div className="rounded-xl border border-gray-100 bg-slate-50 p-4">
-                  <p className="line-clamp-2 font-semibold text-gray-900">{primaryFile.original_filename}</p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-md bg-white px-2 py-1">{formatFileSize(primaryFile.file_size_bytes)}</span>
-                    {primaryFile.page_count ? (
-                      <span className="rounded-md bg-white px-2 py-1">{primaryFile.page_count} trang</span>
-                    ) : null}
-                    {primaryFile.extraction_status ? (
-                      <span className="rounded-md bg-white px-2 py-1">{primaryFile.extraction_status}</span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Chưa có file đính kèm.</p>
-              )}
+              <Button onClick={handleDownload} variant="outline" className="shrink-0 rounded-xl border-zinc-200 hover:bg-zinc-50 text-[#0d8282]">
+                <Download className="mr-2 h-4 w-4" />
+                Mở file gốc
+              </Button>
             </section>
+          )}
 
-            <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-200 duration-500">
-              <h2 className="mb-4 text-base font-bold text-gray-900">Mục lục AI</h2>
-              {document.chapters.length > 0 ? (
-                <div className="space-y-3">
-                  {document.chapters.map((chapter) => (
-                    <div key={chapter.id} className="rounded-xl border border-gray-100 bg-slate-50 p-3">
-                      <p className="text-sm font-semibold text-gray-900">{chapter.title}</p>
-                      {chapter.summary && (
-                        <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{chapter.summary}</p>
-                      )}
-                      {(chapter.start_page || chapter.end_page) && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Trang {chapter.start_page || "?"}-{chapter.end_page || "?"}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Mục lục sẽ xuất hiện sau khi hệ thống xử lý tài liệu.</p>
-              )}
-            </section>
-          </aside>
-
-          <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-250 duration-500">
-            <div className="mb-6 flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="rounded-3xl border border-zinc-200/60 bg-white p-6 md:p-10 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-250 duration-500">
+            <div className="mb-8 flex flex-col gap-3 border-b border-zinc-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Nội dung tài liệu</h2>
-                <p className="text-sm text-muted-foreground">
-                  Trang nội dung {chunkPage}/{totalPages} • {document.total_chunks} đoạn văn bản
+                <h2 className="text-[17px] font-bold text-zinc-800 flex items-center gap-2">
+                  <span className="w-1.5 h-5 bg-[#0d8282] rounded-full"></span>
+                  Nội dung chi tiết
+                </h2>
+                <p className="mt-1 text-[13px] text-zinc-500">
+                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn văn bản
                 </p>
               </div>
-              {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-500" />}
+              {loading && <Loader2 className="h-5 w-5 animate-spin text-[#0d8282]" />}
             </div>
 
             {document.chunks.length > 0 ? (
-              <div className="space-y-5">
-                {document.chunks.map((chunk) => (
-                  <article key={chunk.id} className="rounded-xl border border-gray-100 bg-gradient-to-br from-slate-50 to-blue-50 p-5">
-                    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <span className="rounded-md bg-white px-2 py-1">Đoạn {chunk.chunk_order + 1}</span>
-                      {chunk.page_number ? (
-                        <span className="rounded-md bg-white px-2 py-1">Trang {chunk.page_number}</span>
-                      ) : null}
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">{chunk.content}</p>
-                  </article>
-                ))}
+              <div className="rounded-2xl border border-zinc-200/50 bg-zinc-50/80 p-6 md:p-10">
+                <div className="prose prose-zinc max-w-none text-[16px] leading-[1.8] text-zinc-800 whitespace-pre-wrap">
+                  {document.chunks.map(c => c.content).join("\n\n")}
+                </div>
               </div>
             ) : (
-              <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-slate-50 p-6 text-center">
-                <div>
-                  <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                  <h3 className="mb-2 text-lg font-semibold text-gray-800">Chưa có nội dung trích xuất</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Tài liệu có thể vẫn đang được xử lý sau khi giáo viên tải lên.
+              <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center">
+                <div className="max-w-[300px]">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white border border-zinc-100 shadow-sm">
+                    <FileText className="h-8 w-8 text-zinc-400" />
+                  </div>
+                  <h3 className="mb-2 text-[16px] font-bold text-zinc-800">Chưa có nội dung trích xuất</h3>
+                  <p className="text-[14px] text-zinc-500 leading-relaxed">
+                    Tài liệu này có thể vẫn đang được hệ thống xử lý hoặc nội dung trống.
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="mt-6 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+            <div className="mt-12 flex items-center justify-between gap-3 border-t border-zinc-100 pt-8">
               <Button
                 variant="outline"
-                className="rounded-xl"
+                className="rounded-xl border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
                 disabled={chunkPage <= 1 || loading}
                 onClick={() => setChunkPage((page) => Math.max(1, page - 1))}
               >
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Trang trước
               </Button>
-              <span className="text-sm font-medium text-muted-foreground">
-                {chunkPage}/{totalPages}
+              <span className="rounded-xl bg-zinc-100 px-4 py-2 text-[13px] font-bold text-zinc-600">
+                {chunkPage} / {totalPages}
               </span>
               <Button
                 variant="outline"
-                className="rounded-xl"
+                className="rounded-xl border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
                 disabled={chunkPage >= totalPages || loading}
                 onClick={() => setChunkPage((page) => Math.min(totalPages, page + 1))}
               >

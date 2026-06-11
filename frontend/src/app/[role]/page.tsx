@@ -1,9 +1,8 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, redirect } from "next/navigation";
 import { AdminDashboardView } from "@/components/features/admin-dashboard-view";
 import { DocumentsView as LecturerDocumentsView } from "@/components/features/teacher-documents-view";
-import { StudentDocumentsView } from "@/components/features/student-documents-view";
 
 export default function Page() {
   const params = useParams();
@@ -17,5 +16,6 @@ export default function Page() {
     return <LecturerDocumentsView />;
   }
 
-  return <StudentDocumentsView />;
+  // Redirect student to the new chat landing page
+  redirect(`/${role}/chat`);
 }
