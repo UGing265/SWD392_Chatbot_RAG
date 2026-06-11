@@ -131,7 +131,7 @@ export function MyDocumentsView() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-100">
       <div className="container mx-auto max-w-6xl p-6 py-12">
         {/* Header */}
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">

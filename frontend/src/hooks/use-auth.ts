@@ -59,7 +59,11 @@ export function useAuth() {
         setIsLoading(false);
 
         setTimeout(() => {
-          router.push(`/${role}/documents/my`);
+          if (role === "student") {
+            router.push(`/student/documents/shared`);
+          } else {
+            router.push(`/${role}/documents/my`);
+          }
         }, 500);
 
         return { success: true };

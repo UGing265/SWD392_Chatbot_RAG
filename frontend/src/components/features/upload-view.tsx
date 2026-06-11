@@ -24,17 +24,24 @@ interface AcademicTerm {
   name: string;
 }
 
+interface Chapter {
+  id: string;
+  name: string;
+}
+
 export function UploadView() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [termId, setTermId] = useState("");
+  const [chapterId, setChapterId] = useState("");
   const [visibility, setVisibility] = useState("private");
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
 
   useEffect(() => {
     // Mock data for development
@@ -51,8 +58,15 @@ export function UploadView() {
       { id: "3", name: "HK1 2025-2026" },
     ];
 
+    const mockChapters: Chapter[] = [
+      { id: "1", name: "Chương 1: Tổng quan" },
+      { id: "2", name: "Chương 2: Cơ sở lý thuyết" },
+      { id: "3", name: "Chương 3: Phương pháp nghiên cứu" },
+    ];
+
     setSubjects(mockSubjects);
     setTerms(mockTerms);
+    setChapters(mockChapters);
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +89,7 @@ export function UploadView() {
     formData.append("description", description);
     formData.append("subject_id", subjectId);
     formData.append("academic_term_id", termId);
+    formData.append("chapter_id", chapterId);
     formData.append("visibility", visibility);
 
     try {
@@ -110,6 +125,7 @@ export function UploadView() {
     setDescription("");
     setSubjectId("");
     setTermId("");
+    setChapterId("");
     setVisibility("private");
   };
 
@@ -122,7 +138,7 @@ export function UploadView() {
 
   if (uploaded) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-zinc-100">
         <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-200">
             <CheckCircle2 className="h-12 w-12 text-white" />
@@ -137,7 +153,7 @@ export function UploadView() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-100">
       <div className="container mx-auto max-w-4xl p-6 py-12">
         {/* Header */}
         <div className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-500">
@@ -277,6 +293,25 @@ export function UploadView() {
                     {terms.map((term) => (
                       <SelectItem key={term.id} value={term.id}>
                         {term.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="chapter" className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-orange-600" />
+                  Chương
+                </Label>
+                <Select value={chapterId} onValueChange={setChapterId} disabled={uploading}>
+                  <SelectTrigger id="chapter" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Chọn chương" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {chapters.map((chapter) => (
+                      <SelectItem key={chapter.id} value={chapter.id}>
+                        {chapter.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
