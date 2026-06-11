@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+<<<<<<< HEAD
 function decodeJwt(token: string) {
   try {
     const base64Url = token.split('.')[1];
@@ -35,6 +36,28 @@ export function middleware(request: NextRequest) {
         response.cookies.delete("access_token");
         return response;
       }
+=======
+const ADMIN_HOME = "/admin";
+const LECTURER_HOME = "/lecturer/documents/my";
+const STUDENT_HOME = "/student/documents/shared";
+
+function getHomePath(role: string) {
+  if (role === "admin") return ADMIN_HOME;
+  if (role === "lecturer") return LECTURER_HOME;
+  return STUDENT_HOME;
+}
+
+export function middleware(request: NextRequest) {
+  const isAuth = request.cookies.has("mock_auth");
+
+  const role = request.cookies.get("mock_role")?.value || "student";
+  const pathname = request.nextUrl.pathname;
+
+  // Allow access to login page
+  if (pathname.startsWith("/login")) {
+    if (isAuth) {
+      return NextResponse.redirect(new URL(getHomePath(role), request.url));
+>>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
     }
     return NextResponse.next();
   }
@@ -44,6 +67,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+<<<<<<< HEAD
   // Validate JWT payload for protected routes
   const payload = decodeJwt(tokenCookie.value);
   if (!payload || !payload.role || !["admin", "lecturer", "student"].includes(payload.role)) {
@@ -67,6 +91,24 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(`/${userRole}/documents/my`, request.url));
       }
     }
+=======
+  // Route Guards: Prevent cross-role access
+  if (pathname.startsWith("/student") && role !== "student") {
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
+  }
+
+  if (pathname.startsWith("/lecturer") && role !== "lecturer") {
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
+  }
+
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
+  }
+
+  // Root path routing
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
+>>>>>>> 7d932a8b47b6caf320960e696ab06cefe31b9099
   }
 
   return NextResponse.next();

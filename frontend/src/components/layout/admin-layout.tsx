@@ -29,6 +29,23 @@ const nav = [
   { to: "/moderation", label: "Kiểm duyệt tài liệu", icon: ShieldCheck },
 ];
 
+function getRoleLabel(role?: string) {
+  if (role === "admin") return "Admin";
+  if (role === "lecturer" || role === "teacher") return "Lecturer";
+  if (role === "student") return "Student";
+  return "User";
+}
+
+function getInitials(name?: string | null) {
+  if (!name) return "U";
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
 function SidebarItem({
   to,
   label,
@@ -62,8 +79,11 @@ function SidebarItem({
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const basePath = "/admin";
+  const displayName = session?.user?.name || "User";
+  const roleLabel = getRoleLabel(session?.role || "admin");
+  const initials = getInitials(displayName);
 
   const isActive = (to: string, end?: boolean) => {
     const full = `${basePath}${to}`;
@@ -120,11 +140,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">
-                MA
+                {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">Minh An</div>
-                <div className="truncate text-[10px] text-muted-foreground uppercase tracking-wider">Admin</div>
+                <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">{displayName}</div>
+                <div className="truncate text-[10px] font-semibold text-primary uppercase tracking-wider">{roleLabel}</div>
               </div>
               <button
                 onClick={() => signOut()}

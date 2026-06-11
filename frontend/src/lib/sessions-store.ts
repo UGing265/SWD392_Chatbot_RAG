@@ -156,3 +156,11 @@ export function createSession(title = "Phiên chat mới"): Session {
   ];
   return newSession;
 }
+
+export function deleteSession(id: string) {
+  const index = sessionList.findIndex((s) => s.id === id);
+  if (index !== -1) {
+    sessionList.splice(index, 1);
+  }
+  delete seedMessages[id];
+}

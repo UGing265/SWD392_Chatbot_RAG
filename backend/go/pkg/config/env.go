@@ -37,7 +37,7 @@ func parseInt(s string) int64 {
 func Load() *Config {
 	return &Config{
 		DATABASE_URL:          getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/postgres"),
-		JWT_SECRET:            getEnv("JWT_SECRET", "your-secret-key-min-32-characters-long"),
+		JWT_SECRET:            getEnv("JWT_SECRET", "9d7bca84f7b60e61dbfe7e4e1a0b332d"),
 		JWT_EXPIRY:            getEnv("JWT_EXPIRY", "24h"),
 		GEMINI_API_KEY:        getEnv("GEMINI_API_KEY", ""),
 		UPLOAD_DIR:            getEnv("UPLOAD_DIR", "./uploads"),

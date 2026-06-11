@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Search, MessageSquareText, Clock, Pin, ChevronRight, Plus } from "lucide-react";
-import { sessionList, createSession } from "@/lib/sessions-store";
+import { Search, MessageSquareText, Clock, Pin, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
+import { sessionList, createSession, deleteSession } from "@/lib/sessions-store";
 
 export function SessionsView() {
   const params = useParams();
@@ -11,8 +11,13 @@ export function SessionsView() {
   const role = (params?.role as string) || "student";
 
   const [filter, setFilter] = useState("Gần đây");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [renderTrigger, setRenderTrigger] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleOpen = (id: string) => {
+    if (editingId) return;
     router.push(`/${role}/chat?session=${id}`);
   };
 
@@ -21,8 +26,41 @@ export function SessionsView() {
     router.push(`/${role}/chat?session=${s.id}`);
   };
 
+  const startEditing = (e: React.MouseEvent, id: string, title: string) => {
+    e.stopPropagation();
+    setEditingId(id);
+    setEditTitle(title);
+  };
+
+  const saveEdit = () => {
+    if (editingId && editTitle.trim()) {
+      const session = sessionList.find((s) => s.id === editingId);
+      if (session) {
+        session.title = editTitle.trim();
+      }
+    }
+    setEditingId(null);
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    deleteSession(id);
+    setRenderTrigger(prev => prev + 1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") saveEdit();
+    if (e.key === "Escape") setEditingId(null);
+  };
+
+  useEffect(() => {
+    if (editingId && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingId]);
+
   return (
-    <div className="scrollbar-thin h-[calc(100vh-3.5rem)] overflow-y-auto">
+    <div className="scrollbar-thin h-full overflow-y-auto bg-zinc-100">
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-6 flex items-start justify-between">
           <div>
@@ -87,9 +125,37 @@ export function SessionsView() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="line-clamp-1 text-sm font-medium text-foreground">
-                          {s.title}
-                        </span>
+                        {editingId === s.id ? (
+                          <input
+                            ref={inputRef}
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onBlur={saveEdit}
+                            onKeyDown={handleKeyDown}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-1 bg-white border border-primary/50 rounded-md px-2 py-0.5 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                        ) : (
+                          <>
+                            <span className="line-clamp-1 text-sm font-medium text-foreground">
+                              {s.title}
+                            </span>
+                            <div
+                              onClick={(e) => startEditing(e, s.id, s.title)}
+                              className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                              title="Đổi tên"
+                            >
+                              <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                            </div>
+                            <div
+                              onClick={(e) => handleDelete(e, s.id)}
+                              className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer"
+                              title="Xóa phiên"
+                            >
+                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-red-500" />
+                            </div>
+                          </>
+                        )}
                         {s.starred && <Pin className="h-3.5 w-3.5 -rotate-45 text-primary shrink-0" />}
                         {s.status === "active" && (
                           <span className="rounded-full bg-secondary-soft px-2 py-0.5 text-[10px] font-medium text-secondary-foreground shrink-0">

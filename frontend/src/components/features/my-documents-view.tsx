@@ -82,7 +82,8 @@ export function MyDocumentsView() {
         const data = await response.json();
         setDocuments(data.documents || []);
       } else {
-        console.warn("Failed to fetch documents, falling back to mock data");
+        const errText = await response.text();
+        console.warn("Failed to fetch documents:", response.status, errText);
         useMockData();
       }
     } catch (error) {
@@ -131,7 +132,7 @@ export function MyDocumentsView() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-100">
       <div className="container mx-auto max-w-6xl p-6 py-12">
         {/* Header */}
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">

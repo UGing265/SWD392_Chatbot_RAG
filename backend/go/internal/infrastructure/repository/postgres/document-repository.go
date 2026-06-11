@@ -251,7 +251,7 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 		LEFT JOIN languages l ON d.language_id = l.id
 		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
-		WHERE d.owner_user_id = $1 AND d.status = 'completed'
+		WHERE d.owner_user_id = $1
 	`)
 
 	args := []interface{}{ownerID}
