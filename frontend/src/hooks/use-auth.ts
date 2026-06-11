@@ -54,6 +54,7 @@ export function useAuth() {
     }
 
     let cancelled = false;
+    setResolvedRole(null);
     setIsResolvingRole(true);
 
     resolveUserRole(sessionData.user, sessionToken)
@@ -75,15 +76,19 @@ export function useAuth() {
     };
   }, [sessionData]);
 
-  const session = sessionData ? (() => {
-    const userObj = sessionData.user as any;
-    const rId = userObj.roleId || userObj.role_id;
-    const roleStr = Number(rId) === 1 ? "admin" : (Number(rId) === 2 ? "lecturer" : "student");
-    return {
-      user: sessionData.user,
-      role: roleStr as UserRole
-    };
-  })() : null;
+  const session = sessionData
+    ? (() => {
+      const userObj = sessionData.user as any;
+      const rId = userObj.roleId || userObj.role_id;
+      const roleStr =
+        resolvedRole ??
+        (Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student");
+      return {
+        user: sessionData.user,
+        role: roleStr as UserRole,
+      };
+    })()
+    : null;
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -105,9 +110,9 @@ export function useAuth() {
       if (data) {
         const token = data.token;
         localStorage.setItem("token", token);
-        
+
         let loginRId = (data.user as any).roleId || (data.user as any).role_id;
-        
+
         // Fallback for testing if database doesn't have the role correctly set
         if (!loginRId) {
           if (email.toLowerCase().includes('admin')) loginRId = 1;
@@ -131,7 +136,7 @@ export function useAuth() {
           if (role === "student") {
             router.push(`/student/documents/shared`);
           } else if (role === "admin") {
-            router.push(`/admin/dashboard`);
+            router.push(`/admin`);
           } else {
             // Lecturer
             router.push(`/lecturer/documents/my`);
@@ -165,6 +170,6 @@ export function useAuth() {
     signIn,
     signOut,
     session,
-    isLoading: isLoading || isSessionPending || isResolvingRole || isRolePending,
+    isLoading: isLoading || isSessionPending || isResolvingRole,
   };
 }

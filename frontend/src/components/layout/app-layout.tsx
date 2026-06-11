@@ -59,6 +59,13 @@ const nav = [
   { to: "/quiz/take", label: "Làm Quiz", icon: ClipboardList, studentOnly: true },
 ];
 
+function getRoleLabel(role?: string) {
+  if (role === "admin") return "Admin";
+  if (role === "lecturer" || role === "teacher") return "Lecturer";
+  if (role === "student") return "Student";
+  return "User";
+}
+
 function SidebarItem({
   to,
   label,
@@ -95,6 +102,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const role = (params?.role as string) || pathRole;
   const basePath = role ? `/${role}` : "";
   const { signOut, session } = useAuth();
+  const roleLabel = getRoleLabel(session?.role || role);
   const router = useRouter();
 
   const handleNewSession = () => {
@@ -183,6 +191,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     <div className="truncate text-[14px] font-medium text-foreground">
                       {session?.user?.name || "Người dùng"}
                     </div>
+                    <div className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      {roleLabel}
+                    </div>
                   </div>
                   <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </button>
@@ -195,6 +206,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     </div>
                     <div className="flex flex-col min-w-0 leading-tight">
                       <span className="truncate text-[15px] font-medium">{session?.user?.name || "Người dùng"}</span>
+                      <span className="truncate text-[12px] font-semibold uppercase tracking-wide text-primary mt-1">
+                        {roleLabel}
+                      </span>
                       <span className="truncate text-[13px] text-muted-foreground mt-0.5">{session?.user?.email || "Email"}</span>
                     </div>
                   </div>

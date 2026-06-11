@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const ADMIN_HOME = "/admin";
+const LECTURER_HOME = "/lecturer/documents/my";
+const STUDENT_HOME = "/student/documents/shared";
+
+function getHomePath(role: string) {
+  if (role === "admin") return ADMIN_HOME;
+  if (role === "lecturer") return LECTURER_HOME;
+  return STUDENT_HOME;
+}
+
 export function middleware(request: NextRequest) {
   const isAuth = request.cookies.has("mock_auth");
 
@@ -10,9 +20,7 @@ export function middleware(request: NextRequest) {
   // Allow access to login page
   if (pathname.startsWith("/login")) {
     if (isAuth) {
-      if (role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      if (role === "lecturer") return NextResponse.redirect(new URL("/lecturer/documents/my", request.url));
-      return NextResponse.redirect(new URL("/student/documents/shared", request.url));
+      return NextResponse.redirect(new URL(getHomePath(role), request.url));
     }
     return NextResponse.next();
   }
@@ -24,25 +32,20 @@ export function middleware(request: NextRequest) {
 
   // Route Guards: Prevent cross-role access
   if (pathname.startsWith("/student") && role !== "student") {
-    if (role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    if (role === "lecturer") return NextResponse.redirect(new URL("/lecturer/documents/my", request.url));
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
   }
 
   if (pathname.startsWith("/lecturer") && role !== "lecturer") {
-    if (role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    if (role === "student") return NextResponse.redirect(new URL("/student/documents/shared", request.url));
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
   }
 
   if (pathname.startsWith("/admin") && role !== "admin") {
-    if (role === "lecturer") return NextResponse.redirect(new URL("/lecturer/documents/my", request.url));
-    if (role === "student") return NextResponse.redirect(new URL("/student/documents/shared", request.url));
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
   }
 
   // Root path routing
   if (pathname === "/") {
-    if (role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    if (role === "lecturer") return NextResponse.redirect(new URL("/lecturer/documents/my", request.url));
-    return NextResponse.redirect(new URL("/student/documents/shared", request.url));
+    return NextResponse.redirect(new URL(getHomePath(role), request.url));
   }
 
   return NextResponse.next();
