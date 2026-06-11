@@ -5,19 +5,74 @@ import { authClient } from "@/lib/auth-client";
 
 export type UserRole = "student" | "lecturer" | "admin";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+
+function getExplicitUserRole(user: unknown): UserRole | null {
+  const roleId = (user as any)?.roleId ?? (user as any)?.role_id;
+  if (roleId === 1) return "admin";
+  if (roleId === 2) return "lecturer";
+  if (roleId === 3) return "student";
+  return null;
+}
+
+async function resolveUserRole(user: unknown, token: string | null): Promise<UserRole> {
+  const explicitRole = getExplicitUserRole(user);
+  if (explicitRole) return explicitRole;
+
+  if (!token) return "student";
+
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const adminResponse = await fetch(`${API_BASE_URL}/api/admin/users`, { headers });
+  if (adminResponse.ok) return "admin";
+
+  const lecturerResponse = await fetch(`${API_BASE_URL}/api/documents/dashboard`, { headers });
+  if (lecturerResponse.ok) return "lecturer";
+
+  return "student";
+}
+
 export function useAuth() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvedRole, setResolvedRole] = useState<UserRole | null>(null);
+  const [isResolvingRole, setIsResolvingRole] = useState(false);
   const { data: sessionData, isPending: isSessionPending, refetch } = authClient.useSession();
 
-  // Ensure session token is stored in localStorage if session exists
+  // Keep the Go API bearer token aligned with the active Better Auth session.
   useEffect(() => {
-    if (sessionData && !localStorage.getItem("token")) {
-      const match = document.cookie.match(/(^|;)\s*better-auth\.session_token\s*=\s*([^;]+)/);
-      if (match) {
-        localStorage.setItem("token", match[2]);
-      }
+    if (!sessionData) {
+      setResolvedRole(null);
+      return;
     }
+
+    const match = document.cookie.match(/(^|;)\s*better-auth\.session_token\s*=\s*([^;]+)/);
+    const sessionToken = match?.[2] || localStorage.getItem("token");
+
+    if (match?.[2]) {
+      localStorage.setItem("token", match[2]);
+    }
+
+    let cancelled = false;
+    setIsResolvingRole(true);
+
+    resolveUserRole(sessionData.user, sessionToken)
+      .then((role) => {
+        if (cancelled) return;
+        setResolvedRole(role);
+        document.cookie = `mock_role=${role}; path=/; max-age=3600`;
+      })
+      .catch((err) => {
+        console.error("Failed to resolve user role:", err);
+        if (!cancelled) setResolvedRole("student");
+      })
+      .finally(() => {
+        if (!cancelled) setIsResolvingRole(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionData]);
 
   const session = sessionData ? (() => {
@@ -110,6 +165,6 @@ export function useAuth() {
     signIn,
     signOut,
     session,
-    isLoading: isLoading || isSessionPending,
+    isLoading: isLoading || isSessionPending || isResolvingRole || isRolePending,
   };
 }
