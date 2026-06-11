@@ -106,6 +106,9 @@ export function UploadView() {
         setTimeout(() => {
           setUploaded(false);
           resetForm();
+          // Redirect to Tài liệu riêng
+          const role = window.location.pathname.split("/")[1] || "lecturer";
+          window.location.href = `/${role}/documents/my`;
         }, 2000);
       } else {
         const error = await response.json();

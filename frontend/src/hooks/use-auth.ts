@@ -20,10 +20,15 @@ export function useAuth() {
     }
   }, [sessionData]);
 
-  const session = sessionData ? {
-    user: sessionData.user,
-    role: (sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student") as UserRole
-  } : null;
+  const session = sessionData ? (() => {
+    const userObj = sessionData.user as any;
+    const rId = userObj.roleId || userObj.role_id;
+    const roleStr = Number(rId) === 1 ? "admin" : (Number(rId) === 2 ? "lecturer" : "student");
+    return {
+      user: sessionData.user,
+      role: roleStr as UserRole
+    };
+  })() : null;
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -46,7 +51,16 @@ export function useAuth() {
         const token = data.token;
         localStorage.setItem("token", token);
         
-        const role = (data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student");
+        let loginRId = (data.user as any).roleId || (data.user as any).role_id;
+        
+        // Fallback for testing if database doesn't have the role correctly set
+        if (!loginRId) {
+          if (email.toLowerCase().includes('admin')) loginRId = 1;
+          else if (email.toLowerCase().includes('lecturer') || email.toLowerCase().includes('gv')) loginRId = 2;
+          else loginRId = 3;
+        }
+
+        const role = Number(loginRId) === 1 ? "admin" : (Number(loginRId) === 2 ? "lecturer" : "student");
 
         document.cookie = "mock_auth=true; path=/; max-age=3600";
         document.cookie = `mock_role=${role}; path=/; max-age=3600`;
@@ -61,8 +75,11 @@ export function useAuth() {
         setTimeout(() => {
           if (role === "student") {
             router.push(`/student/documents/shared`);
+          } else if (role === "admin") {
+            router.push(`/admin/dashboard`);
           } else {
-            router.push(`/${role}/documents/my`);
+            // Lecturer
+            router.push(`/lecturer/documents/my`);
           }
         }, 500);
 

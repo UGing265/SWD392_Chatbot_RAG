@@ -82,7 +82,8 @@ export function MyDocumentsView() {
         const data = await response.json();
         setDocuments(data.documents || []);
       } else {
-        console.warn("Failed to fetch documents, falling back to mock data");
+        const errText = await response.text();
+        console.warn("Failed to fetch documents:", response.status, errText);
         useMockData();
       }
     } catch (error) {
