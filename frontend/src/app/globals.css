@@ -79,18 +79,18 @@
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.25 0.01 260);
+  --background: oklch(0.985 0.008 275); /* #FAF5FF (Purple-50) App workspace background */
+  --foreground: oklch(0.22 0.02 265);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.01 260);
+  --card-foreground: oklch(0.22 0.02 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.01 260);
+  --popover-foreground: oklch(0.22 0.02 265);
 
-  --primary: oklch(0.6 0.12 210); /* Cleaner blue/cyan */
+  --primary: oklch(0.52 0.22 280); /* Violet-600 #7C3AED */
   --primary-foreground: oklch(1 0 0);
-  --primary-soft: oklch(0.95 0.02 210);
-  --primary-deep: oklch(0.4 0.15 210);
+  --primary-soft: oklch(0.965 0.012 280); /* Violet-50 #F5F3FF */
+  --primary-deep: oklch(0.42 0.22 280); /* Violet-700 #6D28D9 */
 
   --secondary: oklch(0.96 0.01 260);
   --secondary-foreground: oklch(0.4 0.02 260);
@@ -106,15 +106,15 @@
   --destructive: oklch(0.6 0.15 25);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.92 0.01 260);
-  --input: oklch(0.92 0.01 260);
-  --ring: oklch(0.8 0.05 210);
+  --border: oklch(0.94 0.012 280); /* Subtle light violet border */
+  --input: oklch(0.94 0.012 280);
+  --ring: oklch(0.75 0.12 280);
 
-  --sidebar: oklch(0.98 0.005 260);
-  --sidebar-foreground: oklch(0.3 0.01 260);
-  --sidebar-accent: oklch(0.94 0.01 260);
-  --sidebar-accent-foreground: oklch(0.2 0.01 260);
-  --sidebar-border: oklch(0.92 0.01 260);
+  --sidebar: oklch(0.99 0.003 280); /* Clean white/violet sidebar background */
+  --sidebar-foreground: oklch(0.25 0.015 280);
+  --sidebar-accent: oklch(0.955 0.012 280);
+  --sidebar-accent-foreground: oklch(0.18 0.02 280);
+  --sidebar-border: oklch(0.94 0.012 280);
 }
 
 @layer base {
