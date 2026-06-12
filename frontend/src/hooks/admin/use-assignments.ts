@@ -60,12 +60,10 @@ export function useAssignments() {
       setSubjects(subjectList);
       setAssignments(assignmentsData);
       setSelectedLecturer(firstLecturerId);
-      
+
       if (firstLecturerId) {
         setAssignedSubjects(
-          assignmentsData
-            .filter((a) => a.userId === firstLecturerId)
-            .map((a) => a.subjectId)
+          assignmentsData.filter((a) => a.userId === firstLecturerId).map((a) => a.subjectId),
         );
       }
     } catch (err: any) {
@@ -83,11 +81,7 @@ export function useAssignments() {
 
   const handleSelectLecturer = (lecturerId: string) => {
     setSelectedLecturer(lecturerId);
-    setAssignedSubjects(
-      assignments
-        .filter((a) => a.userId === lecturerId)
-        .map((a) => a.subjectId)
-    );
+    setAssignedSubjects(assignments.filter((a) => a.userId === lecturerId).map((a) => a.subjectId));
   };
 
   const toggleSubject = (subjectId: string) => {
@@ -95,13 +89,13 @@ export function useAssignments() {
     if (existing && existing.userId !== selectedLecturer) {
       notify.error(
         "Môn học đã được phân công",
-        `${existing.subjectCode || "Môn này"} đang thuộc ${existing.lecturerEmail || "giảng viên khác"}.`
+        `${existing.subjectCode || "Môn này"} đang thuộc ${existing.lecturerEmail || "giảng viên khác"}.`,
       );
       return;
     }
 
     setAssignedSubjects((prev) =>
-      prev.includes(subjectId) ? prev.filter((id) => id !== subjectId) : [...prev, subjectId]
+      prev.includes(subjectId) ? prev.filter((id) => id !== subjectId) : [...prev, subjectId],
     );
   };
 
@@ -113,7 +107,10 @@ export function useAssignments() {
 
     setSaving(true);
     try {
-      const savedAssignments = await assignmentApi.saveAssignments(selectedLecturer, assignedSubjects);
+      const savedAssignments = await assignmentApi.saveAssignments(
+        selectedLecturer,
+        assignedSubjects,
+      );
       setAssignments((prev) => [
         ...prev.filter((a) => a.userId !== selectedLecturer),
         ...savedAssignments,

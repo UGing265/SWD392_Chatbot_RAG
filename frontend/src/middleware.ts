@@ -13,11 +13,16 @@ function getHomePath(role: string) {
 
 function decodeJwt(token: string) {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join(""),
+    );
     return JSON.parse(jsonPayload);
   } catch (e) {
     return null;
@@ -29,7 +34,7 @@ export function middleware(request: NextRequest) {
 
   // Resolve Auth and Role strictly from JWT (access_token)
   const tokenCookie = request.cookies.get("access_token");
-  
+
   let isAuth = false;
   let role = "student";
 
@@ -41,9 +46,10 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const isAuthPage = pathname.startsWith("/login") || 
-                     pathname.startsWith("/forgot-password") ||
-                     pathname.startsWith("/reset-password");
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
 
   // Allow access to auth pages
   if (isAuthPage) {
@@ -69,7 +75,7 @@ export function middleware(request: NextRequest) {
   if (match) {
     const routeRole = match[1];
     const validRoles = ["student", "lecturer", "admin"];
-    
+
     if (validRoles.includes(routeRole)) {
       // If the user's role doesn't match the route's role, redirect them to their own dashboard
       if (routeRole !== role) {

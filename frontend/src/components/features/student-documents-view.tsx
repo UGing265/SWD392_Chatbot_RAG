@@ -63,7 +63,7 @@ const documents = [
 export function StudentDocumentsView() {
   const [activeSubject, setActiveSubject] = useState("Tất cả môn học");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedDoc, setSelectedDoc] = useState<typeof documents[0] | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<(typeof documents)[0] | null>(null);
 
   return (
     <div className="p-4 md:p-6 lg:p-8">
@@ -79,7 +79,9 @@ export function StudentDocumentsView() {
             onClick={() => setViewMode("grid")}
             className={cn(
               "flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold",
-              viewMode === "grid" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              viewMode === "grid"
+                ? "bg-muted text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -89,7 +91,9 @@ export function StudentDocumentsView() {
             onClick={() => setViewMode("list")}
             className={cn(
               "flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold",
-              viewMode === "list" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              viewMode === "list"
+                ? "bg-muted text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <List className="h-4 w-4" />
@@ -107,7 +111,7 @@ export function StudentDocumentsView() {
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               activeSubject === sub
                 ? "bg-[#3e8ced] text-white"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted",
             )}
           >
             {sub}
@@ -128,16 +132,23 @@ export function StudentDocumentsView() {
                   <div
                     className={cn(
                       "flex h-10 w-10 items-center justify-center rounded-xl",
-                      doc.bgIcon
+                      doc.bgIcon,
                     )}
                   >
                     <Icon className={cn("h-5 w-5", doc.iconColor)} />
                   </div>
                   <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button onClick={() => setSelectedDoc(doc)} className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors" title="Xem tài liệu">
+                    <button
+                      onClick={() => setSelectedDoc(doc)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors"
+                      title="Xem tài liệu"
+                    >
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors" title="Tải xuống">
+                    <button
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors"
+                      title="Tải xuống"
+                    >
                       <Download className="h-4 w-4" />
                     </button>
                   </div>
@@ -146,9 +157,7 @@ export function StudentDocumentsView() {
                 <h3 className="mb-1 text-base font-bold leading-tight text-foreground line-clamp-2 group-hover:text-[#3e8ced] transition-colors">
                   {doc.title}
                 </h3>
-                <p className="mb-6 text-sm text-muted-foreground line-clamp-2">
-                  {doc.desc}
-                </p>
+                <p className="mb-6 text-sm text-muted-foreground line-clamp-2">{doc.desc}</p>
 
                 <div className="mt-auto flex items-center justify-between border-t border-border/60 pt-4">
                   <span className="text-xs font-medium text-muted-foreground">
@@ -180,11 +189,18 @@ export function StudentDocumentsView() {
                   <tr key={doc.id} className="hover:bg-muted/20 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", doc.bgIcon)}>
+                        <div
+                          className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-lg",
+                            doc.bgIcon,
+                          )}
+                        >
                           <Icon className={cn("h-4 w-4", doc.iconColor)} />
                         </div>
                         <div>
-                          <div className="font-medium text-foreground group-hover:text-[#3e8ced] transition-colors">{doc.title}</div>
+                          <div className="font-medium text-foreground group-hover:text-[#3e8ced] transition-colors">
+                            {doc.title}
+                          </div>
                           <div className="text-xs">{doc.desc}</div>
                         </div>
                       </div>
@@ -197,10 +213,17 @@ export function StudentDocumentsView() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button onClick={() => setSelectedDoc(doc)} className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors" title="Xem tài liệu">
+                        <button
+                          onClick={() => setSelectedDoc(doc)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors"
+                          title="Xem tài liệu"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors" title="Tải xuống">
+                        <button
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-[#3e8ced] hover:text-white transition-colors"
+                          title="Tải xuống"
+                        >
                           <Download className="h-4 w-4" />
                         </button>
                       </div>
@@ -222,8 +245,12 @@ export function StudentDocumentsView() {
           <div className="flex-1 rounded-md border bg-muted/10 flex items-center justify-center p-4">
             <div className="text-center">
               <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-lg font-medium text-foreground">Nội dung tài liệu sẽ hiển thị ở đây</p>
-              <p className="text-sm text-muted-foreground">Tính năng xem file PDF/DOCX trực tiếp đang được phát triển.</p>
+              <p className="text-lg font-medium text-foreground">
+                Nội dung tài liệu sẽ hiển thị ở đây
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Tính năng xem file PDF/DOCX trực tiếp đang được phát triển.
+              </p>
             </div>
           </div>
         </DialogContent>

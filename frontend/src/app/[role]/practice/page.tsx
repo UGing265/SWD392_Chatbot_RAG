@@ -25,7 +25,6 @@ import { StudentPracticeView } from "@/components/features/student-practice-view
 import { TeacherPracticeView } from "@/components/features/teacher-practice-view";
 import { useAuth } from "@/hooks/use-auth";
 
-
 export default function PracticePage() {
   const { session } = useAuth();
   const params = useParams();

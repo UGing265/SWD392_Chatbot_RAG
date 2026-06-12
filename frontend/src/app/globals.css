@@ -1,10 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&display=swap');
-@import url('https://cdn.jsdelivr.net/fontsource/fonts/google-sans@latest/index.css');
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&display=swap");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/google-sans@latest/index.css");
 
-@import '@mantine/core/styles.css';
-@import '@mantine/dates/styles.css';
-@import '@mantine/notifications/styles.css';
-
+@import "@mantine/core/styles.css";
+@import "@mantine/dates/styles.css";
+@import "@mantine/notifications/styles.css";
 
 @import "tailwindcss";
 @source ".";
@@ -137,10 +136,10 @@
 
   /* Override browser autofill background to match the white cards */
   input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 50px #FFFFFF inset !important;
+    -webkit-box-shadow: 0 0 0 50px #ffffff inset !important;
     -webkit-text-fill-color: #111111 !important;
     transition: background-color 5000s ease-in-out 0s;
   }

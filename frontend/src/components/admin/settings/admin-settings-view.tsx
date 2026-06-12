@@ -118,28 +118,44 @@ export function AdminSettingsView() {
           <Stack gap="sm">
             <Group justify="space-between" wrap="nowrap">
               <div>
-                <Text size="sm" fw={500}>Yêu cầu 2FA đối với Admin</Text>
-                <Text size="xs" c="dimmed">Bắt buộc xác thực 2 lớp khi truy cập bảng điều khiển</Text>
+                <Text size="sm" fw={500}>
+                  Yêu cầu 2FA đối với Admin
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Bắt buộc xác thực 2 lớp khi truy cập bảng điều khiển
+                </Text>
               </div>
               <Switch
                 checked={toggles["Security-Require 2FA for Admins"]}
-                onChange={(e) => handleToggle("Security-Require 2FA for Admins", e.currentTarget.checked)}
+                onChange={(e) =>
+                  handleToggle("Security-Require 2FA for Admins", e.currentTarget.checked)
+                }
               />
             </Group>
             <Group justify="space-between" wrap="nowrap">
               <div>
-                <Text size="sm" fw={500}>Giới hạn phiên làm việc (1 giờ)</Text>
-                <Text size="xs" c="dimmed">Tự động đăng xuất sau 1 giờ không hoạt động</Text>
+                <Text size="sm" fw={500}>
+                  Giới hạn phiên làm việc (1 giờ)
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Tự động đăng xuất sau 1 giờ không hoạt động
+                </Text>
               </div>
               <Switch
                 checked={toggles["Security-Session Timeout (1 hour)"]}
-                onChange={(e) => handleToggle("Security-Session Timeout (1 hour)", e.currentTarget.checked)}
+                onChange={(e) =>
+                  handleToggle("Security-Session Timeout (1 hour)", e.currentTarget.checked)
+                }
               />
             </Group>
             <Group justify="space-between" wrap="nowrap">
               <div>
-                <Text size="sm" fw={500}>Bật danh sách IP cho phép</Text>
-                <Text size="xs" c="dimmed">Chỉ cho phép các IP trong danh sách truy cập admin</Text>
+                <Text size="sm" fw={500}>
+                  Bật danh sách IP cho phép
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Chỉ cho phép các IP trong danh sách truy cập admin
+                </Text>
               </div>
               <Switch
                 checked={toggles["Security-IP Allowlist"]}
@@ -166,22 +182,34 @@ export function AdminSettingsView() {
           <Stack gap="sm">
             <Group justify="space-between" wrap="nowrap">
               <div>
-                <Text size="sm" fw={500}>Cảnh báo lỗi phân tách chỉ mục (Indexing Failure)</Text>
-                <Text size="xs" c="dimmed">Thông báo khi việc tạo embedding cho tài liệu bị lỗi</Text>
+                <Text size="sm" fw={500}>
+                  Cảnh báo lỗi phân tách chỉ mục (Indexing Failure)
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Thông báo khi việc tạo embedding cho tài liệu bị lỗi
+                </Text>
               </div>
               <Switch
                 checked={toggles["Notifications-Indexing failure alerts"]}
-                onChange={(e) => handleToggle("Notifications-Indexing failure alerts", e.currentTarget.checked)}
+                onChange={(e) =>
+                  handleToggle("Notifications-Indexing failure alerts", e.currentTarget.checked)
+                }
               />
             </Group>
             <Group justify="space-between" wrap="nowrap">
               <div>
-                <Text size="sm" fw={500}>Báo cáo sử dụng hàng ngày</Text>
-                <Text size="xs" c="dimmed">Gửi báo cáo tổng hợp thống kê hệ thống mỗi ngày</Text>
+                <Text size="sm" fw={500}>
+                  Báo cáo sử dụng hàng ngày
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Gửi báo cáo tổng hợp thống kê hệ thống mỗi ngày
+                </Text>
               </div>
               <Switch
                 checked={toggles["Notifications-Daily usage report"]}
-                onChange={(e) => handleToggle("Notifications-Daily usage report", e.currentTarget.checked)}
+                onChange={(e) =>
+                  handleToggle("Notifications-Daily usage report", e.currentTarget.checked)
+                }
               />
             </Group>
           </Stack>

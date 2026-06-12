@@ -6,13 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
@@ -21,11 +15,7 @@ const formSchema = z.object({
 });
 
 function StaticCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="w-full max-w-[440px] z-10 relative">
-      {children}
-    </div>
-  );
+  return <div className="w-full max-w-[440px] z-10 relative">{children}</div>;
 }
 
 function SpotlightInput({
@@ -96,9 +86,16 @@ function ElegantExpandButton({
               <span className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-x-2">
                 {children}
               </span>
-              <svg 
-                className="absolute opacity-0 -right-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-100 group-hover:-right-5" 
-                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              <svg
+                className="absolute opacity-0 -right-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:opacity-100 group-hover:-right-5"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -137,63 +134,80 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <StaticCard>
-          <div className="bg-[#FFFFFF] rounded-[16px] border border-[#EAEAEA] p-8 md:p-12 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            <div className="mb-10 text-left border-b border-[#EAEAEA] pb-6">
-              <h2 className="font-serif text-[40px] tracking-[-0.03em] text-[#111111] leading-none select-none">
-                Khôi Phục.
-              </h2>
-            </div>
+        <div className="bg-[#FFFFFF] rounded-[16px] border border-[#EAEAEA] p-8 md:p-12 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
+          <div className="mb-10 text-left border-b border-[#EAEAEA] pb-6">
+            <h2 className="font-serif text-[40px] tracking-[-0.03em] text-[#111111] leading-none select-none">
+              Khôi Phục.
+            </h2>
+          </div>
 
-            {isSuccess ? (
-              <div className="space-y-6 text-center animate-in fade-in duration-500">
-                <div className="mx-auto w-16 h-16 bg-[#111111] rounded-full flex items-center justify-center mb-6">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                </div>
-                <h3 className="font-serif text-[22px] text-[#111111]">Đã Gửi Email Khôi Phục</h3>
-                <p className="text-[14px] text-[#787774] leading-relaxed px-4">
-                  Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu vào email <span className="font-medium text-[#111111]">{watchEmail}</span>. Vui lòng kiểm tra hộp thư của bạn.
-                </p>
-                <div className="pt-6">
-                  <Link href="/login" className="text-[14px] font-medium text-[#111111] hover:underline underline-offset-4 transition-colors">
-                    Quay Lại Đăng Nhập
-                  </Link>
-                </div>
+          {isSuccess ? (
+            <div className="space-y-6 text-center animate-in fade-in duration-500">
+              <div className="mx-auto w-16 h-16 bg-[#111111] rounded-full flex items-center justify-center mb-6">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
               </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
-                  <div className="space-y-5">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem className="space-y-0">
+              <h3 className="font-serif text-[22px] text-[#111111]">Đã Gửi Email Khôi Phục</h3>
+              <p className="text-[14px] text-[#787774] leading-relaxed px-4">
+                Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu vào email{" "}
+                <span className="font-medium text-[#111111]">{watchEmail}</span>. Vui lòng kiểm tra
+                hộp thư của bạn.
+              </p>
+              <div className="pt-6">
+                <Link
+                  href="/login"
+                  className="text-[14px] font-medium text-[#111111] hover:underline underline-offset-4 transition-colors"
+                >
+                  Quay Lại Đăng Nhập
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+                <div className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0">
                         <FormControl>
                           <SpotlightInput label="Email" field={field} />
                         </FormControl>
                         <FormMessage className="text-[13px] text-[#9F2F2D] ml-0.5 mt-2" />
                       </FormItem>
-                      )}
-                    />
-                  </div>
+                    )}
+                  />
+                </div>
 
-                  <ElegantExpandButton isLoading={isLoading} disabled={isLoading || !watchEmail}>
-                    Gửi Yêu Cầu
-                  </ElegantExpandButton>
+                <ElegantExpandButton isLoading={isLoading} disabled={isLoading || !watchEmail}>
+                  Gửi Yêu Cầu
+                </ElegantExpandButton>
 
-                  <div className="pt-6 text-center">
-                    <Link href="/login" className="text-[13px] text-[#787774] hover:text-[#111111] transition-colors hover:underline underline-offset-4">
-                      Quay Lại Đăng Nhập
-                    </Link>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </div>
-        </StaticCard>
+                <div className="pt-6 text-center">
+                  <Link
+                    href="/login"
+                    className="text-[13px] text-[#787774] hover:text-[#111111] transition-colors hover:underline underline-offset-4"
+                  >
+                    Quay Lại Đăng Nhập
+                  </Link>
+                </div>
+              </form>
+            </Form>
+          )}
+        </div>
+      </StaticCard>
 
       <div className="mt-10 text-center text-[11px] text-[#A0A0A0] font-mono uppercase tracking-[0.1em] animate-in fade-in duration-1000 delay-500">
         StudyMate System &copy; {new Date().getFullYear()}

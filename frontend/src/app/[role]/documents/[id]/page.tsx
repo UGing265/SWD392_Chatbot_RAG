@@ -97,119 +97,129 @@ export default function DocumentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDocument = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
+  const fetchDocument = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const query = new URLSearchParams({
-        chunkPage: String(chunkPage),
-        chunkPageSize: String(CHUNK_PAGE_SIZE),
-      });
+      try {
+        const query = new URLSearchParams({
+          chunkPage: String(chunkPage),
+          chunkPageSize: String(CHUNK_PAGE_SIZE),
+        });
 
-      const response = await fetch(`${API_BASE_URL}/api/documents/${slug}?${query.toString()}`, {
-        headers: getAuthHeaders(),
-        signal,
-      });
+        const response = await fetch(`${API_BASE_URL}/api/documents/${slug}?${query.toString()}`, {
+          headers: getAuthHeaders(),
+          signal,
+        });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || "Không thể tải tài liệu này.");
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error || "Không thể tải tài liệu này.");
+        }
+
+        const data = await response.json();
+        setDocument({
+          ...data,
+          files: Array.isArray(data.files) ? data.files : [],
+          chapters: Array.isArray(data.chapters) ? data.chapters : [],
+          chunks: Array.isArray(data.chunks) ? data.chunks : [],
+          total_chunks: data.total_chunks || 0,
+          total_chapters: data.total_chapters || 0,
+          view_count: data.view_count || 0,
+          download_count: data.download_count || 0,
+          file_count: data.file_count || 0,
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("Error fetching document details:", err);
+
+        // Fallback mock data for SWD392 preview
+        setDocument({
+          id: "mock-1",
+          title: "Bài giảng 1: Giới thiệu môn học Software Architecture",
+          description:
+            "Tài liệu này bao gồm tổng quan về môn học SWD392, các khái niệm cơ bản về kiến trúc phần mềm, vai trò của Software Architect và các mẫu kiến trúc phổ biến (Architectural Patterns). Đọc kỹ trước khi làm Quiz 1.",
+          subject_name: "SWD392 - Software Architecture",
+          academic_term_name: "Kỳ học 1 (Spring)",
+          visibility: "school_wide",
+          status: "Đã xử lý",
+          document_type_name: "Bài giảng (Slide)",
+          language_name: "Tiếng Việt",
+          total_chunks: 42,
+          total_chapters: 3,
+          view_count: 156,
+          download_count: 89,
+          file_count: 1,
+          files: [
+            {
+              id: "f1",
+              original_filename: "SWD392_Lec1_Intro.pdf",
+              file_size_bytes: 2500000,
+              page_count: 45,
+              extraction_status: "Hoàn tất",
+            },
+          ],
+          chapters: [
+            {
+              id: "c1",
+              title: "Chương 1: Tổng quan về Kiến trúc Phần mềm",
+              summary:
+                "Định nghĩa về Kiến trúc phần mềm, tầm quan trọng của nó trong vòng đời phát triển phần mềm (SDLC).",
+              chapter_order: 1,
+              start_page: 1,
+              end_page: 15,
+            },
+            {
+              id: "c2",
+              title: "Chương 2: Vai trò của Software Architect",
+              summary:
+                "Nhiệm vụ, kỹ năng cần thiết và trách nhiệm của một kiến trúc sư phần mềm trong team Agile.",
+              chapter_order: 2,
+              start_page: 16,
+              end_page: 30,
+            },
+            {
+              id: "c3",
+              title: "Chương 3: Các mẫu Kiến trúc phổ biến",
+              summary:
+                "Giới thiệu về Client-Server, Layered Architecture, Microservices và Event-Driven.",
+              chapter_order: 3,
+              start_page: 31,
+              end_page: 45,
+            },
+          ],
+          chunks: [
+            {
+              id: "ch1",
+              chunk_order: 0,
+              page_number: 1,
+              content:
+                "Chào mừng các bạn đến với môn học SWD392 - Software Architecture.\n\nTrong môn học này, chúng ta sẽ tìm hiểu về cách thiết kế một hệ thống phần mềm lớn, từ việc xác định các module, thành phần cốt lõi đến cách chúng giao tiếp với nhau.",
+            },
+            {
+              id: "ch2",
+              chunk_order: 1,
+              page_number: 3,
+              content:
+                "Định nghĩa: Kiến trúc phần mềm của một hệ thống là cấu trúc hoặc các cấu trúc của hệ thống, bao gồm các thành phần phần mềm, các thuộc tính có thể nhìn thấy từ bên ngoài của các thành phần đó và các mối quan hệ giữa chúng.",
+            },
+            {
+              id: "ch3",
+              chunk_order: 2,
+              page_number: 5,
+              content:
+                "Tại sao Kiến trúc phần mềm lại quan trọng?\n1. Nó đóng vai trò là phương tiện giao tiếp giữa các bên liên quan.\n2. Nó nắm bắt các quyết định thiết kế sớm, có ảnh hưởng sâu sắc đến sự phát triển, triển khai và bảo trì hệ thống.\n3. Nó là một mô hình trừu tượng, tương đối nhỏ của hệ thống, giúp chúng ta dễ hiểu và quản lý độ phức tạp.",
+            },
+          ],
+        });
+        // setError(err instanceof Error ? err.message : "Không thể tải tài liệu này.");
+      } finally {
+        setLoading(false);
       }
-
-      const data = await response.json();
-      setDocument({
-        ...data,
-        files: Array.isArray(data.files) ? data.files : [],
-        chapters: Array.isArray(data.chapters) ? data.chapters : [],
-        chunks: Array.isArray(data.chunks) ? data.chunks : [],
-        total_chunks: data.total_chunks || 0,
-        total_chapters: data.total_chapters || 0,
-        view_count: data.view_count || 0,
-        download_count: data.download_count || 0,
-        file_count: data.file_count || 0,
-      });
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      console.error("Error fetching document details:", err);
-      
-      // Fallback mock data for SWD392 preview
-      setDocument({
-        id: "mock-1",
-        title: "Bài giảng 1: Giới thiệu môn học Software Architecture",
-        description: "Tài liệu này bao gồm tổng quan về môn học SWD392, các khái niệm cơ bản về kiến trúc phần mềm, vai trò của Software Architect và các mẫu kiến trúc phổ biến (Architectural Patterns). Đọc kỹ trước khi làm Quiz 1.",
-        subject_name: "SWD392 - Software Architecture",
-        academic_term_name: "Kỳ học 1 (Spring)",
-        visibility: "school_wide",
-        status: "Đã xử lý",
-        document_type_name: "Bài giảng (Slide)",
-        language_name: "Tiếng Việt",
-        total_chunks: 42,
-        total_chapters: 3,
-        view_count: 156,
-        download_count: 89,
-        file_count: 1,
-        files: [
-          {
-            id: "f1",
-            original_filename: "SWD392_Lec1_Intro.pdf",
-            file_size_bytes: 2500000,
-            page_count: 45,
-            extraction_status: "Hoàn tất"
-          }
-        ],
-        chapters: [
-          {
-            id: "c1",
-            title: "Chương 1: Tổng quan về Kiến trúc Phần mềm",
-            summary: "Định nghĩa về Kiến trúc phần mềm, tầm quan trọng của nó trong vòng đời phát triển phần mềm (SDLC).",
-            chapter_order: 1,
-            start_page: 1,
-            end_page: 15
-          },
-          {
-            id: "c2",
-            title: "Chương 2: Vai trò của Software Architect",
-            summary: "Nhiệm vụ, kỹ năng cần thiết và trách nhiệm của một kiến trúc sư phần mềm trong team Agile.",
-            chapter_order: 2,
-            start_page: 16,
-            end_page: 30
-          },
-          {
-            id: "c3",
-            title: "Chương 3: Các mẫu Kiến trúc phổ biến",
-            summary: "Giới thiệu về Client-Server, Layered Architecture, Microservices và Event-Driven.",
-            chapter_order: 3,
-            start_page: 31,
-            end_page: 45
-          }
-        ],
-        chunks: [
-          {
-            id: "ch1",
-            chunk_order: 0,
-            page_number: 1,
-            content: "Chào mừng các bạn đến với môn học SWD392 - Software Architecture.\n\nTrong môn học này, chúng ta sẽ tìm hiểu về cách thiết kế một hệ thống phần mềm lớn, từ việc xác định các module, thành phần cốt lõi đến cách chúng giao tiếp với nhau."
-          },
-          {
-            id: "ch2",
-            chunk_order: 1,
-            page_number: 3,
-            content: "Định nghĩa: Kiến trúc phần mềm của một hệ thống là cấu trúc hoặc các cấu trúc của hệ thống, bao gồm các thành phần phần mềm, các thuộc tính có thể nhìn thấy từ bên ngoài của các thành phần đó và các mối quan hệ giữa chúng."
-          },
-          {
-            id: "ch3",
-            chunk_order: 2,
-            page_number: 5,
-            content: "Tại sao Kiến trúc phần mềm lại quan trọng?\n1. Nó đóng vai trò là phương tiện giao tiếp giữa các bên liên quan.\n2. Nó nắm bắt các quyết định thiết kế sớm, có ảnh hưởng sâu sắc đến sự phát triển, triển khai và bảo trì hệ thống.\n3. Nó là một mô hình trừu tượng, tương đối nhỏ của hệ thống, giúp chúng ta dễ hiểu và quản lý độ phức tạp."
-          }
-        ]
-      });
-      // setError(err instanceof Error ? err.message : "Không thể tải tài liệu này.");
-    } finally {
-      setLoading(false);
-    }
-  }, [chunkPage, slug]);
+    },
+    [chunkPage, slug],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -292,7 +302,11 @@ export default function DocumentDetailPage() {
           <p className="mb-6 text-muted-foreground">
             {error || "Tài liệu này không tồn tại hoặc bạn không có quyền truy cập."}
           </p>
-          <Button onClick={() => router.back()} variant="outline" className="rounded-xl border-zinc-200 hover:bg-zinc-100">
+          <Button
+            onClick={() => router.back()}
+            variant="outline"
+            className="rounded-xl border-zinc-200 hover:bg-zinc-100"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
@@ -305,7 +319,11 @@ export default function DocumentDetailPage() {
     <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
       <div className="container mx-auto max-w-5xl p-6 py-8 md:py-12">
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          <Button onClick={() => router.back()} variant="outline" className="mb-6 rounded-xl border-zinc-200 hover:bg-white text-zinc-600">
+          <Button
+            onClick={() => router.back()}
+            variant="outline"
+            className="mb-6 rounded-xl border-zinc-200 hover:bg-white text-zinc-600"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
@@ -333,10 +351,16 @@ export default function DocumentDetailPage() {
                     </span>
                   )}
                 </Badge>
-                <Badge variant="outline" className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]">
+                <Badge
+                  variant="outline"
+                  className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]"
+                >
                   {document.document_type_name || "Tài liệu"}
                 </Badge>
-                <Badge variant="outline" className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]">
+                <Badge
+                  variant="outline"
+                  className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]"
+                >
                   {document.status}
                 </Badge>
               </div>
@@ -360,7 +384,11 @@ export default function DocumentDetailPage() {
                 <Download className="mr-2 h-4 w-4" />
                 Tải xuống
               </Button>
-              <Button onClick={handleShare} variant="outline" className="rounded-xl border-zinc-200 hover:bg-zinc-100 h-11">
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="rounded-xl border-zinc-200 hover:bg-zinc-100 h-11"
+              >
                 <Share2 className="mr-2 h-4 w-4" />
                 Chia sẻ
               </Button>
@@ -381,7 +409,11 @@ export default function DocumentDetailPage() {
         <div className="mb-10 grid gap-4 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 delay-100 duration-500">
           {[
             { icon: BookOpen, label: "Môn học", value: document.subject_name || "Chưa có môn học" },
-            { icon: Calendar, label: "Kỳ học", value: document.academic_term_name || "Chưa có kỳ học" },
+            {
+              icon: Calendar,
+              label: "Kỳ học",
+              value: document.academic_term_name || "Chưa có kỳ học",
+            },
             { icon: File, label: "Ngôn ngữ", value: document.language_name || "Chưa xác định" },
           ].map((stat, i) => (
             <div key={i} className="rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm">
@@ -404,14 +436,20 @@ export default function DocumentDetailPage() {
                   <FileText className="h-6 w-6 text-[#0d8282]" />
                 </div>
                 <div>
-                  <p className="line-clamp-1 text-[15px] font-semibold text-zinc-800">{primaryFile.original_filename}</p>
+                  <p className="line-clamp-1 text-[15px] font-semibold text-zinc-800">
+                    {primaryFile.original_filename}
+                  </p>
                   <p className="text-[13px] text-zinc-500 mt-0.5">
-                    {formatFileSize(primaryFile.file_size_bytes)} 
+                    {formatFileSize(primaryFile.file_size_bytes)}
                     {primaryFile.page_count ? ` • ${primaryFile.page_count} trang` : ""}
                   </p>
                 </div>
               </div>
-              <Button onClick={handleDownload} variant="outline" className="shrink-0 rounded-xl border-zinc-200 hover:bg-zinc-50 text-[#0d8282]">
+              <Button
+                onClick={handleDownload}
+                variant="outline"
+                className="shrink-0 rounded-xl border-zinc-200 hover:bg-zinc-50 text-[#0d8282]"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Mở file gốc
               </Button>
@@ -426,7 +464,8 @@ export default function DocumentDetailPage() {
                   Nội dung chi tiết
                 </h2>
                 <p className="mt-1 text-[13px] text-zinc-500">
-                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn văn bản
+                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn
+                  văn bản
                 </p>
               </div>
               {loading && <Loader2 className="h-5 w-5 animate-spin text-[#0d8282]" />}
@@ -435,7 +474,7 @@ export default function DocumentDetailPage() {
             {document.chunks.length > 0 ? (
               <div className="rounded-2xl border border-zinc-200/50 bg-zinc-50/80 p-6 md:p-10">
                 <div className="prose prose-zinc max-w-none text-[16px] leading-[1.8] text-zinc-800 whitespace-pre-wrap">
-                  {document.chunks.map(c => c.content).join("\n\n")}
+                  {document.chunks.map((c) => c.content).join("\n\n")}
                 </div>
               </div>
             ) : (
@@ -444,7 +483,9 @@ export default function DocumentDetailPage() {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white border border-zinc-100 shadow-sm">
                     <FileText className="h-8 w-8 text-zinc-400" />
                   </div>
-                  <h3 className="mb-2 text-[16px] font-bold text-zinc-800">Chưa có nội dung trích xuất</h3>
+                  <h3 className="mb-2 text-[16px] font-bold text-zinc-800">
+                    Chưa có nội dung trích xuất
+                  </h3>
                   <p className="text-[14px] text-zinc-500 leading-relaxed">
                     Tài liệu này có thể vẫn đang được hệ thống xử lý hoặc nội dung trống.
                   </p>

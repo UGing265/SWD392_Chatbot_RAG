@@ -30,10 +30,7 @@ import {
   IconAlertTriangle,
 } from "@tabler/icons-react";
 
-const statusConfig: Record<
-  DocStatus,
-  { label: string; color: string; icon: any }
-> = {
+const statusConfig: Record<DocStatus, { label: string; color: string; icon: any }> = {
   completed: {
     label: "Hoàn thành",
     color: "green",
@@ -163,7 +160,10 @@ export function AdminDocumentsView() {
                       </Table.Td>
                       <Table.Td>
                         <Group gap="xs" wrap="nowrap">
-                          <IconFileText size={18} style={{ color: "var(--mantine-color-gray-5)" }} />
+                          <IconFileText
+                            size={18}
+                            style={{ color: "var(--mantine-color-gray-5)" }}
+                          />
                           <Text size="sm" fw={600} style={{ maxWidth: 250 }} truncate>
                             {doc.title}
                           </Text>
@@ -175,7 +175,9 @@ export function AdminDocumentsView() {
                             {doc.subject_name}
                           </Badge>
                         ) : (
-                          <Text size="xs" c="dimmed">—</Text>
+                          <Text size="xs" c="dimmed">
+                            —
+                          </Text>
                         )}
                       </Table.Td>
                       <Table.Td>
@@ -246,7 +248,12 @@ export function AdminDocumentsView() {
 
         {/* Pagination bar */}
         {!loading && totalPages > 1 && (
-          <Group justify="space-between" p="md" bg="gray.0" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+          <Group
+            justify="space-between"
+            p="md"
+            bg="gray.0"
+            style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+          >
             <Text size="xs" c="dimmed">
               Hiển thị {documents.length} tài liệu
             </Text>
@@ -267,20 +274,28 @@ export function AdminDocumentsView() {
           Quy trình xử lý tài liệu tự động
         </Text>
         <Text size="sm" c="dimmed" mb="md" style={{ lineHeight: 1.6 }}>
-          Tài liệu sau khi phê duyệt sẽ được đưa qua pipeline xử lý: Tải lên → Phân tích văn bản → Chia nhỏ ngữ nghĩa → Trích xuất vector embedding (sử dụng Gemini Embedding 3072 dimensions) → Lưu trữ lập chỉ mục vào pgvector.
+          Tài liệu sau khi phê duyệt sẽ được đưa qua pipeline xử lý: Tải lên → Phân tích văn bản →
+          Chia nhỏ ngữ nghĩa → Trích xuất vector embedding (sử dụng Gemini Embedding 3072
+          dimensions) → Lưu trữ lập chỉ mục vào pgvector.
         </Text>
         <Group gap="xs" wrap="wrap">
-          {["Tải lên", "Phân tích", "Chia đoạn", "Nhúng vector", "Lập chỉ mục"].map((stage, idx) => (
-            <Group key={stage} gap="xs" align="center">
-              <Badge variant="filled" color="violet" size="sm" circle>
-                {idx + 1}
-              </Badge>
-              <Text size="xs" fw={600} c="gray.7">
-                {stage}
-              </Text>
-              {idx < 4 && <Text size="xs" c="dimmed">→</Text>}
-            </Group>
-          ))}
+          {["Tải lên", "Phân tích", "Chia đoạn", "Nhúng vector", "Lập chỉ mục"].map(
+            (stage, idx) => (
+              <Group key={stage} gap="xs" align="center">
+                <Badge variant="filled" color="violet" size="sm" circle>
+                  {idx + 1}
+                </Badge>
+                <Text size="xs" fw={600} c="gray.7">
+                  {stage}
+                </Text>
+                {idx < 4 && (
+                  <Text size="xs" c="dimmed">
+                    →
+                  </Text>
+                )}
+              </Group>
+            ),
+          )}
         </Group>
       </Paper>
     </Stack>

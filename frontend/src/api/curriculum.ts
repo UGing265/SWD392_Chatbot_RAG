@@ -44,8 +44,17 @@ export const curriculumApi = {
     return response.data;
   },
 
-  updateSubject: async (subjectId: string, code: string, name: string, academicTermId: string | null): Promise<any> => {
-    const response = await ragApi.put(`/admin/subjects/${subjectId}`, { code, name, academicTermId });
+  updateSubject: async (
+    subjectId: string,
+    code: string,
+    name: string,
+    academicTermId: string | null,
+  ): Promise<any> => {
+    const response = await ragApi.put(`/admin/subjects/${subjectId}`, {
+      code,
+      name,
+      academicTermId,
+    });
     return response.data;
   },
 

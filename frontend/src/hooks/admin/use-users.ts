@@ -99,7 +99,7 @@ export function useUsers() {
         email: u.email,
         username: u.username || "",
         roleId: u.role_id,
-        role: u.role_id === 1 ? "Admin" : (u.role_id === 2 ? "Lecturer" : "Student"),
+        role: u.role_id === 1 ? "Admin" : u.role_id === 2 ? "Lecturer" : "Student",
         status: u.is_blocked ? "BỊ KHÓA" : "ĐANG HOẠT ĐỘNG",
         active: !u.is_blocked,
       }));
@@ -118,12 +118,19 @@ export function useUsers() {
 
   const handleToggleBlock = async (userId: string, active: boolean) => {
     const action = active ? "block" : "unblock";
-    if (!confirm(active ? "Bạn có chắc muốn khóa tài khoản này?" : "Bạn có chắc muốn mở khóa tài khoản này?")) {
+    if (
+      !confirm(
+        active ? "Bạn có chắc muốn khóa tài khoản này?" : "Bạn có chắc muốn mở khóa tài khoản này?",
+      )
+    ) {
       return;
     }
     try {
       await adminUserApi.toggleBlock(userId, action);
-      notify.success(active ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản", "Trạng thái tài khoản đã được cập nhật.");
+      notify.success(
+        active ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản",
+        "Trạng thái tài khoản đã được cập nhật.",
+      );
       fetchUsers();
     } catch (error) {
       notify.error("Thao tác thất bại", "Vui lòng thử lại sau.");
@@ -173,7 +180,11 @@ export function useUsers() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa vĩnh viễn tài khoản "${userName}"? Thao tác này không thể hoàn tác.`)) {
+    if (
+      !confirm(
+        `Bạn có chắc muốn xóa vĩnh viễn tài khoản "${userName}"? Thao tác này không thể hoàn tác.`,
+      )
+    ) {
       return;
     }
     try {

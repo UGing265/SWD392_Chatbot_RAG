@@ -49,14 +49,18 @@ export function SharedDocumentsView() {
   const pathname = usePathname();
   const router = useRouter();
   const role = pathname.split("/")[1] || "student";
-  
+
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const [selectedTerm, setSelectedTerm] = useState<{id: string, name: string, year: string} | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<{id: string, name: string} | null>(null);
+
+  const [selectedTerm, setSelectedTerm] = useState<{
+    id: string;
+    name: string;
+    year: string;
+  } | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null);
 
   // Mock data for UI structure
   const terms = [
@@ -76,92 +80,101 @@ export function SharedDocumentsView() {
   ];
 
   // Group terms by year
-  const groupedTerms = terms.reduce((acc, term) => {
-    if (!acc[term.year]) acc[term.year] = [];
-    acc[term.year].push(term);
-    return acc;
-  }, {} as Record<string, typeof terms>);
+  const groupedTerms = terms.reduce(
+    (acc, term) => {
+      if (!acc[term.year]) acc[term.year] = [];
+      acc[term.year].push(term);
+      return acc;
+    },
+    {} as Record<string, typeof terms>,
+  );
 
-  const fetchDocuments = useCallback(async (signal?: AbortSignal) => {
-    if (!selectedTerm || !selectedSubject) return;
-    
-    setLoading(true);
-    setError(null);
+  const fetchDocuments = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!selectedTerm || !selectedSubject) return;
 
-    try {
-      const params = new URLSearchParams({
-        page: "1",
-        pageSize: "12",
-        sortBy: "date_desc",
-        term: selectedTerm.id,
-        subject: selectedSubject.id,
-      });
+      setLoading(true);
+      setError(null);
 
-      if (searchQuery.trim()) {
-        params.set("q", searchQuery.trim());
+      try {
+        const params = new URLSearchParams({
+          page: "1",
+          pageSize: "12",
+          sortBy: "date_desc",
+          term: selectedTerm.id,
+          subject: selectedSubject.id,
+        });
+
+        if (searchQuery.trim()) {
+          params.set("q", searchQuery.trim());
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/documents?${params.toString()}`, {
+          headers: getAuthHeaders(),
+          signal,
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error || "Không thể tải danh sách tài liệu.");
+        }
+
+        const data = await response.json();
+        const docs = Array.isArray(data.documents) ? data.documents : [];
+
+        // Inject mock data if empty (for preview purposes)
+        if (docs.length === 0 && selectedSubject?.id === "s1") {
+          setDocuments([
+            {
+              id: "doc-1",
+              slug: "bai-giang-1",
+              title: "Bài giảng 1: Giới thiệu môn học",
+              preview_text: "Tổng quan về môn học và phương pháp đánh giá.",
+              subject_name: selectedSubject.name,
+              academic_term_name: selectedTerm.name,
+              visibility: "school_wide",
+              created_at: new Date().toISOString(),
+            },
+          ]);
+        } else {
+          setDocuments(docs);
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("Failed to fetch shared documents:", err);
+        // Fallback mock data if API fails
+        if (selectedSubject?.id === "s1") {
+          setDocuments([
+            {
+              id: "doc-1",
+              slug: "bai-giang-1",
+              title: "Bài giảng 1: Giới thiệu môn học",
+              preview_text: "Tổng quan về môn học và phương pháp đánh giá.",
+              subject_name: selectedSubject.name,
+              academic_term_name: selectedTerm.name,
+              visibility: "school_wide",
+              created_at: new Date().toISOString(),
+            },
+          ]);
+        } else {
+          setDocuments([]);
+        }
+      } finally {
+        setLoading(false);
       }
-
-      const response = await fetch(`${API_BASE_URL}/api/documents?${params.toString()}`, {
-        headers: getAuthHeaders(),
-        signal,
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || "Không thể tải danh sách tài liệu.");
-      }
-
-      const data = await response.json();
-      const docs = Array.isArray(data.documents) ? data.documents : [];
-      
-      // Inject mock data if empty (for preview purposes)
-      if (docs.length === 0 && selectedSubject?.id === "s1") {
-        setDocuments([
-          {
-            id: "doc-1",
-            slug: "bai-giang-1",
-            title: "Bài giảng 1: Giới thiệu môn học",
-            preview_text: "Tổng quan về môn học và phương pháp đánh giá.",
-            subject_name: selectedSubject.name,
-            academic_term_name: selectedTerm.name,
-            visibility: "school_wide",
-            created_at: new Date().toISOString()
-          }
-        ]);
-      } else {
-        setDocuments(docs);
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      console.error("Failed to fetch shared documents:", err);
-      // Fallback mock data if API fails
-      if (selectedSubject?.id === "s1") {
-        setDocuments([
-          {
-            id: "doc-1",
-            slug: "bai-giang-1",
-            title: "Bài giảng 1: Giới thiệu môn học",
-            preview_text: "Tổng quan về môn học và phương pháp đánh giá.",
-            subject_name: selectedSubject.name,
-            academic_term_name: selectedTerm.name,
-            visibility: "school_wide",
-            created_at: new Date().toISOString()
-          }
-        ]);
-      } else {
-        setDocuments([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, selectedTerm, selectedSubject]);
+    },
+    [searchQuery, selectedTerm, selectedSubject],
+  );
 
   useEffect(() => {
     if (!selectedTerm || !selectedSubject) return;
     const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      fetchDocuments(controller.signal);
-    }, searchQuery.trim() ? 250 : 0);
+    const timer = window.setTimeout(
+      () => {
+        fetchDocuments(controller.signal);
+      },
+      searchQuery.trim() ? 250 : 0,
+    );
 
     return () => {
       window.clearTimeout(timer);
@@ -183,7 +196,6 @@ export function SharedDocumentsView() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
       <div className="container mx-auto max-w-5xl p-6 py-12">
-        
         {/* Header */}
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -192,22 +204,23 @@ export function SharedDocumentsView() {
                 <FolderOpen className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-[#0d8282]">
-                  Tài liệu chung
-                </h1>
+                <h1 className="text-3xl font-bold text-[#0d8282]">Tài liệu chung</h1>
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mt-1">
-                  <span 
-                    className={`cursor-pointer hover:text-foreground transition-colors ${!selectedTerm ? 'text-foreground' : ''}`}
-                    onClick={() => { setSelectedTerm(null); setSelectedSubject(null); }}
+                  <span
+                    className={`cursor-pointer hover:text-foreground transition-colors ${!selectedTerm ? "text-foreground" : ""}`}
+                    onClick={() => {
+                      setSelectedTerm(null);
+                      setSelectedSubject(null);
+                    }}
                   >
                     Tất cả năm học
                   </span>
-                  
+
                   {selectedTerm && (
                     <>
                       <ChevronRight className="h-3.5 w-3.5" />
-                      <span 
-                        className={`cursor-pointer hover:text-foreground transition-colors ${!selectedSubject ? 'text-foreground' : ''}`}
+                      <span
+                        className={`cursor-pointer hover:text-foreground transition-colors ${!selectedSubject ? "text-foreground" : ""}`}
                         onClick={() => setSelectedSubject(null)}
                       >
                         Năm {selectedTerm.year} - {selectedTerm.name}
@@ -224,7 +237,7 @@ export function SharedDocumentsView() {
                 </div>
               </div>
             </div>
-            
+
             {(selectedTerm || selectedSubject) && (
               <Button variant="outline" onClick={handleBack} className="rounded-xl">
                 Quay lại
@@ -236,33 +249,37 @@ export function SharedDocumentsView() {
         {/* Level 1: Select Term grouped by Year */}
         {!selectedTerm ? (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {Object.entries(groupedTerms).sort((a,b) => Number(b[0]) - Number(a[0])).map(([year, yearTerms]) => (
-              <div key={year}>
-                <h2 className="text-lg font-bold text-zinc-800 mb-4 flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-[#0d8282]" />
-                  Năm học {year}
-                </h2>
-                <div className="grid gap-4 md:grid-cols-3">
-                  {yearTerms.map((term) => (
-                    <div
-                      key={term.id}
-                      onClick={() => setSelectedTerm(term)}
-                      className="cursor-pointer rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all hover:border-[#0d8282] hover:shadow-md group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10 text-[#0d8282] group-hover:bg-[#0d8282] group-hover:text-white transition-colors">
-                          <FolderOpen className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-zinc-800 group-hover:text-[#0d8282] transition-colors">{term.name}</h3>
-                          <p className="text-sm text-zinc-500 mt-0.5">Bấm để chọn kỳ học</p>
+            {Object.entries(groupedTerms)
+              .sort((a, b) => Number(b[0]) - Number(a[0]))
+              .map(([year, yearTerms]) => (
+                <div key={year}>
+                  <h2 className="text-lg font-bold text-zinc-800 mb-4 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-[#0d8282]" />
+                    Năm học {year}
+                  </h2>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {yearTerms.map((term) => (
+                      <div
+                        key={term.id}
+                        onClick={() => setSelectedTerm(term)}
+                        className="cursor-pointer rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all hover:border-[#0d8282] hover:shadow-md group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10 text-[#0d8282] group-hover:bg-[#0d8282] group-hover:text-white transition-colors">
+                            <FolderOpen className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-zinc-800 group-hover:text-[#0d8282] transition-colors">
+                              {term.name}
+                            </h3>
+                            <p className="text-sm text-zinc-500 mt-0.5">Bấm để chọn kỳ học</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : !selectedSubject ? (
           /* Level 2: Select Subject */
@@ -273,25 +290,27 @@ export function SharedDocumentsView() {
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {subjects
-                .filter(s => s.termId === selectedTerm.id)
+                .filter((s) => s.termId === selectedTerm.id)
                 .map((subject) => (
-                <div
-                  key={subject.id}
-                  onClick={() => setSelectedSubject(subject)}
-                  className="cursor-pointer rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all hover:border-[#0d8282] hover:shadow-md group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10 text-[#0d8282] group-hover:bg-[#0d8282] group-hover:text-white transition-colors">
-                      <BookOpen className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-bold text-zinc-800 group-hover:text-[#0d8282] transition-colors line-clamp-2">{subject.name}</h3>
-                      <p className="text-[13px] text-zinc-500 mt-1">Bấm để xem tài liệu</p>
+                  <div
+                    key={subject.id}
+                    onClick={() => setSelectedSubject(subject)}
+                    className="cursor-pointer rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all hover:border-[#0d8282] hover:shadow-md group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10 text-[#0d8282] group-hover:bg-[#0d8282] group-hover:text-white transition-colors">
+                        <BookOpen className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-bold text-zinc-800 group-hover:text-[#0d8282] transition-colors line-clamp-2">
+                          {subject.name}
+                        </h3>
+                        <p className="text-[13px] text-zinc-500 mt-1">Bấm để xem tài liệu</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {subjects.filter(s => s.termId === selectedTerm.id).length === 0 && (
+                ))}
+              {subjects.filter((s) => s.termId === selectedTerm.id).length === 0 && (
                 <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-zinc-300">
                   <p className="text-zinc-500">Chưa có môn học nào trong kỳ này.</p>
                 </div>
@@ -325,7 +344,9 @@ export function SharedDocumentsView() {
                   {searchQuery ? "Không tìm thấy tài liệu nào" : "Chưa có tài liệu nào"}
                 </h3>
                 <p className="text-zinc-400 font-medium">
-                  {searchQuery ? "Hãy thử một từ khóa khác." : "Giảng viên chưa tải lên tài liệu cho môn học này."}
+                  {searchQuery
+                    ? "Hãy thử một từ khóa khác."
+                    : "Giảng viên chưa tải lên tài liệu cho môn học này."}
                 </p>
               </div>
             ) : (
@@ -351,7 +372,9 @@ export function SharedDocumentsView() {
                     </h3>
 
                     {getPreview(doc) && (
-                      <p className="mb-5 line-clamp-2 text-[14px] leading-relaxed text-zinc-500">{getPreview(doc)}</p>
+                      <p className="mb-5 line-clamp-2 text-[14px] leading-relaxed text-zinc-500">
+                        {getPreview(doc)}
+                      </p>
                     )}
 
                     <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-5 mt-auto">

@@ -34,7 +34,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${sansFont.variable} ${serifFont.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="vi"
+      className={`${sansFont.variable} ${serifFont.variable} ${jetbrainsMono.variable}`}
+    >
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
         <Toaster position="top-right" richColors />

@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CloudUpload, FileText, CheckCircle2, Loader2, X, BookOpen, Calendar, Lock, Globe } from "lucide-react";
+import {
+  CloudUpload,
+  FileText,
+  CheckCircle2,
+  Loader2,
+  X,
+  BookOpen,
+  Calendar,
+  Lock,
+  Globe,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -172,7 +182,10 @@ export function UploadView() {
           </p>
         </div>
 
-        <form onSubmit={handleUpload} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+        <form
+          onSubmit={handleUpload}
+          className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100"
+        >
           {/* File Upload Area */}
           <div className="relative group">
             <input
@@ -221,7 +234,9 @@ export function UploadView() {
                   <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <CloudUpload className="h-10 w-10 text-white" />
                   </div>
-                  <p className="mb-2 font-semibold text-xl text-gray-900">Kéo và thả file vào đây</p>
+                  <p className="mb-2 font-semibold text-xl text-gray-900">
+                    Kéo và thả file vào đây
+                  </p>
                   <p className="text-gray-500">hoặc nhấp để chọn file từ máy tính</p>
                   <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
                     <span className="px-3 py-1 rounded-full bg-gray-100">PDF</span>
@@ -238,7 +253,9 @@ export function UploadView() {
           {/* Document Details */}
           <div className="bg-white rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6">
             <div className="grid gap-2">
-              <Label htmlFor="title" className="text-base font-semibold text-gray-700">Tiêu đề tài liệu</Label>
+              <Label htmlFor="title" className="text-base font-semibold text-gray-700">
+                Tiêu đề tài liệu
+              </Label>
               <Input
                 id="title"
                 value={title}
@@ -251,7 +268,9 @@ export function UploadView() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description" className="text-base font-semibold text-gray-700">Mô tả ngắn gọn</Label>
+              <Label htmlFor="description" className="text-base font-semibold text-gray-700">
+                Mô tả ngắn gọn
+              </Label>
               <Textarea
                 id="description"
                 value={description}
@@ -265,12 +284,18 @@ export function UploadView() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="subject" className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                <Label
+                  htmlFor="subject"
+                  className="text-base font-semibold text-gray-700 flex items-center gap-2"
+                >
                   <BookOpen className="h-4 w-4 text-blue-600" />
                   Môn học
                 </Label>
                 <Select value={subjectId} onValueChange={setSubjectId} disabled={uploading}>
-                  <SelectTrigger id="subject" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger
+                    id="subject"
+                    className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  >
                     <SelectValue placeholder="Chọn môn học" />
                   </SelectTrigger>
                   <SelectContent>
@@ -284,12 +309,18 @@ export function UploadView() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="term" className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                <Label
+                  htmlFor="term"
+                  className="text-base font-semibold text-gray-700 flex items-center gap-2"
+                >
                   <Calendar className="h-4 w-4 text-purple-600" />
                   Kỳ học
                 </Label>
                 <Select value={termId} onValueChange={setTermId} disabled={uploading}>
-                  <SelectTrigger id="term" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger
+                    id="term"
+                    className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  >
                     <SelectValue placeholder="Chọn kỳ học" />
                   </SelectTrigger>
                   <SelectContent>
@@ -303,12 +334,18 @@ export function UploadView() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="chapter" className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                <Label
+                  htmlFor="chapter"
+                  className="text-base font-semibold text-gray-700 flex items-center gap-2"
+                >
                   <BookOpen className="h-4 w-4 text-orange-600" />
                   Chương
                 </Label>
                 <Select value={chapterId} onValueChange={setChapterId} disabled={uploading}>
-                  <SelectTrigger id="chapter" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger
+                    id="chapter"
+                    className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  >
                     <SelectValue placeholder="Chọn chương" />
                   </SelectTrigger>
                   <SelectContent>
@@ -323,9 +360,14 @@ export function UploadView() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="visibility" className="text-base font-semibold text-gray-700">Quyền riêng tư</Label>
+              <Label htmlFor="visibility" className="text-base font-semibold text-gray-700">
+                Quyền riêng tư
+              </Label>
               <Select value={visibility} onValueChange={setVisibility} disabled={uploading}>
-                <SelectTrigger id="visibility" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                <SelectTrigger
+                  id="visibility"
+                  className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                >
                   <SelectValue placeholder="Chọn quyền riêng tư" />
                 </SelectTrigger>
                 <SelectContent>

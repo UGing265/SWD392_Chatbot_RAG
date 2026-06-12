@@ -13,11 +13,7 @@ import {
   Checkbox,
   Grid,
 } from "@mantine/core";
-import {
-  IconBook,
-  IconDeviceFloppy,
-  IconUserCheck,
-} from "@tabler/icons-react";
+import { IconBook, IconDeviceFloppy, IconUserCheck } from "@tabler/icons-react";
 
 export function AdminAssignmentsView() {
   const {
@@ -94,7 +90,12 @@ export function AdminAssignmentsView() {
                 Môn học phân công
               </Text>
               {subjects.length === 0 ? (
-                <Paper withBorder p="md" radius="md" style={{ borderStyle: "dashed", textAlign: "center" }}>
+                <Paper
+                  withBorder
+                  p="md"
+                  radius="md"
+                  style={{ borderStyle: "dashed", textAlign: "center" }}
+                >
                   <Text size="sm" c="dimmed">
                     Chưa có môn học nào trong hệ thống.
                   </Text>
@@ -104,7 +105,7 @@ export function AdminAssignmentsView() {
                   {subjects.map((subject) => {
                     const existing = assignedBySubject.get(subject.id);
                     const assignedToOther = Boolean(
-                      existing && existing.userId !== selectedLecturer
+                      existing && existing.userId !== selectedLecturer,
                     );
                     const checked = assignedSubjects.includes(subject.id);
 
@@ -143,7 +144,13 @@ export function AdminAssignmentsView() {
                             </Group>
 
                             {assignedToOther && (
-                              <Text size="xs" c="red.6" style={{ maxWidth: 120 }} truncate title={existing?.lecturerEmail}>
+                              <Text
+                                size="xs"
+                                c="red.6"
+                                style={{ maxWidth: 120 }}
+                                truncate
+                                title={existing?.lecturerEmail}
+                              >
                                 Đã giao: {existing?.lecturerName || existing?.lecturerEmail}
                               </Text>
                             )}

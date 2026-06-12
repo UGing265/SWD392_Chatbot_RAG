@@ -19,7 +19,11 @@ export interface DocumentsResponse {
 }
 
 export const documentApi = {
-  getDocuments: async (params: { page: number; pageSize: number; q?: string }): Promise<DocumentsResponse> => {
+  getDocuments: async (params: {
+    page: number;
+    pageSize: number;
+    q?: string;
+  }): Promise<DocumentsResponse> => {
     const response = await ragApi.get("/admin/documents", { params });
     return response.data;
   },

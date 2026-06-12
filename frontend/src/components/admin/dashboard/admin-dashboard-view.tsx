@@ -117,7 +117,12 @@ export function AdminDashboardView() {
 
           {/* Recent Documents Section */}
           <Paper withBorder radius="md" shadow="sm" style={{ overflow: "hidden" }}>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--mantine-color-gray-2)",
+              }}
+            >
               <Title order={4} size="md">
                 Tiến trình hệ thống & Tài liệu mới tải lên
               </Title>
@@ -139,7 +144,9 @@ export function AdminDashboardView() {
                 {recentDocs.length === 0 ? (
                   <Table.Tr>
                     <Table.Td colSpan={4} style={{ textAlign: "center", py: 20 }}>
-                      <Text size="sm" c="dimmed">Chưa có tài liệu nào</Text>
+                      <Text size="sm" c="dimmed">
+                        Chưa có tài liệu nào
+                      </Text>
                     </Table.Td>
                   </Table.Tr>
                 ) : (
@@ -147,8 +154,13 @@ export function AdminDashboardView() {
                     <Table.Tr key={doc.id}>
                       <Table.Td>
                         <Group gap="xs">
-                          <IconFileText size={18} style={{ color: "var(--mantine-color-gray-5)" }} />
-                          <Text size="sm" fw={600}>{doc.title}</Text>
+                          <IconFileText
+                            size={18}
+                            style={{ color: "var(--mantine-color-gray-5)" }}
+                          />
+                          <Text size="sm" fw={600}>
+                            {doc.title}
+                          </Text>
                         </Group>
                       </Table.Td>
                       <Table.Td>
@@ -157,14 +169,22 @@ export function AdminDashboardView() {
                       <Table.Td>
                         <Badge
                           variant="dot"
-                          color={doc.status === "completed" ? "green" : doc.status === "pending" ? "yellow" : "blue"}
+                          color={
+                            doc.status === "completed"
+                              ? "green"
+                              : doc.status === "pending"
+                                ? "yellow"
+                                : "blue"
+                          }
                         >
                           {doc.status || "completed"}
                         </Badge>
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" c="dimmed">
-                          {doc.created_at ? new Date(doc.created_at).toLocaleDateString("vi-VN") : "—"}
+                          {doc.created_at
+                            ? new Date(doc.created_at).toLocaleDateString("vi-VN")
+                            : "—"}
                         </Text>
                       </Table.Td>
                     </Table.Tr>

@@ -17,7 +17,9 @@ export function useAdminSettings() {
   });
 
   const [geminiApiKey, setGeminiApiKey] = useState("sk-••••••••••••••••");
-  const [vectorDbConnection, setVectorDbConnection] = useState("postgresql://localhost:5432/studymate_vectors");
+  const [vectorDbConnection, setVectorDbConnection] = useState(
+    "postgresql://localhost:5432/studymate_vectors",
+  );
 
   const [saving, setSaving] = useState(false);
 

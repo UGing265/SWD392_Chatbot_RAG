@@ -1,12 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusCircle, Save, Trash2, CheckCircle2, Circle, Check, BookOpen, Calendar, HelpCircle } from "lucide-react";
+import {
+  PlusCircle,
+  Save,
+  Trash2,
+  CheckCircle2,
+  Circle,
+  Check,
+  BookOpen,
+  Calendar,
+  HelpCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Option {
   id: string;
@@ -96,7 +112,7 @@ export function CreateQuizView() {
           };
         }
         return q;
-      })
+      }),
     );
   };
 
@@ -107,7 +123,7 @@ export function CreateQuizView() {
           return { ...q, options: q.options.filter((o) => o.id !== oId) };
         }
         return q;
-      })
+      }),
     );
   };
 
@@ -121,7 +137,7 @@ export function CreateQuizView() {
           };
         }
         return q;
-      })
+      }),
     );
   };
 
@@ -135,7 +151,7 @@ export function CreateQuizView() {
           };
         }
         return q;
-      })
+      }),
     );
   };
 
@@ -168,7 +184,6 @@ export function CreateQuizView() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-100 py-10 px-4 md:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        
         {/* Header Section */}
         <div className="bg-white rounded-3xl p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50">
           <div className="flex items-center gap-4 mb-6">
@@ -217,7 +232,9 @@ export function CreateQuizView() {
                   </SelectTrigger>
                   <SelectContent>
                     {terms.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -234,7 +251,9 @@ export function CreateQuizView() {
                   </SelectTrigger>
                   <SelectContent>
                     {subjects.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -246,10 +265,15 @@ export function CreateQuizView() {
         {/* Questions Section */}
         <div className="space-y-6">
           {questions.map((q, qIndex) => (
-            <div key={q.id} className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50 animate-in fade-in duration-300">
+            <div
+              key={q.id}
+              className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50 animate-in fade-in duration-300"
+            >
               <div className="flex justify-between items-start mb-6 gap-4">
                 <div className="flex-1">
-                  <Label className="text-lg font-bold text-gray-800 mb-3 block">Câu hỏi {qIndex + 1}</Label>
+                  <Label className="text-lg font-bold text-gray-800 mb-3 block">
+                    Câu hỏi {qIndex + 1}
+                  </Label>
                   <Input
                     placeholder="Nhập nội dung câu hỏi..."
                     value={q.text}
@@ -275,7 +299,9 @@ export function CreateQuizView() {
                     <button
                       onClick={() => setCorrectOption(q.id, opt.id)}
                       className={`flex shrink-0 h-6 w-6 items-center justify-center rounded-full transition-colors ${
-                        opt.isCorrect ? "bg-green-500 text-white" : "border-2 border-gray-300 hover:border-green-400"
+                        opt.isCorrect
+                          ? "bg-green-500 text-white"
+                          : "border-2 border-gray-300 hover:border-green-400"
                       }`}
                     >
                       {opt.isCorrect && <Check className="h-4 w-4" />}
@@ -298,7 +324,7 @@ export function CreateQuizView() {
                     )}
                   </div>
                 ))}
-                
+
                 <Button
                   variant="ghost"
                   onClick={() => addOption(q.id)}
@@ -332,7 +358,6 @@ export function CreateQuizView() {
             {saving ? "Đang lưu..." : "Lưu Quiz"}
           </Button>
         </div>
-
       </div>
     </div>
   );

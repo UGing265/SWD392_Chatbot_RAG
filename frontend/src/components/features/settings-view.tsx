@@ -10,9 +10,7 @@ export function SettingsView() {
     <div className="scrollbar-thin h-[calc(100vh-3.5rem)] overflow-y-auto">
       <div className="mx-auto max-w-3xl px-6 py-8">
         <h1 className="text-2xl font-semibold text-foreground">Cài đặt</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Quản lý tài khoản và giao diện.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Quản lý tài khoản và giao diện.</p>
 
         <div className="mt-6 space-y-4">
           <Section title="Đổi mật khẩu" desc="Cập nhật mật khẩu của bạn để bảo vệ tài khoản.">

@@ -1,11 +1,11 @@
 import { Table, Badge, ActionIcon, Group, Menu } from "@mantine/core";
-import { 
-  IconLock, 
-  IconLockOpen, 
-  IconDotsVertical, 
-  IconEdit, 
-  IconKey, 
-  IconTrash 
+import {
+  IconLock,
+  IconLockOpen,
+  IconDotsVertical,
+  IconEdit,
+  IconKey,
+  IconTrash,
 } from "@tabler/icons-react";
 
 interface User {
@@ -33,19 +33,54 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
       <Table striped highlightOnHover verticalSpacing="md" withRowBorders>
         <Table.Thead>
           <Table.Tr style={{ borderBottomWidth: 1.5 }}>
-            <Table.Th style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", tracking: "wider" }}>
+            <Table.Th
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                tracking: "wider",
+              }}
+            >
               Tên người dùng
             </Table.Th>
-            <Table.Th style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", tracking: "wider" }}>
+            <Table.Th
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                tracking: "wider",
+              }}
+            >
               Email
             </Table.Th>
-            <Table.Th style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", tracking: "wider" }}>
+            <Table.Th
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                tracking: "wider",
+              }}
+            >
               Vai trò
             </Table.Th>
-            <Table.Th style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", tracking: "wider" }}>
+            <Table.Th
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                tracking: "wider",
+              }}
+            >
               Trạng thái
             </Table.Th>
-            <Table.Th style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", tracking: "wider" }} />
+            <Table.Th
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                tracking: "wider",
+              }}
+            />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -55,10 +90,10 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
               <Table.Td style={{ color: "var(--mantine-color-dimmed)" }}>{user.email}</Table.Td>
               <Table.Td>{user.role}</Table.Td>
               <Table.Td>
-                <Badge 
-                  color={user.active ? "green" : "red"} 
-                  variant="light" 
-                  size="sm" 
+                <Badge
+                  color={user.active ? "green" : "red"}
+                  variant="light"
+                  size="sm"
                   style={{ textTransform: "uppercase", fontWeight: 700 }}
                 >
                   {user.status}
@@ -66,9 +101,9 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
               </Table.Td>
               <Table.Td>
                 <Group gap="xs" justify="flex-end">
-                  <ActionIcon 
-                    variant="subtle" 
-                    color={user.active ? "red" : "green"} 
+                  <ActionIcon
+                    variant="subtle"
+                    color={user.active ? "red" : "green"}
                     onClick={() => onToggleBlock(user.id, user.active)}
                     title={user.active ? "Khóa tài khoản" : "Mở khóa tài khoản"}
                   >
@@ -83,22 +118,19 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                     </Menu.Target>
 
                     <Menu.Dropdown>
-                      <Menu.Item 
-                        leftSection={<IconEdit size={14} />} 
-                        onClick={() => onEdit(user)}
-                      >
+                      <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => onEdit(user)}>
                         Sửa thông tin
                       </Menu.Item>
-                      <Menu.Item 
-                        leftSection={<IconKey size={14} />} 
+                      <Menu.Item
+                        leftSection={<IconKey size={14} />}
                         onClick={() => onPassword(user)}
                       >
                         Đổi mật khẩu
                       </Menu.Item>
                       <Menu.Divider />
-                      <Menu.Item 
-                        color="red" 
-                        leftSection={<IconTrash size={14} />} 
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
                         onClick={() => onDelete(user.id, user.name)}
                         style={{ fontWeight: 600 }}
                       >

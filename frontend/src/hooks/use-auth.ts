@@ -5,11 +5,16 @@ import { authClient } from "@/lib/auth-client";
 
 function decodeJwt(token: string) {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join(""),
+    );
     return JSON.parse(jsonPayload);
   } catch (e) {
     return null;
@@ -91,10 +96,12 @@ export function useAuth() {
   const session = sessionData
     ? (() => {
         let currentRole: UserRole = "student";
-        
+
         // 1. Try to get role from JWT token
         if (typeof window !== "undefined") {
-          const token = localStorage.getItem("token") || document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
+          const token =
+            localStorage.getItem("token") ||
+            document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
           if (token) {
             const payload = decodeJwt(token);
             if (payload && payload.role) {
@@ -113,7 +120,7 @@ export function useAuth() {
         const userObj = sessionData.user as any;
         const rId = userObj.roleId || userObj.role_id;
         currentRole = Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student";
-        
+
         return {
           user: sessionData.user,
           role: currentRole,
@@ -145,14 +152,16 @@ export function useAuth() {
             const res = await client.$fetch("/token", { method: "GET" });
             if (res.data) jwtToken = res.data.token;
           } else {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:5000'}/api/auth/token`);
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:5000"}/api/auth/token`,
+            );
             const tokenData = await res.json();
             jwtToken = tokenData?.token;
           }
         } catch (e) {
           console.error("Failed to fetch JWT token:", e);
         }
-        
+
         if (!jwtToken) {
           jwtToken = data.token;
         }
@@ -175,11 +184,12 @@ export function useAuth() {
         if (role === "student") {
           let loginRId = (data.user as any).roleId || (data.user as any).role_id;
           if (!loginRId) {
-            if (email.toLowerCase().includes('admin')) loginRId = 1;
-            else if (email.toLowerCase().includes('lecturer') || email.toLowerCase().includes('gv')) loginRId = 2;
+            if (email.toLowerCase().includes("admin")) loginRId = 1;
+            else if (email.toLowerCase().includes("lecturer") || email.toLowerCase().includes("gv"))
+              loginRId = 2;
             else loginRId = 3;
           }
-          role = Number(loginRId) === 1 ? "admin" : (Number(loginRId) === 2 ? "lecturer" : "student");
+          role = Number(loginRId) === 1 ? "admin" : Number(loginRId) === 2 ? "lecturer" : "student";
         }
 
         notify.success("Đăng nhập thành công!", "Đang chuyển hướng...");
@@ -205,7 +215,7 @@ export function useAuth() {
       setIsLoading(false);
       return { success: false, error: "Authentication failed" };
     },
-    [router, refetch]
+    [router, refetch],
   );
 
   const signOut = useCallback(async () => {

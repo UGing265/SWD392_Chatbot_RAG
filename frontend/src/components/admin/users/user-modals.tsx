@@ -8,9 +8,22 @@ interface CreateUserModalProps {
   setForm: (form: any) => void;
 }
 
-export function CreateUserModal({ opened, onClose, onSubmit, form, setForm }: CreateUserModalProps) {
+export function CreateUserModal({
+  opened,
+  onClose,
+  onSubmit,
+  form,
+  setForm,
+}: CreateUserModalProps) {
   return (
-    <Modal opened={opened} onClose={onClose} title="Thêm tài khoản mới" centered size="md" radius="lg">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Thêm tài khoản mới"
+      centered
+      size="md"
+      radius="lg"
+    >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
           <TextInput
@@ -56,9 +69,7 @@ export function CreateUserModal({ opened, onClose, onSubmit, form, setForm }: Cr
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">
-              Thêm tài khoản
-            </Button>
+            <Button type="submit">Thêm tài khoản</Button>
           </Group>
         </Stack>
       </form>
@@ -76,7 +87,14 @@ interface EditUserModalProps {
 
 export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: EditUserModalProps) {
   return (
-    <Modal opened={opened} onClose={onClose} title="Cập nhật thông tin tài khoản" centered size="md" radius="lg">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="Cập nhật thông tin tài khoản"
+      centered
+      size="md"
+      radius="lg"
+    >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
           <TextInput
@@ -115,9 +133,7 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">
-              Cập nhật
-            </Button>
+            <Button type="submit">Cập nhật</Button>
           </Group>
         </Stack>
       </form>
@@ -134,9 +150,23 @@ interface ChangePasswordModalProps {
   userName: string;
 }
 
-export function ChangePasswordModal({ opened, onClose, onSubmit, value, onChange, userName }: ChangePasswordModalProps) {
+export function ChangePasswordModal({
+  opened,
+  onClose,
+  onSubmit,
+  value,
+  onChange,
+  userName,
+}: ChangePasswordModalProps) {
   return (
-    <Modal opened={opened} onClose={onClose} title={`Đổi mật khẩu cho: ${userName}`} centered size="md" radius="lg">
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={`Đổi mật khẩu cho: ${userName}`}
+      centered
+      size="md"
+      radius="lg"
+    >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
           <PasswordInput

@@ -13,12 +13,7 @@ import {
   Badge,
   Alert,
 } from "@mantine/core";
-import {
-  IconAlertTriangle,
-  IconCheck,
-  IconTrash,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconTrash, IconRefresh } from "@tabler/icons-react";
 
 export function AdminModerationView() {
   const { reports, loading, handleResolve, refresh } = useModeration();
@@ -55,8 +50,9 @@ export function AdminModerationView() {
         radius="md"
       >
         <Text size="sm">
-          Danh sách tài liệu học tập bị sinh viên báo cáo lỗi (nội dung sai lệch, tài liệu trùng lặp, hoặc vi phạm bản quyền).
-          Quản trị viên cần xem xét kỹ để giữ lại (bỏ qua báo cáo) hoặc xóa bỏ hoàn toàn khỏi cơ sở dữ liệu RAG.
+          Danh sách tài liệu học tập bị sinh viên báo cáo lỗi (nội dung sai lệch, tài liệu trùng
+          lặp, hoặc vi phạm bản quyền). Quản trị viên cần xem xét kỹ để giữ lại (bỏ qua báo cáo)
+          hoặc xóa bỏ hoàn toàn khỏi cơ sở dữ liệu RAG.
         </Text>
       </Alert>
 
@@ -82,7 +78,10 @@ export function AdminModerationView() {
                 <Table.Tr>
                   <Table.Td colSpan={5} style={{ textAlign: "center", py: 40 }}>
                     <Stack align="center" gap="xs">
-                      <IconAlertTriangle size={32} style={{ color: "var(--mantine-color-gray-4)" }} />
+                      <IconAlertTriangle
+                        size={32}
+                        style={{ color: "var(--mantine-color-gray-4)" }}
+                      />
                       <Text c="dimmed" size="sm">
                         Không có báo cáo tài liệu nào cần xử lý
                       </Text>

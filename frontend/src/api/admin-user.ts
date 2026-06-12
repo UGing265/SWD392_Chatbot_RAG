@@ -24,7 +24,9 @@ export const adminUserApi = {
   },
 
   changePassword: async (userId: string, passwordNew: string) => {
-    const response = await authApi.put(`/admin/users/${userId}/password`, { password: passwordNew });
+    const response = await authApi.put(`/admin/users/${userId}/password`, {
+      password: passwordNew,
+    });
     return response.data;
   },
 

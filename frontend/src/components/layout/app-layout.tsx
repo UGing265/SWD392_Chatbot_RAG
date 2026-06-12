@@ -1,7 +1,5 @@
 "use client";
 
-
-
 import Link from "next/link";
 
 import { usePathname, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -80,10 +78,11 @@ function SidebarItem({
   return (
     <Link
       href={to}
-      className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${active
-        ? "bg-secondary text-foreground"
-        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-        }`}
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${
+        active
+          ? "bg-secondary text-foreground"
+          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+      }`}
     >
       <Icon
         className={`h-[18px] w-[18px] ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
@@ -120,9 +119,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
               <ClipboardList className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </div>
-            <div className="text-[19px] font-bold tracking-tight text-foreground">
-              StudyMate
-            </div>
+            <div className="text-[19px] font-bold tracking-tight text-foreground">StudyMate</div>
           </Link>
         </div>
 
@@ -143,7 +140,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   to={fullPath}
                   label={n.label}
                   icon={n.icon}
-                  active={pathname === fullPath || (fullPath !== basePath && pathname.startsWith(fullPath))}
+                  active={
+                    pathname === fullPath ||
+                    (fullPath !== basePath && pathname.startsWith(fullPath))
+                  }
                 />
               );
             })}
@@ -164,7 +164,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     "group flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] transition-colors",
                     searchParams?.get("session") === session.id
                       ? "bg-[#0d8282]/10 text-[#0d8282] font-medium"
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                   )}
                 >
                   <MessageSquareText className="h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
@@ -198,18 +198,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[240px] ml-3 mb-2 rounded-xl" side="top" align="start">
+              <DropdownMenuContent
+                className="w-[240px] ml-3 mb-2 rounded-xl"
+                side="top"
+                align="start"
+              >
                 <DropdownMenuLabel className="p-2 font-normal pb-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2e6d2b] text-[15px] font-semibold text-white shrink-0">
                       {session?.user?.name?.[0]?.toUpperCase() || "U"}
                     </div>
                     <div className="flex flex-col min-w-0 leading-tight">
-                      <span className="truncate text-[15px] font-medium">{session?.user?.name || "Người dùng"}</span>
+                      <span className="truncate text-[15px] font-medium">
+                        {session?.user?.name || "Người dùng"}
+                      </span>
                       <span className="truncate text-[12px] font-semibold uppercase tracking-wide text-primary mt-1">
                         {roleLabel}
                       </span>
-                      <span className="truncate text-[13px] text-muted-foreground mt-0.5">{session?.user?.email || "Email"}</span>
+                      <span className="truncate text-[13px] text-muted-foreground mt-0.5">
+                        {session?.user?.email || "Email"}
+                      </span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -236,7 +244,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <Monitor className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                       <div className="flex flex-col">
                         <span>Appearance</span>
-                        <span className="text-[12px] text-muted-foreground leading-none mt-1">System (Light)</span>
+                        <span className="text-[12px] text-muted-foreground leading-none mt-1">
+                          System (Light)
+                        </span>
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
@@ -246,7 +256,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <Languages className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                       <div className="flex flex-col">
                         <span>Language</span>
-                        <span className="text-[12px] text-muted-foreground leading-none mt-1">Default</span>
+                        <span className="text-[12px] text-muted-foreground leading-none mt-1">
+                          Default
+                        </span>
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
@@ -273,14 +285,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-
-
       {/* Main */}
 
       <div className="flex min-w-0 flex-1 flex-col">
-
         <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/70 px-6 backdrop-blur-md md:px-8">
-
           {/* Left Side */}
           <div className="flex min-w-0 items-center gap-4">
             {/* Current Session Title (Only on Chat) */}
@@ -288,7 +296,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <div className="text-[16px] font-semibold text-foreground truncate max-w-[300px] md:max-w-[500px]">
                 {(() => {
                   const sessionId = searchParams?.get("session");
-                  const currentSession = sessionId ? sessionList.find(s => s.id === sessionId) : null;
+                  const currentSession = sessionId
+                    ? sessionList.find((s) => s.id === sessionId)
+                    : null;
                   return currentSession ? currentSession.title : "Phiên chat mới";
                 })()}
               </div>
@@ -305,18 +315,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <span className="whitespace-nowrap font-medium text-foreground">Gói miễn phí</span>
             </div>
           </div>
-
         </header>
 
-
-
         <main className="flex-1 overflow-y-auto min-h-0">{children}</main>
-
       </div>
-
     </div>
-
   );
-
 }
-

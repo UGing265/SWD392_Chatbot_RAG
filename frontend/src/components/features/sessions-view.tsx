@@ -2,7 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Search, MessageSquareText, Clock, Pin, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Search,
+  MessageSquareText,
+  Clock,
+  Pin,
+  ChevronRight,
+  Plus,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { sessionList, createSession, deleteSession } from "@/lib/sessions-store";
 
 export function SessionsView() {
@@ -45,7 +54,7 @@ export function SessionsView() {
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     deleteSession(id);
-    setRenderTrigger(prev => prev + 1);
+    setRenderTrigger((prev) => prev + 1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -156,7 +165,9 @@ export function SessionsView() {
                             </div>
                           </>
                         )}
-                        {s.starred && <Pin className="h-3.5 w-3.5 -rotate-45 text-primary shrink-0" />}
+                        {s.starred && (
+                          <Pin className="h-3.5 w-3.5 -rotate-45 text-primary shrink-0" />
+                        )}
                         {s.status === "active" && (
                           <span className="rounded-full bg-secondary-soft px-2 py-0.5 text-[10px] font-medium text-secondary-foreground shrink-0">
                             Đang mở

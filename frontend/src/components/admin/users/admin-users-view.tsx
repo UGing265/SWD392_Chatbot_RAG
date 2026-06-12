@@ -38,7 +38,7 @@ export function AdminUsersView() {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -53,8 +53,8 @@ export function AdminUsersView() {
             Quản lý vai trò và trạng thái truy cập của người dùng trong hệ thống
           </Text>
         </div>
-        <Button 
-          leftSection={<IconPlus size={16} />} 
+        <Button
+          leftSection={<IconPlus size={16} />}
           onClick={openCreateModal}
           size="md"
           radius="md"
@@ -90,8 +90,13 @@ export function AdminUsersView() {
               onPassword={openPasswordModal}
               onDelete={handleDeleteUser}
             />
-            
-            <Group justify="space-between" mt="md" pt="md" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+
+            <Group
+              justify="space-between"
+              mt="md"
+              pt="md"
+              style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+            >
               <Text size="xs" c="dimmed">
                 Hiển thị {filteredUsers.length} trên {users.length} người dùng
               </Text>

@@ -272,187 +272,201 @@ export function AdminCurriculumView() {
                   <div>
                     <Divider />
                     <Stack p="md" gap="md">
-                    <Group justify="space-between" align="center">
-                      <Text size="xs" fw={700} c="dimmed" style={{ letterSpacing: 0.5 }}>
-                        DANH SÁCH MÔN HỌC
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="xs"
-                        leftSection={<IconPlus size={14} />}
-                        onClick={() => startAddingSubject(term.id)}
-                      >
-                        Thêm môn học
-                      </Button>
-                    </Group>
-
-                    {/* Adding Subject Form */}
-                    <Collapse in={addingSubjectForTerm === term.id}>
-                      <Paper withBorder p="sm" radius="md" bg="gray.0" style={{ borderStyle: "dashed" }}>
-                        <Stack gap="xs">
-                          <Text size="xs" fw={700} c="violet">
-                            Môn học mới
-                          </Text>
-                          <Group align="flex-end" gap="xs">
-                            <TextInput
-                              placeholder="Mã môn (ví dụ: SWD392)"
-                              value={newSubjectCode}
-                              onChange={(e) => setNewSubjectCode(e.target.value)}
-                              style={{ width: 180 }}
-                              radius="md"
-                              size="sm"
-                            />
-                            <TextInput
-                              placeholder="Tên môn học"
-                              value={newSubjectName}
-                              onChange={(e) => setNewSubjectName(e.target.value)}
-                              style={{ flex: 1 }}
-                              radius="md"
-                              size="sm"
-                            />
-                            <Group gap="xs">
-                              <Button
-                                size="sm"
-                                radius="md"
-                                onClick={() => handleCreateSubject(term.id)}
-                                loading={savingAction === `create-subject-${term.id}`}
-                              >
-                                Lưu
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="subtle"
-                                color="gray"
-                                onClick={() => setAddingSubjectForTerm(null)}
-                                radius="md"
-                              >
-                                Hủy
-                              </Button>
-                            </Group>
-                          </Group>
-                        </Stack>
-                      </Paper>
-                    </Collapse>
-
-                    {/* Subjects list */}
-                    {termSubjects.length === 0 && addingSubjectForTerm !== term.id ? (
-                      <Paper withBorder p="md" radius="md" style={{ borderStyle: "dashed", textAlign: "center" }}>
-                        <Text size="sm" c="dimmed">
-                          Chưa có môn học nào trong học kỳ này.
+                      <Group justify="space-between" align="center">
+                        <Text size="xs" fw={700} c="dimmed" style={{ letterSpacing: 0.5 }}>
+                          DANH SÁCH MÔN HỌC
                         </Text>
-                      </Paper>
-                    ) : (
-                      <Stack gap="xs">
-                        {termSubjects.map((sub) => {
-                          const isEditingSubject = editingSubjectId === sub.id;
-                          const isSavingSubject = savingAction === `update-subject-${sub.id}`;
-                          const isDeletingSubject = savingAction === `delete-subject-${sub.id}`;
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          leftSection={<IconPlus size={14} />}
+                          onClick={() => startAddingSubject(term.id)}
+                        >
+                          Thêm môn học
+                        </Button>
+                      </Group>
 
-                          return (
-                            <Paper
-                              key={sub.id}
-                              withBorder
-                              p="sm"
-                              radius="md"
-                              bg="gray.0"
-                              style={{ transition: "background-color 150ms ease" }}
-                            >
-                              {isEditingSubject ? (
-                                <Group align="center" gap="xs">
-                                  <TextInput
-                                    placeholder="Mã môn"
-                                    value={editingSubjectCode}
-                                    onChange={(e) => setEditingSubjectCode(e.target.value)}
-                                    style={{ width: 140 }}
-                                    radius="md"
-                                    size="sm"
-                                  />
-                                  <TextInput
-                                    placeholder="Tên môn học"
-                                    value={editingSubjectName}
-                                    onChange={(e) => setEditingSubjectName(e.target.value)}
-                                    style={{ flex: 1 }}
-                                    radius="md"
-                                    size="sm"
-                                  />
-                                  <Group gap="xs">
-                                    <ActionIcon
-                                      variant="filled"
-                                      color="green"
-                                      radius="md"
-                                      size="lg"
-                                      onClick={() => handleUpdateSubject(sub)}
-                                      loading={isSavingSubject}
-                                    >
-                                      <IconCheck size={16} />
-                                    </ActionIcon>
-                                    <ActionIcon
-                                      variant="light"
-                                      color="gray"
-                                      radius="md"
-                                      size="lg"
-                                      onClick={() => setEditingSubjectId(null)}
-                                    >
-                                      <IconX size={16} />
-                                    </ActionIcon>
-                                  </Group>
-                                </Group>
-                              ) : (
-                                <Group justify="space-between" align="center">
-                                  <Group gap="sm">
-                                    <Paper
-                                      p={6}
-                                      radius="md"
-                                      bg="white"
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        boxShadow: "var(--mantine-shadow-xs)",
-                                      }}
-                                    >
-                                      <IconBook size={16} style={{ color: "var(--mantine-color-violet-6)" }} />
-                                    </Paper>
-                                    <div>
-                                      <Text size="xs" fw={700} c="dimmed">
-                                        {sub.code}
-                                      </Text>
-                                      <Text size="sm" fw={600}>
-                                        {sub.name}
-                                      </Text>
-                                    </div>
-                                  </Group>
+                      {/* Adding Subject Form */}
+                      <Collapse in={addingSubjectForTerm === term.id}>
+                        <Paper
+                          withBorder
+                          p="sm"
+                          radius="md"
+                          bg="gray.0"
+                          style={{ borderStyle: "dashed" }}
+                        >
+                          <Stack gap="xs">
+                            <Text size="xs" fw={700} c="violet">
+                              Môn học mới
+                            </Text>
+                            <Group align="flex-end" gap="xs">
+                              <TextInput
+                                placeholder="Mã môn (ví dụ: SWD392)"
+                                value={newSubjectCode}
+                                onChange={(e) => setNewSubjectCode(e.target.value)}
+                                style={{ width: 180 }}
+                                radius="md"
+                                size="sm"
+                              />
+                              <TextInput
+                                placeholder="Tên môn học"
+                                value={newSubjectName}
+                                onChange={(e) => setNewSubjectName(e.target.value)}
+                                style={{ flex: 1 }}
+                                radius="md"
+                                size="sm"
+                              />
+                              <Group gap="xs">
+                                <Button
+                                  size="sm"
+                                  radius="md"
+                                  onClick={() => handleCreateSubject(term.id)}
+                                  loading={savingAction === `create-subject-${term.id}`}
+                                >
+                                  Lưu
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="subtle"
+                                  color="gray"
+                                  onClick={() => setAddingSubjectForTerm(null)}
+                                  radius="md"
+                                >
+                                  Hủy
+                                </Button>
+                              </Group>
+                            </Group>
+                          </Stack>
+                        </Paper>
+                      </Collapse>
 
-                                  <Group gap="xs">
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="blue"
-                                      onClick={() => startEditingSubject(sub)}
-                                      disabled={savingAction !== null}
+                      {/* Subjects list */}
+                      {termSubjects.length === 0 && addingSubjectForTerm !== term.id ? (
+                        <Paper
+                          withBorder
+                          p="md"
+                          radius="md"
+                          style={{ borderStyle: "dashed", textAlign: "center" }}
+                        >
+                          <Text size="sm" c="dimmed">
+                            Chưa có môn học nào trong học kỳ này.
+                          </Text>
+                        </Paper>
+                      ) : (
+                        <Stack gap="xs">
+                          {termSubjects.map((sub) => {
+                            const isEditingSubject = editingSubjectId === sub.id;
+                            const isSavingSubject = savingAction === `update-subject-${sub.id}`;
+                            const isDeletingSubject = savingAction === `delete-subject-${sub.id}`;
+
+                            return (
+                              <Paper
+                                key={sub.id}
+                                withBorder
+                                p="sm"
+                                radius="md"
+                                bg="gray.0"
+                                style={{ transition: "background-color 150ms ease" }}
+                              >
+                                {isEditingSubject ? (
+                                  <Group align="center" gap="xs">
+                                    <TextInput
+                                      placeholder="Mã môn"
+                                      value={editingSubjectCode}
+                                      onChange={(e) => setEditingSubjectCode(e.target.value)}
+                                      style={{ width: 140 }}
                                       radius="md"
-                                      title="Sửa môn học"
-                                    >
-                                      <IconEdit size={14} />
-                                    </ActionIcon>
-                                    <ActionIcon
-                                      variant="subtle"
-                                      color="red"
-                                      onClick={() => handleDeleteSubject(sub.id)}
-                                      disabled={savingAction !== null}
-                                      loading={isDeletingSubject}
+                                      size="sm"
+                                    />
+                                    <TextInput
+                                      placeholder="Tên môn học"
+                                      value={editingSubjectName}
+                                      onChange={(e) => setEditingSubjectName(e.target.value)}
+                                      style={{ flex: 1 }}
                                       radius="md"
-                                      title="Xóa môn học"
-                                    >
-                                      <IconTrash size={14} />
-                                    </ActionIcon>
+                                      size="sm"
+                                    />
+                                    <Group gap="xs">
+                                      <ActionIcon
+                                        variant="filled"
+                                        color="green"
+                                        radius="md"
+                                        size="lg"
+                                        onClick={() => handleUpdateSubject(sub)}
+                                        loading={isSavingSubject}
+                                      >
+                                        <IconCheck size={16} />
+                                      </ActionIcon>
+                                      <ActionIcon
+                                        variant="light"
+                                        color="gray"
+                                        radius="md"
+                                        size="lg"
+                                        onClick={() => setEditingSubjectId(null)}
+                                      >
+                                        <IconX size={16} />
+                                      </ActionIcon>
+                                    </Group>
                                   </Group>
-                                </Group>
-                              )}
-                            </Paper>
-                          );
-                        })}
-                      </Stack>
-                    )}
+                                ) : (
+                                  <Group justify="space-between" align="center">
+                                    <Group gap="sm">
+                                      <Paper
+                                        p={6}
+                                        radius="md"
+                                        bg="white"
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          boxShadow: "var(--mantine-shadow-xs)",
+                                        }}
+                                      >
+                                        <IconBook
+                                          size={16}
+                                          style={{ color: "var(--mantine-color-violet-6)" }}
+                                        />
+                                      </Paper>
+                                      <div>
+                                        <Text size="xs" fw={700} c="dimmed">
+                                          {sub.code}
+                                        </Text>
+                                        <Text size="sm" fw={600}>
+                                          {sub.name}
+                                        </Text>
+                                      </div>
+                                    </Group>
+
+                                    <Group gap="xs">
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="blue"
+                                        onClick={() => startEditingSubject(sub)}
+                                        disabled={savingAction !== null}
+                                        radius="md"
+                                        title="Sửa môn học"
+                                      >
+                                        <IconEdit size={14} />
+                                      </ActionIcon>
+                                      <ActionIcon
+                                        variant="subtle"
+                                        color="red"
+                                        onClick={() => handleDeleteSubject(sub.id)}
+                                        disabled={savingAction !== null}
+                                        loading={isDeletingSubject}
+                                        radius="md"
+                                        title="Xóa môn học"
+                                      >
+                                        <IconTrash size={14} />
+                                      </ActionIcon>
+                                    </Group>
+                                  </Group>
+                                )}
+                              </Paper>
+                            );
+                          })}
+                        </Stack>
+                      )}
                     </Stack>
                   </div>
                 </Collapse>

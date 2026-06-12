@@ -3,10 +3,27 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Search, FileText, Loader2, Trash2, BookOpen, Calendar, Lock, Globe, FolderOpen, ArrowUpDown } from "lucide-react";
+import {
+  Search,
+  FileText,
+  Loader2,
+  Trash2,
+  BookOpen,
+  Calendar,
+  Lock,
+  Globe,
+  FolderOpen,
+  ArrowUpDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Document {
   id: string;
@@ -109,7 +126,7 @@ export function MyDocumentsView() {
   const filteredDocuments = sortedDocuments.filter(
     (doc) =>
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const handleDelete = async (docId: string) => {
@@ -161,7 +178,10 @@ export function MyDocumentsView() {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={sortBy} onValueChange={(value: "date" | "subject" | "term") => setSortBy(value)}>
+              <Select
+                value={sortBy}
+                onValueChange={(value: "date" | "subject" | "term") => setSortBy(value)}
+              >
                 <SelectTrigger className="w-[180px] rounded-xl">
                   <SelectValue placeholder="Sắp xếp theo" />
                 </SelectTrigger>

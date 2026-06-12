@@ -18,14 +18,16 @@ export function useDashboard() {
     try {
       const [users, docsData, reports] = await Promise.all([
         adminUserApi.getUsers().catch(() => []),
-        documentApi.getDocuments({ page: 1, pageSize: 5 }).catch(() => ({ documents: [], total: 0 })),
+        documentApi
+          .getDocuments({ page: 1, pageSize: 5 })
+          .catch(() => ({ documents: [], total: 0 })),
         moderationApi.getReports().catch(() => []),
       ]);
 
       // Calculate approximate embeddings count based on documents (for display)
       // e.g. 50 chunks per document on average
       const documentsCount = docsData.total || docsData.documents?.length || 0;
-      const calculatedEmbeddings = documentsCount * 45; 
+      const calculatedEmbeddings = documentsCount * 45;
 
       setStats({
         totalUsers: users.length || 0,

@@ -14,9 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </h1>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center w-full px-6">
-        {children}
-      </div>
+      <div className="relative z-10 flex flex-col items-center w-full px-6">{children}</div>
     </div>
   );
 }

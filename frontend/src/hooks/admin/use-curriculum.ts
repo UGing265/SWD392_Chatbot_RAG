@@ -54,10 +54,7 @@ export function useCurriculum() {
     code: subject.code || "",
     name: subject.name || "",
     academic_term_id:
-      subject.academic_term_id ??
-      subject.academicTermId ??
-      subject.academicTermID ??
-      null,
+      subject.academic_term_id ?? subject.academicTermId ?? subject.academicTermID ?? null,
   });
 
   const fetchData = useCallback(async () => {
@@ -68,7 +65,8 @@ export function useCurriculum() {
       setTerms((data.academicTerms || []).map(normalizeTerm));
       setSubjects(Array.isArray(data.subjects) ? data.subjects.map(normalizeSubject) : []);
     } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Không thể tải dữ liệu chương trình học.";
+      const msg =
+        err.response?.data?.error || err.message || "Không thể tải dữ liệu chương trình học.";
       setError(msg);
       notify.error(msg);
     } finally {
