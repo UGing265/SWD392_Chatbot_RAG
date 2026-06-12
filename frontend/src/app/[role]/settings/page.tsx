@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AdminSettingsView } from "@/components/features/admin-settings-view";
+import { AdminSettingsView } from "@/components/admin/settings/admin-settings-view";
 import { SettingsView } from "@/components/features/settings-view";
 
 export default function Page() {
