@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 
 interface Subject {
   id: string;
@@ -136,7 +136,7 @@ export function DocumentsView() {
       setSubjects(mappedSubjects);
     } catch (err) {
       console.error("Failed to fetch lookups:", err);
-      toast.error("Không thể tải danh sách kỳ học và môn học.");
+      notify.error("Không thể tải danh sách kỳ học và môn học.");
     }
   }, []);
 
@@ -210,9 +210,7 @@ export function DocumentsView() {
   , [materials, selectedMaterialId]);
 
   const handleSaveSubject = () => {
-    toast.info("Tính năng thêm môn học chỉ dành cho Admin.", {
-      description: "Vui lòng liên hệ quản trị viên để thêm môn học mới."
-    });
+    notify.info("Tính năng thêm môn học chỉ dành cho Admin.", "Vui lòng liên hệ quản trị viên để thêm môn học mới.");
     setNewSubjectName("");
     setIsAddSubjectModalOpen(false);
   };
@@ -231,10 +229,10 @@ export function DocumentsView() {
         }
         // Re-fetch from API
         await fetchMyDocuments();
-        toast.success("Đã xóa tài liệu thành công.");
+        notify.success("Đã xóa tài liệu thành công.");
       } catch (err: any) {
         console.error(err);
-        toast.error("Xóa thất bại", { description: err.message });
+        notify.error("Xóa thất bại", err.message);
       }
       setIsDeleteModalOpen(false);
       setCurrentMaterial(null);
@@ -250,7 +248,7 @@ export function DocumentsView() {
     }
 
     if (!selectedFile) {
-      toast.error("Vui lòng chọn một tệp để tải lên.");
+      notify.error("Vui lòng chọn một tệp để tải lên.");
       return;
     }
 
@@ -289,18 +287,14 @@ export function DocumentsView() {
       // Re-fetch documents from API to show the new upload
       await fetchMyDocuments();
 
-      toast.success("Tải lên thành công!", {
-        description: "Tài liệu của bạn đang được hệ thống RAG xử lý ngầm."
-      });
+      notify.success("Tải lên thành công!", "Tài liệu của bạn đang được hệ thống RAG xử lý ngầm.");
 
       setIsUploadModalOpen(false);
       setSelectedFile(null);
       setCurrentMaterial(null);
     } catch (err: any) {
       console.error(err);
-      toast.error("Tải lên thất bại", {
-        description: err.message || "Đã xảy ra lỗi, vui lòng thử lại."
-      });
+      notify.error("Tải lên thất bại", err.message || "Đã xảy ra lỗi, vui lòng thử lại.");
     } finally {
       setIsUploading(false);
     }

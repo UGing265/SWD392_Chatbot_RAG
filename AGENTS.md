@@ -154,9 +154,15 @@ Browser ──► Next.js (Better Auth Client - Port 3000) ──► Go Backend 
 
 ---
 
-## Startup Guide
+## Startup Guide & Process Termination
 
-Run both backend servers concurrently using:
-```cmd
-backend\start-backends.bat
-```
+1. **Start Backends**: Run both backend servers concurrently using:
+   ```cmd
+   backend\start-backends.bat
+   ```
+
+2. **Verify & Clean up**: After verifying changes, compilation (`go build`), or testing, ensure you terminate the processes running on ports `8080` (Go) and `5000` (Node/Hono) so they do not conflict with subsequent runs:
+   ```powershell
+   # Windows PowerShell command to find and terminate processes using ports 8080 and 5000
+   Get-NetTCPConnection -LocalPort 8080, 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+   ```

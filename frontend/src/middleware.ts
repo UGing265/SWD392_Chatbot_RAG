@@ -11,14 +11,43 @@ function getHomePath(role: string) {
   return STUDENT_HOME;
 }
 
-export function middleware(request: NextRequest) {
-  const isAuth = request.cookies.has("mock_auth");
+function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
 
-  const role = request.cookies.get("mock_role")?.value || "student";
+export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Allow access to login page
-  if (pathname.startsWith("/login")) {
+  // Resolve Auth and Role strictly from JWT (access_token)
+  const tokenCookie = request.cookies.get("access_token");
+  
+  let isAuth = false;
+  let role = "student";
+
+  if (tokenCookie) {
+    const payload = decodeJwt(tokenCookie.value);
+    if (payload && payload.role && ["admin", "lecturer", "student"].includes(payload.role)) {
+      isAuth = true;
+      role = payload.role;
+    }
+  }
+
+  const isAuthPage = pathname.startsWith("/login") || 
+                     pathname.startsWith("/forgot-password") ||
+                     pathname.startsWith("/reset-password");
+
+  // Allow access to auth pages
+  if (isAuthPage) {
+    // If already logged in, redirect to role-based home
     if (isAuth) {
       return NextResponse.redirect(new URL(getHomePath(role), request.url));
     }
@@ -27,20 +56,26 @@ export function middleware(request: NextRequest) {
 
   // Redirect to login if unauthenticated
   if (!isAuth) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    // Clean token if it was invalid
+    if (tokenCookie) {
+      response.cookies.delete("access_token");
+    }
+    return response;
   }
 
   // Route Guards: Prevent cross-role access
-  if (pathname.startsWith("/student") && role !== "student") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
-  }
-
-  if (pathname.startsWith("/lecturer") && role !== "lecturer") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
-  }
-
-  if (pathname.startsWith("/admin") && role !== "admin") {
-    return NextResponse.redirect(new URL(getHomePath(role), request.url));
+  const match = pathname.match(/^\/([^/]+)/);
+  if (match) {
+    const routeRole = match[1];
+    const validRoles = ["student", "lecturer", "admin"];
+    
+    if (validRoles.includes(routeRole)) {
+      // If the user's role doesn't match the route's role, redirect them to their own dashboard
+      if (routeRole !== role) {
+        return NextResponse.redirect(new URL(getHomePath(role), request.url));
+      }
+    }
   }
 
   // Root path routing

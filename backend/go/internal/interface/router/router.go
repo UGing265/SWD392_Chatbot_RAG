@@ -13,9 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"swd392-chatbot-rag/pkg/config"
 
-	_ "swd392-chatbot-rag/docs" // swag docs
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "swd392-chatbot-rag/docs" // swag docs
 )
 
 func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
@@ -59,12 +59,13 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	jobRepo := postgres.NewUploadJobRepository(db)
 	userRepo := postgres.NewUserRepository(db)
 	auditRepo := postgres.NewAuditLogRepository(db)
+	assignRepo := postgres.NewLecturerSubjectRepository(db)
 
 	// Initialize Service
 	docService := application.NewDocumentService(
 		docRepo, fileRepo, chunkRepo, chapterRepo, subjectRepo,
 		termRepo, typeRepo, langRepo, sourceRepo, reportRepo,
-		jobRepo, userRepo, auditRepo, s3Storage,
+		jobRepo, userRepo, auditRepo, assignRepo, s3Storage,
 	)
 
 	// Initialize Handlers
@@ -107,6 +108,11 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 			admin.GET("/users", adminHandler.Users)
 			admin.POST("/users/:id/block", adminHandler.BlockUser)
 			admin.POST("/users/:id/unblock", adminHandler.UnblockUser)
+
+			// Lecturer subject assignments
+			admin.GET("/user-subjects", adminHandler.LecturerSubjectAssignments)
+			admin.GET("/lecturers/:id/subjects", adminHandler.LecturerSubjects)
+			admin.PUT("/lecturers/:id/subjects", adminHandler.ReplaceLecturerSubjects)
 
 			// Documents review & management
 			admin.GET("/documents", adminHandler.Documents)

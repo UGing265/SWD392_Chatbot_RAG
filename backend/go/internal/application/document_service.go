@@ -23,6 +23,7 @@ import (
 	"swd392-chatbot-rag/internal/domain/documentsource"
 	"swd392-chatbot-rag/internal/domain/documenttype"
 	"swd392-chatbot-rag/internal/domain/language"
+	"swd392-chatbot-rag/internal/domain/lecturersubject"
 	"swd392-chatbot-rag/internal/domain/subject"
 	"swd392-chatbot-rag/internal/domain/uploadjob"
 	"swd392-chatbot-rag/internal/domain/user"
@@ -34,8 +35,8 @@ import (
 var (
 	AllowedExtensions = []string{".pdf", ".doc", ".docx", ".ppt", ".pptx"}
 	AllowedMimeTypes  = map[string]bool{
-		"application/pdf":                                                           true,
-		"application/msword":                                                        true,
+		"application/pdf":    true,
+		"application/msword": true,
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document":   true,
 		"application/vnd.ms-powerpoint":                                             true,
 		"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
@@ -73,17 +74,17 @@ type DocumentCreateResultDto struct {
 }
 
 type DocumentFileDto struct {
-	ID               uuid.UUID  `json:"id"`
-	DocumentID       uuid.UUID  `json:"document_id"`
-	OriginalFilename string     `json:"original_filename"`
-	StoragePath      string     `json:"storage_path"`
-	S3Key            *string    `json:"s3_key"`
-	FileUrl          *string    `json:"file_url"`
-	MimeType         *string    `json:"mime_type"`
-	FileSizeBytes    int64      `json:"file_size_bytes"`
-	PageCount        *int       `json:"page_count"`
-	ExtractionStatus string     `json:"extraction_status"`
-	CreatedAt        time.Time  `json:"created_at"`
+	ID               uuid.UUID `json:"id"`
+	DocumentID       uuid.UUID `json:"document_id"`
+	OriginalFilename string    `json:"original_filename"`
+	StoragePath      string    `json:"storage_path"`
+	S3Key            *string   `json:"s3_key"`
+	FileUrl          *string   `json:"file_url"`
+	MimeType         *string   `json:"mime_type"`
+	FileSizeBytes    int64     `json:"file_size_bytes"`
+	PageCount        *int      `json:"page_count"`
+	ExtractionStatus string    `json:"extraction_status"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 type DocumentChapterDto struct {
@@ -103,17 +104,17 @@ type DocumentChapterDto struct {
 }
 
 type DocumentChunkDto struct {
-	ID           uuid.UUID  `json:"id"`
-	DocumentID   uuid.UUID  `json:"document_id"`
-	ChapterID    *uuid.UUID `json:"chapter_id,omitempty"`
-	ChunkOrder   int        `json:"chunk_order"`
-	PageNumber   *int       `json:"page_number,omitempty"`
-	Content      string     `json:"content"`
+	ID            uuid.UUID  `json:"id"`
+	DocumentID    uuid.UUID  `json:"document_id"`
+	ChapterID     *uuid.UUID `json:"chapter_id,omitempty"`
+	ChunkOrder    int        `json:"chunk_order"`
+	PageNumber    *int       `json:"page_number,omitempty"`
+	Content       string     `json:"content"`
 	ContentTokens *int       `json:"content_tokens,omitempty"`
-	Metadata     string     `json:"metadata"`
-	ChunkHash    string     `json:"chunk_hash"`
-	HasEmbedding bool       `json:"has_embedding"`
-	CreatedAt    time.Time  `json:"created_at"`
+	Metadata      string     `json:"metadata"`
+	ChunkHash     string     `json:"chunk_hash"`
+	HasEmbedding  bool       `json:"has_embedding"`
+	CreatedAt     time.Time  `json:"created_at"`
 }
 
 type DocumentDetailsDto struct {
@@ -147,15 +148,15 @@ type DocumentDetailsDto struct {
 }
 
 type UploadJobSummaryDto struct {
-	ID              uuid.UUID `json:"id"`
+	ID              uuid.UUID  `json:"id"`
 	DocumentID      *uuid.UUID `json:"document_id,omitempty"`
-	FileName        string    `json:"file_name"`
-	FileSizeBytes   int64     `json:"file_size_bytes"`
-	Status          string    `json:"status"`
-	ProgressPercent int       `json:"progress_percent"`
-	Message         *string   `json:"message,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	FileName        string     `json:"file_name"`
+	FileSizeBytes   int64      `json:"file_size_bytes"`
+	Status          string     `json:"status"`
+	ProgressPercent int        `json:"progress_percent"`
+	Message         *string    `json:"message,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }
 
 type DocumentListItemDto struct {
@@ -205,15 +206,15 @@ type DashboardRecentDocumentDto struct {
 }
 
 type DashboardSummaryDto struct {
-	TotalDocuments         int                           `json:"total_documents"`
-	TotalChunks            int                           `json:"total_chunks"`
-	TotalFiles             int                           `json:"total_files"`
-	ApprovedDocuments      int                           `json:"approved_documents"`
-	PendingDocuments       int                           `json:"pending_documents"`
-	RejectedDocuments      int                           `json:"rejected_documents"`
+	TotalDocuments         int                          `json:"total_documents"`
+	TotalChunks            int                          `json:"total_chunks"`
+	TotalFiles             int                          `json:"total_files"`
+	ApprovedDocuments      int                          `json:"approved_documents"`
+	PendingDocuments       int                          `json:"pending_documents"`
+	RejectedDocuments      int                          `json:"rejected_documents"`
 	RecentDocuments        []DashboardRecentDocumentDto `json:"recent_documents"`
-	ActiveUploadJobs       []UploadJobSummaryDto         `json:"active_upload_jobs"`
-	CompletedUploadMessage *string                       `json:"completed_upload_message,omitempty"`
+	ActiveUploadJobs       []UploadJobSummaryDto        `json:"active_upload_jobs"`
+	CompletedUploadMessage *string                      `json:"completed_upload_message,omitempty"`
 }
 
 type SubjectDto struct {
@@ -222,6 +223,16 @@ type SubjectDto struct {
 	Name           string     `json:"name"`
 	AcademicTermID *uuid.UUID `json:"academic_term_id,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
+}
+
+type LecturerSubjectAssignmentDto struct {
+	UserID        uuid.UUID `json:"user_id"`
+	SubjectID     uuid.UUID `json:"subject_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	LecturerEmail *string   `json:"lecturer_email,omitempty"`
+	LecturerName  *string   `json:"lecturer_name,omitempty"`
+	SubjectCode   *string   `json:"subject_code,omitempty"`
+	SubjectName   *string   `json:"subject_name,omitempty"`
 }
 
 type DocumentTypeDto struct {
@@ -286,6 +297,7 @@ type DocumentService struct {
 	jobRepo     uploadjob.UploadJobRepository
 	userRepo    user.UserRepository
 	auditRepo   auditlog.AuditLogRepository
+	assignRepo  lecturersubject.AssignmentRepository
 	s3Storage   *filestorage.S3FileStorage
 }
 
@@ -303,6 +315,7 @@ func NewDocumentService(
 	jobRepo uploadjob.UploadJobRepository,
 	userRepo user.UserRepository,
 	auditRepo auditlog.AuditLogRepository,
+	assignRepo lecturersubject.AssignmentRepository,
 	s3Storage *filestorage.S3FileStorage,
 ) *DocumentService {
 	return &DocumentService{
@@ -319,6 +332,7 @@ func NewDocumentService(
 		jobRepo:     jobRepo,
 		userRepo:    userRepo,
 		auditRepo:   auditRepo,
+		assignRepo:  assignRepo,
 		s3Storage:   s3Storage,
 	}
 }
@@ -365,6 +379,13 @@ func (s *DocumentService) EnsureUniqueSlug(ctx context.Context, baseSlug string)
 // Core Document API
 
 func (s *DocumentService) CreateDocument(ctx context.Context, input DocumentCreateInput, fileHeaderSize int64, fileReader io.Reader) (*DocumentCreateResultDto, error) {
+	if input.SubjectID == nil {
+		return nil, errors.New("vui long chon mon hoc duoc phan cong")
+	}
+	if err := s.EnsureLecturerCanUseSubject(ctx, input.OwnerUserID, *input.SubjectID); err != nil {
+		return nil, err
+	}
+
 	// MD5 Hash computation
 	hasher := md5.New()
 	if _, err := io.Copy(hasher, fileReader); err != nil {
@@ -426,7 +447,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, input DocumentCrea
 
 func (s *DocumentService) UploadOriginalFileToS3(ctx context.Context, docID uuid.UUID, reader io.Reader, filename string, contentType string) (string, string, error) {
 	key := fmt.Sprintf("%s/%s", docID.String(), filename)
-	
+
 	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
 		// Mock successful S3 upload for local dev without AWS setup
 		return key, "http://localhost:8080/mock-s3/" + key, nil
@@ -895,6 +916,13 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, docID uuid.UUID, o
 		return errors.New("truy cập bị từ chối")
 	}
 
+	if subjectID == nil {
+		return errors.New("vui long chon mon hoc duoc phan cong")
+	}
+	if err := s.EnsureLecturerCanUseSubject(ctx, ownerUserID, *subjectID); err != nil {
+		return err
+	}
+
 	doc.Title = title
 	doc.Description = description
 	doc.SubjectID = subjectID
@@ -1018,6 +1046,135 @@ func (s *DocumentService) GetSubjectsByOwner(ctx context.Context, ownerUserID uu
 		})
 	}
 	return dtos, nil
+}
+
+func (s *DocumentService) GetAssignedSubjectsByLecturer(ctx context.Context, lecturerID uuid.UUID) ([]*SubjectDto, error) {
+	assignments, err := s.assignRepo.FindByLecturer(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+
+	var dtos []*SubjectDto
+	for _, assignment := range assignments {
+		sub, err := s.subjectRepo.FindByID(ctx, assignment.SubjectID)
+		if err != nil {
+			return nil, err
+		}
+		if sub == nil {
+			continue
+		}
+		dtos = append(dtos, &SubjectDto{
+			ID:             sub.ID,
+			Code:           sub.Code,
+			Name:           sub.Name,
+			AcademicTermID: sub.AcademicTermID,
+			CreatedAt:      sub.CreatedAt,
+		})
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) EnsureLecturerCanUseSubject(ctx context.Context, lecturerID uuid.UUID, subjectID uuid.UUID) error {
+	assignment, err := s.assignRepo.FindBySubject(ctx, subjectID)
+	if err != nil {
+		return err
+	}
+	if assignment == nil {
+		return errors.New("mon hoc nay chua duoc phan cong cho giang vien")
+	}
+	if assignment.UserID != lecturerID {
+		return errors.New("giang vien khong duoc phan cong mon hoc nay")
+	}
+	return nil
+}
+
+func toAssignmentDto(a *lecturersubject.Assignment) *LecturerSubjectAssignmentDto {
+	return &LecturerSubjectAssignmentDto{
+		UserID:        a.UserID,
+		SubjectID:     a.SubjectID,
+		CreatedAt:     a.CreatedAt,
+		LecturerEmail: a.LecturerEmail,
+		LecturerName:  a.LecturerName,
+		SubjectCode:   a.SubjectCode,
+		SubjectName:   a.SubjectName,
+	}
+}
+
+func (s *DocumentService) GetLecturerSubjectAssignments(ctx context.Context) ([]*LecturerSubjectAssignmentDto, error) {
+	assignments, err := s.assignRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]*LecturerSubjectAssignmentDto, 0, len(assignments))
+	for _, assignment := range assignments {
+		dtos = append(dtos, toAssignmentDto(assignment))
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) GetLecturerSubjectAssignmentsByLecturer(ctx context.Context, lecturerID uuid.UUID) ([]*LecturerSubjectAssignmentDto, error) {
+	assignments, err := s.assignRepo.FindByLecturer(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]*LecturerSubjectAssignmentDto, 0, len(assignments))
+	for _, assignment := range assignments {
+		dtos = append(dtos, toAssignmentDto(assignment))
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) ReplaceLecturerSubjectAssignments(ctx context.Context, lecturerID uuid.UUID, subjectIDs []uuid.UUID) ([]*LecturerSubjectAssignmentDto, error) {
+	lecturer, err := s.userRepo.FindByID(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+	if lecturer == nil {
+		return nil, errors.New("khong tim thay giang vien")
+	}
+	if lecturer.RoleID != 2 {
+		return nil, errors.New("nguoi dung duoc phan cong phai la lecturer")
+	}
+
+	seen := map[uuid.UUID]bool{}
+	uniqueSubjectIDs := make([]uuid.UUID, 0, len(subjectIDs))
+	for _, subjectID := range subjectIDs {
+		if seen[subjectID] {
+			continue
+		}
+		seen[subjectID] = true
+
+		sub, err := s.subjectRepo.FindByID(ctx, subjectID)
+		if err != nil {
+			return nil, err
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("khong tim thay mon hoc: %s", subjectID)
+		}
+
+		existing, err := s.assignRepo.FindBySubject(ctx, subjectID)
+		if err != nil {
+			return nil, err
+		}
+		if existing != nil && existing.UserID != lecturerID {
+			subjectLabel := subjectID.String()
+			if existing.SubjectCode != nil {
+				subjectLabel = *existing.SubjectCode
+			}
+			lecturerLabel := existing.UserID.String()
+			if existing.LecturerEmail != nil {
+				lecturerLabel = *existing.LecturerEmail
+			}
+			return nil, fmt.Errorf("mon %s da duoc phan cong cho %s", subjectLabel, lecturerLabel)
+		}
+
+		uniqueSubjectIDs = append(uniqueSubjectIDs, subjectID)
+	}
+
+	if err := s.assignRepo.ReplaceForLecturer(ctx, lecturerID, uniqueSubjectIDs); err != nil {
+		return nil, err
+	}
+	return s.GetLecturerSubjectAssignmentsByLecturer(ctx, lecturerID)
 }
 
 func (s *DocumentService) CreateSubject(ctx context.Context, code, name string, termID *uuid.UUID) (*SubjectDto, error) {

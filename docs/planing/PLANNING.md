@@ -1,4 +1,4 @@
-# Planning Guide for SWD392 Chatbot RAG
+﻿# Planning Guide for SWD392 Chatbot RAG
 
 When using `/plan` command, read this file for complete project context.
 
@@ -181,8 +181,8 @@ backend/
 │   │   └── pgvector.go
 │   └── jwt/
 │       └── jwt.go
-└── migrations/
-    └── 001_initial.sql
+├── database/
+│   └── swd391_dangerous_malware.sql
 ```
 
 ---
