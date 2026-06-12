@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
+import { Toaster } from "sonner";
 
 import { Providers } from "./providers";
 import "./globals.css";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" className={`${sansFont.variable} ${serifFont.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

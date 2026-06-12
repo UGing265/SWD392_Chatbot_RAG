@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 import { authClient } from "@/lib/auth-client";
 
 function decodeJwt(token: string) {
@@ -131,9 +131,7 @@ export function useAuth() {
       });
 
       if (error) {
-        toast.error("Đăng nhập thất bại", {
-          description: error.message || "Email hoặc mật khẩu không chính xác.",
-        });
+        notify.error("Đăng nhập thất bại", error.message || "Email hoặc mật khẩu không chính xác.");
         setIsLoading(false);
         return { success: false, error: error.message };
       }
@@ -184,9 +182,7 @@ export function useAuth() {
           role = Number(loginRId) === 1 ? "admin" : (Number(loginRId) === 2 ? "lecturer" : "student");
         }
 
-        toast.success("Đăng nhập thành công!", {
-          description: "Đang chuyển hướng...",
-        });
+        notify.success("Đăng nhập thành công!", "Đang chuyển hướng...");
 
         await refetch();
         setIsLoading(false);
@@ -234,15 +230,11 @@ export function useAuth() {
         redirectTo: "/reset-password",
       });
       if (error) {
-        toast.error("Gửi yêu cầu thất bại", {
-          description: error.message || "Không thể gửi email khôi phục.",
-        });
+        notify.error("Gửi yêu cầu thất bại", error.message || "Không thể gửi email khôi phục.");
         setIsLoading(false);
         return { success: false, error: error.message };
       }
-      toast.success("Đã gửi email khôi phục", {
-        description: "Vui lòng kiểm tra hộp thư của bạn.",
-      });
+      notify.success("Đã gửi email khôi phục", "Vui lòng kiểm tra hộp thư của bạn.");
       setIsLoading(false);
       return { success: true };
     } catch (err: any) {
