@@ -13,16 +13,16 @@ const theme = createTheme({
   primaryColor: "blue",
   colors: {
     blue: [
-      "#f5f3ff",
-      "#ede9fe",
-      "#ddd6fe",
-      "#c084fc",
-      "#a78bfa",
-      "#8b5cf6",
-      "#7c3aed", // primary: Violet-600
-      "#6d28d9",
-      "#5b21b6",
-      "#4c1d95",
+      "#f0f9ff",
+      "#e0f2fe",
+      "#bae6fd",
+      "#7dd3fc",
+      "#38bdf8",
+      "#0ea5e9", // primary: Sky-500
+      "#0284c7",
+      "#0369a1",
+      "#075985",
+      "#0c4a6e",
     ],
   },
   defaultRadius: "md",

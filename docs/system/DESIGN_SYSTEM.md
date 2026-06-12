@@ -6,7 +6,7 @@ This document defines the visual guidelines, typography, colors, layout rules, a
 
 ## 1. Visual Direction & Style Match
 *   **Design Personality:** **AI-Native + Academic Scholarly**. Focuses on highly readable educational content, ambient gradients, card layouts, and responsive panels.
-*   **Aesthetic Principle:** Clean white surface panels on an ultra-light violet background, accented by rich purple branding and cyber-cyan CTAs.
+*   **Aesthetic Principle:** Clean white surface panels on a minimalist light gray/white background, accented by cleaner blue/cyan branding.
 
 ---
 
@@ -17,12 +17,12 @@ We prioritize high-contrast, professional shades suited for long academic readin
 
 | Role | Variable | Hex Code | Purpose |
 |:---|:---|:---|:---|
-| **Primary** | `var(--mantine-color-blue-filled)` | `#7C3AED` (Violet-600) | Primary buttons, active tabs, brand headers |
-| **Secondary** | `var(--mantine-color-blue-light)` | `#A78BFA` (Violet-400) | Accent badges, borders, hover states |
+| **Primary** | `var(--mantine-color-blue-filled)` | `#0EA5E9` (Sky-500) | Primary buttons, active tabs, brand headers |
+| **Secondary** | `var(--mantine-color-blue-light)` | `#E0F2FE` (Sky-100) | Accent badges, borders, hover states |
 | **CTA / Highlight**| -- | `#06B6D4` (Cyan-500) | Special triggers (e.g., Take Quiz, RAG citation) |
-| **Background** | `var(--mantine-color-body)` | `#FAF5FF` (Purple-50) | App workspace background |
+| **Background** | `var(--mantine-color-body)` | `#FFFFFF` (White) | App workspace background |
 | **Card Surface** | -- | `#FFFFFF` | Form fields, data cards, chat box, tables |
-| **Text Primary** | `var(--mantine-color-text)` | `#1E1B4B` (Indigo-950) | Title, body text, readable content |
+| **Text Primary** | `var(--mantine-color-text)` | `#0F172A` (Slate-900) | Title, body text, readable content |
 | **Text Muted** | `var(--mantine-color-dimmed)` | `#475569` (Slate-600) | Secondary descriptions, file metadata |
 
 ### 2.2. Typography (Google Fonts Integration)
