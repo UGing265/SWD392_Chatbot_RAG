@@ -1,28 +1,32 @@
-import { toast } from "sonner";
+import { notifications } from "@mantine/notifications";
 
 export const notify = {
   success: (message: string, description?: string) => {
-    toast.success(message, {
-      description,
-      duration: 4000,
+    notifications.show({
+      title: message,
+      message: description || "",
+      color: "green",
     });
   },
   error: (message: string, description?: string) => {
-    toast.error(message, {
-      description,
-      duration: 5000,
+    notifications.show({
+      title: message,
+      message: description || "",
+      color: "red",
     });
   },
   warning: (message: string, description?: string) => {
-    toast.warning(message, {
-      description,
-      duration: 4000,
+    notifications.show({
+      title: message,
+      message: description || "",
+      color: "yellow",
     });
   },
   info: (message: string, description?: string) => {
-    toast.info(message, {
-      description,
-      duration: 4000,
+    notifications.show({
+      title: message,
+      message: description || "",
+      color: "blue",
     });
   },
 };

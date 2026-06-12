@@ -2,10 +2,11 @@
 
 ## LLM-Friendly Documentation Links
 
-Always consult the following `llms.txt` references before writing code for UI or Authentication:
+Always consult the following references before writing code for UI, Frontend, or Authentication:
 
 - **Mantine (v7+) Components**: https://mantine.dev/llms.txt
 - **Better Auth Integration**: https://better-auth.com/llms.txt
+- **Mandatory Project Design System**: Consult [DESIGN_SYSTEM.md](docs/system/DESIGN_SYSTEM.md) first to ensure styling, color consistency, and component sizes align with the project design system.
 
 ---
 
@@ -94,6 +95,7 @@ Always consult the following `llms.txt` references before writing code for UI or
 
 | File | Description |
 |------|-------------|
+| `docs/system/DESIGN_SYSTEM.md` | **Mandatory Frontend Design System (Mantine v7+ & UI/UX rules)** |
 | `docs/ERD.txt` | Database schema with all tables |
 | `docs/Architecture.md` | Models, architecture, flows |
 | `docs/planing/` | Implementation plans |
