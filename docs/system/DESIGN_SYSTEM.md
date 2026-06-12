@@ -26,13 +26,10 @@ We prioritize high-contrast, professional shades suited for long academic readin
 | **Text Muted** | `var(--mantine-color-dimmed)` | `#475569` (Slate-600) | Secondary descriptions, file metadata |
 
 ### 2.2. Typography (Google Fonts Integration)
-*   **Headings (H1 - H6):** `Crimson Pro` (Serif style for an academic, research-oriented feel).
-*   **Body & UI Text:** `Atkinson Hyperlegible` (Sans-serif specifically engineered for high legibility, essential for reading AI-generated chunks).
+*   **Headings & Body UI Text:** `Plus Jakarta Sans` (A modern, clean, geometric sans-serif font for maximum legibility and UI visual quality).
+*   **Secondary/Research Text:** `Newsreader` (A premium serif font for academic/research papers, used via the `.font-serif` utility class).
+*   **Monospace/Code:** `JetBrains Mono` (For JSON data views, configurations, and logs).
 *   **Line-Height:** 1.6 - 1.75 for reading lists, 1.5 for UI buttons and menus.
-*   **Font Import (CSS):**
-    ```css
-    @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&display=swap');
-    ```
 
 ### 2.3. Borders & Shadows
 *   **Border Radius:** 
