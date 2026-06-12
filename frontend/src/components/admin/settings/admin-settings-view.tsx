@@ -62,7 +62,7 @@ export function AdminSettingsView() {
         {/* Section: RAG Engine */}
         <Paper withBorder radius="md" p="xl" shadow="sm">
           <Group gap="md" mb="md">
-            <ThemeIcon color="violet" variant="light" size="lg" radius="md">
+            <ThemeIcon color="blue" variant="light" size="lg" radius="md">
               <IconDatabase size={20} />
             </ThemeIcon>
             <div>
@@ -258,7 +258,7 @@ export function AdminSettingsView() {
           Đặt lại mặc định
         </Button>
         <Button
-          color="violet"
+          color="blue"
           leftSection={<IconDeviceFloppy size={16} />}
           loading={saving}
           onClick={handleSave}

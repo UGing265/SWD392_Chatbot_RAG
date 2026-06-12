@@ -74,7 +74,7 @@ export function AdminDashboardView() {
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
           radius="xl"
-          color="violet"
+          color="blue"
         >
           Làm mới
         </Button>
@@ -82,7 +82,7 @@ export function AdminDashboardView() {
 
       {loading ? (
         <Group justify="center" py="xl">
-          <Loader size="lg" color="violet" />
+          <Loader size="lg" color="blue" />
         </Group>
       ) : (
         <>

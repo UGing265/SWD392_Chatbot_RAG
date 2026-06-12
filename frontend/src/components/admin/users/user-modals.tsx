@@ -180,7 +180,7 @@ export function ChangePasswordModal({
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit" color="violet">
+            <Button type="submit">
               Thay đổi mật khẩu
             </Button>
           </Group>

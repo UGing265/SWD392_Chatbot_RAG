@@ -35,7 +35,7 @@ export function AdminModerationView() {
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
           radius="xl"
-          color="violet"
+          color="blue"
         >
           Làm mới
         </Button>
@@ -60,7 +60,7 @@ export function AdminModerationView() {
       <Paper withBorder radius="md" shadow="sm" style={{ overflow: "hidden" }}>
         {loading ? (
           <Group justify="center" py="xl">
-            <Loader size="lg" color="violet" />
+            <Loader size="lg" color="blue" />
           </Group>
         ) : (
           <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover>

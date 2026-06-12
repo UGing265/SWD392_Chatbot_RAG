@@ -52,14 +52,14 @@ export function AdminAssignmentsView() {
           <Paper
             p={8}
             radius="md"
-            bg="violet.1"
+            bg="blue.1"
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <IconUserCheck size={20} style={{ color: "var(--mantine-color-violet-6)" }} />
+            <IconUserCheck size={20} style={{ color: "var(--mantine-color-blue-6)" }} />
           </Paper>
           <Text fw={700} size="lg">
             Phân công môn học cho giảng viên
@@ -68,7 +68,7 @@ export function AdminAssignmentsView() {
 
         {loading ? (
           <Group justify="center" py="xl">
-            <Loader size="lg" color="violet" />
+            <Loader size="lg" color="blue" />
           </Group>
         ) : (
           <Stack gap="lg">
@@ -115,11 +115,11 @@ export function AdminAssignmentsView() {
                           withBorder
                           p="md"
                           radius="md"
-                          bg={checked ? "violet.0" : "white"}
+                          bg={checked ? "blue.0" : "white"}
                           onClick={() => !assignedToOther && toggleSubject(subject.id)}
                           style={{
                             cursor: assignedToOther ? "not-allowed" : "pointer",
-                            borderColor: checked ? "var(--mantine-color-violet-4)" : undefined,
+                            borderColor: checked ? "var(--mantine-color-blue-4)" : undefined,
                             opacity: assignedToOther ? 0.6 : 1,
                             transition: "all 150ms ease",
                           }}
@@ -131,7 +131,7 @@ export function AdminAssignmentsView() {
                                 disabled={assignedToOther}
                                 onChange={() => {}} // Click is handled by parent Paper
                                 radius="xs"
-                                color="violet"
+                                color="blue"
                               />
                               <div style={{ flex: 1 }}>
                                 <Text size="sm" fw={600}>
@@ -171,7 +171,7 @@ export function AdminAssignmentsView() {
               radius="md"
               size="md"
               fullWidth
-              color="violet"
+              color="blue"
             >
               Lưu phân công môn học
             </Button>

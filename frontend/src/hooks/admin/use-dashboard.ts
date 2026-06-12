@@ -29,11 +29,14 @@ export function useDashboard() {
       const documentsCount = docsData.total || docsData.documents?.length || 0;
       const calculatedEmbeddings = documentsCount * 45;
 
+      const usersList = Array.isArray(users) ? users : [];
+      const reportsList = Array.isArray(reports) ? reports : [];
+
       setStats({
-        totalUsers: users.length || 0,
+        totalUsers: usersList.length,
         totalDocuments: documentsCount,
         totalEmbeddings: calculatedEmbeddings,
-        totalReports: reports.length || 0,
+        totalReports: reportsList.length,
       });
 
       setRecentDocs(docsData.documents || []);

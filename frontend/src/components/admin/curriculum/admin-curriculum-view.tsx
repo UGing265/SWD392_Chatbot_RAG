@@ -108,10 +108,10 @@ export function AdminCurriculumView() {
       )}
 
       {/* Adding Term Form */}
-      <Collapse in={addingTerm}>
-        <Paper withBorder p="md" radius="md" bg="violet.0" style={{ borderStyle: "dashed" }}>
+      <Collapse {...({ in: addingTerm } as any)}>
+        <Paper withBorder p="md" radius="md" bg="blue.0" style={{ borderStyle: "dashed" }}>
           <Stack gap="sm">
-            <Text size="sm" fw={700} c="violet">
+            <Text size="sm" fw={700} c="blue">
               Học kỳ mới
             </Text>
             <Group align="flex-end" gap="md">
@@ -136,7 +136,7 @@ export function AdminCurriculumView() {
                   disabled={!newTermName.trim() || savingAction === "create-term"}
                   loading={savingAction === "create-term"}
                   radius="md"
-                  color="violet"
+                  color="blue"
                 >
                   Lưu
                 </Button>
@@ -152,7 +152,7 @@ export function AdminCurriculumView() {
       {/* Main content */}
       {loading ? (
         <Group justify="center" py="xl">
-          <Loader size="lg" color="violet" />
+          <Loader size="lg" color="blue" />
         </Group>
       ) : sortedTerms.length === 0 ? (
         <Paper withBorder radius="md" p="xl" style={{ textAlign: "center", borderStyle: "dashed" }}>
@@ -177,7 +177,7 @@ export function AdminCurriculumView() {
                   <Group gap="md" style={{ flex: 1 }}>
                     <ActionIcon
                       variant="light"
-                      color="violet"
+                      color="blue"
                       radius="md"
                       size="lg"
                       onClick={() => toggleTerm(term.id)}
@@ -268,7 +268,7 @@ export function AdminCurriculumView() {
                 </Group>
 
                 {/* Term Subjects Collapse */}
-                <Collapse in={isExpanded}>
+                <Collapse {...({ in: isExpanded } as any)}>
                   <div>
                     <Divider />
                     <Stack p="md" gap="md">
@@ -287,7 +287,7 @@ export function AdminCurriculumView() {
                       </Group>
 
                       {/* Adding Subject Form */}
-                      <Collapse in={addingSubjectForTerm === term.id}>
+                      <Collapse {...({ in: addingSubjectForTerm === term.id } as any)}>
                         <Paper
                           withBorder
                           p="sm"
@@ -296,7 +296,7 @@ export function AdminCurriculumView() {
                           style={{ borderStyle: "dashed" }}
                         >
                           <Stack gap="xs">
-                            <Text size="xs" fw={700} c="violet">
+                            <Text size="xs" fw={700} c="blue">
                               Môn học mới
                             </Text>
                             <Group align="flex-end" gap="xs">
@@ -424,7 +424,7 @@ export function AdminCurriculumView() {
                                       >
                                         <IconBook
                                           size={16}
-                                          style={{ color: "var(--mantine-color-violet-6)" }}
+                                          style={{ color: "var(--mantine-color-blue-6)" }}
                                         />
                                       </Paper>
                                       <div>
