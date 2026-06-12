@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AdminDocumentsView } from "@/components/features/admin-documents-view";
+import { AdminDocumentsView } from "@/components/admin/documents/admin-documents-view";
 import { StudentDocumentsView } from "@/components/features/student-documents-view";
 import { DocumentsView } from "@/components/features/teacher-documents-view";
 
