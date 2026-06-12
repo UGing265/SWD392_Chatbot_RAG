@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
-  Plus,
   FileText,
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
@@ -98,7 +97,9 @@ export function AdminDashboardView() {
     <div className="p-4 md:p-6 lg:p-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Hệ thống quản trị và Thống kê</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Hệ thống quản trị và Thống kê
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Theo dõi hiệu suất hệ thống RAG và hoạt động tải lên tài liệu
           </p>
@@ -136,16 +137,21 @@ export function AdminDashboardView() {
                   </p>
                   <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">{m.value}</p>
                 </div>
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl",
-                  m.isWarning ? "bg-rose-100/50" : "bg-primary/10"
-                )}>
+                <div
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-xl",
+                    m.isWarning ? "bg-rose-100/50" : "bg-primary/10",
+                  )}
+                >
                   <Icon className={cn("h-5 w-5", m.isWarning ? "text-rose-500" : "text-primary")} />
                 </div>
               </div>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={cn("h-full rounded-full", m.isWarning ? "bg-rose-400" : "bg-primary/60")}
+                  className={cn(
+                    "h-full rounded-full",
+                    m.isWarning ? "bg-rose-400" : "bg-primary/60",
+                  )}
                   style={{ width: `${m.bar}%` }}
                 />
               </div>
@@ -157,8 +163,12 @@ export function AdminDashboardView() {
       <div className="rounded-2xl border border-border/60 bg-white shadow-soft">
         <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Tiến trình hệ thống & Tài liệu mới tải lên</h2>
-            <p className="text-xs text-muted-foreground">Danh sách các tài liệu đang được xử lý hoặc đã hoàn tất</p>
+            <h2 className="text-base font-semibold text-foreground">
+              Tiến trình hệ thống & Tài liệu mới tải lên
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Danh sách các tài liệu đang được xử lý hoặc đã hoàn tất
+            </p>
           </div>
           <button className="text-xs font-medium text-primary hover:underline">Xem tất cả</button>
         </div>
@@ -204,10 +214,6 @@ export function AdminDashboardView() {
           </TableBody>
         </Table>
       </div>
-
-      <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-pop transition-transform hover:scale-105">
-        <Plus className="h-5 w-5" />
-      </button>
     </div>
   );
 }

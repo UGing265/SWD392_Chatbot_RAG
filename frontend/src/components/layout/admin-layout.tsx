@@ -3,23 +3,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-  Upload,
-  HelpCircle,
-  LogOut,
-  Search,
+  ArrowUpCircle,
   Bell,
-  LayoutGrid,
-  Crown,
-  Command,
-  ShieldCheck,
   BookOpen,
+  ChevronRight,
+  ChevronsUpDown,
+  ClipboardList,
+  Command,
+  Download,
+  HelpCircle,
+  Languages,
+  LayoutDashboard,
+  LogOut,
+  Monitor,
+  Settings,
+  ShieldCheck,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "", label: "Bảng điều khiển", icon: LayoutDashboard, end: true },
@@ -38,12 +52,24 @@ function getRoleLabel(role?: string) {
 
 function getInitials(name?: string | null) {
   if (!name) return "U";
+
   return name
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+}
+
+function getPageTitle(pathname: string) {
+  const current = nav.find((item) => {
+    const fullPath = `/admin${item.to}`;
+
+    if (item.end) return pathname === fullPath || pathname === `${fullPath}/`;
+    return pathname.startsWith(fullPath);
+  });
+
+  return current?.label || "Admin";
 }
 
 function SidebarItem({
@@ -54,25 +80,27 @@ function SidebarItem({
 }: {
   to: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: LucideIcon;
   active: boolean;
 }) {
   return (
     <Link
       href={to}
-      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ${active
-        ? "bg-card text-foreground shadow-soft"
-        : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
-        }`}
-    >
-      {active && (
-        <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors",
+        active
+          ? "bg-secondary text-foreground"
+          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
       )}
+    >
       <Icon
-        className={`h-[17px] w-[17px] ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
-        strokeWidth={1.75}
+        className={cn(
+          "h-[18px] w-[18px]",
+          active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+        )}
+        strokeWidth={2}
       />
-      <span>{label}</span>
+      <span className="flex-1">{label}</span>
     </Link>
   );
 }
@@ -81,126 +109,169 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { signOut, session } = useAuth();
   const basePath = "/admin";
-  const displayName = session?.user?.name || "User";
+  const displayName = session?.user?.name || "Người dùng";
   const roleLabel = getRoleLabel(session?.role || "admin");
   const initials = getInitials(displayName);
+  const pageTitle = getPageTitle(pathname);
 
   const isActive = (to: string, end?: boolean) => {
     const full = `${basePath}${to}`;
+
     if (end) return pathname === full || pathname === `${full}/`;
     return pathname.startsWith(full);
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar/70 backdrop-blur md:flex">
-        <div className="px-5 pt-5 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="relative">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground shadow-soft">
-                <Crown className="h-4 w-4" strokeWidth={2} />
-              </div>
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-secondary" />
+    <div className="flex h-screen w-full overflow-hidden bg-background selection:bg-primary/20">
+      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-border bg-sidebar md:flex">
+        <div className="px-5 pb-6 pt-6">
+          <Link href={basePath} className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
+              <ClipboardList className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </div>
-            <div className="leading-tight">
-              <div className="text-[15px] font-semibold tracking-tight text-foreground">
-                StudyMate <span className="font-normal text-primary-deep">Admin</span>
-              </div>
-              <div className="text-[10px] tabular-nums uppercase tracking-wider text-muted-foreground">
-                v0.4 · RAG
-              </div>
-            </div>
-          </div>
+            <div className="text-[19px] font-bold tracking-tight text-foreground">StudyMate</div>
+          </Link>
         </div>
 
-        <div className="px-3 pb-3">
-          <button className="group flex w-full items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card">
-            <Search className="h-3.5 w-3.5" />
-            <span className="flex-1 text-left">Tìm mọi thứ…</span>
-            <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 tabular-nums text-[10px]">
-              <Command className="h-2.5 w-2.5" />K
-            </kbd>
-          </button>
-        </div>
-
-        <nav className="flex flex-col gap-0.5 px-3">
-          {nav.map((n) => (
+        <nav className="flex flex-col gap-1 px-3">
+          {nav.map((item) => (
             <SidebarItem
-              key={n.to}
-              to={`${basePath}${n.to}`}
-              label={n.label}
-              icon={n.icon}
-              active={isActive(n.to, n.end)}
+              key={item.to}
+              to={`${basePath}${item.to}`}
+              label={item.label}
+              icon={item.icon}
+              active={isActive(item.to, item.end)}
             />
           ))}
         </nav>
 
-
-        <div className="mt-auto p-4">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">{displayName}</div>
-                <div className="truncate text-[10px] font-semibold text-primary uppercase tracking-wider">{roleLabel}</div>
-              </div>
-              <button
-                onClick={() => signOut()}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                title="Đăng xuất"
+        <div className="mt-auto border-t border-border/50 p-3">
+          <div className="flex w-full items-center justify-between">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="mr-1 flex min-w-0 flex-1 items-center gap-2 rounded-lg p-2 text-left transition-colors hover:bg-secondary/50">
+                  <div className="relative">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2e6d2b] text-[13px] font-semibold text-white">
+                      {initials}
+                    </div>
+                    <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 rounded-full border-2 border-background bg-[#0d8282]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14px] font-medium text-foreground">
+                      {displayName}
+                    </div>
+                    <div className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      {roleLabel}
+                    </div>
+                  </div>
+                  <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="mb-2 ml-3 w-[240px] rounded-xl"
+                side="top"
+                align="start"
               >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
+                <DropdownMenuLabel className="p-2 pb-3 font-normal">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2e6d2b] text-[15px] font-semibold text-white">
+                      {initials}
+                    </div>
+                    <div className="flex min-w-0 flex-col leading-tight">
+                      <span className="truncate text-[15px] font-medium">{displayName}</span>
+                      <span className="mt-1 truncate text-[12px] font-semibold uppercase tracking-wide text-primary">
+                        {roleLabel}
+                      </span>
+                      <span className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                        {session?.user?.email || "Email"}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Cài đặt</span>
+                    <DropdownMenuShortcut>Ctrl ,</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <ArrowUpCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Nâng cấp gói</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <Download className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Cài ứng dụng</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex cursor-pointer justify-between py-2.5">
+                    <div className="flex items-start">
+                      <Monitor className="mr-2 mt-0.5 h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span>Giao diện</span>
+                        <span className="mt-1 text-[12px] leading-none text-muted-foreground">
+                          Hệ thống
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex cursor-pointer justify-between py-2.5">
+                    <div className="flex items-start">
+                      <Languages className="mr-2 mt-0.5 h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span>Ngôn ngữ</span>
+                        <span className="mt-1 text-[12px] leading-none text-muted-foreground">
+                          Tiếng Việt
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex cursor-pointer items-center justify-between py-2.5">
+                    <div className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span>Trợ giúp</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer py-2.5" onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground">
+              <Bell className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/70 px-4 backdrop-blur-md md:px-6">
-          <div className="flex flex-1 items-center gap-4">
-            <div className="relative hidden max-w-sm flex-1 lg:max-w-md sm:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={
-                  pathname === '/admin' || pathname === '/admin/'
-                    ? "Search analytics..."
-                    : pathname.includes('documents')
-                      ? "Global search for documents..."
-                      : "Global search..."
-                }
-                className="h-9 w-full rounded-full border border-border bg-muted/30 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-              />
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/70 px-6 backdrop-blur-md md:px-8">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="truncate text-[16px] font-semibold text-foreground md:max-w-[500px]">
+              {pageTitle}
             </div>
-
-            {(pathname === '/admin' || pathname === '/admin/') && (
-              <div className="ml-4 hidden h-14 items-center gap-6 lg:flex">
-              </div>
-            )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-3">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-              <Bell className="h-4 w-4" />
-            </button>
-
-            {(pathname === '/admin' || pathname === '/admin/') ? (
-              <button className="hidden h-9 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary/90 sm:flex">
-                New Session
-              </button>
-            ) : (
-              <button className="hidden h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:flex">
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-            )}
-
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-full border border-border bg-card/80 py-1.5 pl-1.5 pr-4 text-[13px] sm:flex">
+              <span className="relative flex h-5 w-5 items-center justify-center">
+                <span className="pulse-ring absolute h-2 w-2 rounded-full bg-secondary" />
+                <span className="relative h-2 w-2 rounded-full bg-secondary" />
+              </span>
+              <span className="whitespace-nowrap font-medium text-foreground">Admin workspace</span>
+            </div>
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
