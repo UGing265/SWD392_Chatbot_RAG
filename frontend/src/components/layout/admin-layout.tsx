@@ -19,6 +19,7 @@ import {
   IconChevronRight,
   IconLogout,
   IconBell,
+  IconLayoutSidebar,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Menu, Avatar, Text, Group, Stack, Badge, UnstyledButton } from "@mantine/core";
@@ -79,20 +80,19 @@ function SidebarItem({
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors",
         active
-          ? "bg-zinc-100 text-gray-905"
-          : "text-gray-500 hover:bg-zinc-50 hover:text-gray-905",
+          ? "bg-zinc-200/50 text-gray-900"
+          : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900",
       )}
     >
       <Icon
         size={18}
         className={cn(
-          active ? "text-gray-905" : "text-gray-400 group-hover:text-gray-905",
+          active ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900",
         )}
       />
       <span className="flex-1">{label}</span>
     </Link>
-  );
-}
+  );}
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -112,14 +112,15 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-blue-100">
-      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-gray-200 bg-zinc-50/50 md:flex">
-        <div className="px-5 pb-6 pt-6">
-          <Link href={basePath} className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm">
-              <IconClipboardList size={18} />
-            </div>
-            <div className="text-[19px] font-bold tracking-tight text-gray-900">StudyMate</div>
+      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-gray-200 bg-zinc-50 md:flex">
+        {/* Brand */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-3.5">
+          <Link href={basePath} className="text-[18px] font-bold tracking-tight text-gray-900 px-1">
+            StudyMate
           </Link>
+          <UnstyledButton className="rounded-lg p-1.5 text-gray-400 hover:bg-zinc-150 hover:text-gray-900 transition-colors">
+            <IconLayoutSidebar size={18} />
+          </UnstyledButton>
         </div>
 
         <nav className="flex flex-col gap-1 px-3">
@@ -134,71 +135,69 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-gray-200 p-3">
-          <div className="flex w-full items-center justify-between">
-            <Menu shadow="md" width={240} position="top-start" radius="md">
-              <Menu.Target>
-                <UnstyledButton className="mr-1 flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1.5 text-left transition-colors hover:bg-zinc-100">
-                  <Avatar color="dark" radius="xl" size="sm">
-                    {initials}
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <Text size="sm" fw={600} className="truncate text-gray-900 leading-tight">
-                      {displayName}
-                    </Text>
-                    <Text size="10px" fw={700} className="uppercase tracking-wide text-blue-600 mt-0.5">
-                      {roleLabel}
-                    </Text>
-                  </div>
-                  <IconSelector size={16} className="text-gray-400 shrink-0" />
-                </UnstyledButton>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>Quản trị viên</Menu.Label>
-                <div className="px-3 py-2 flex items-center gap-3">
-                  <Avatar color="dark" radius="xl" size="md">
-                    {initials}
-                  </Avatar>
-                  <div className="flex flex-col min-w-0 leading-tight">
-                    <Text size="sm" fw={750} className="truncate text-gray-900">
-                      {displayName}
-                    </Text>
-                    <Text size="10px" fw={700} className="uppercase tracking-wide text-blue-600 mt-0.5">
-                      {roleLabel}
-                    </Text>
-                    <Text size="xs" c="dimmed" className="truncate mt-0.5">
-                      {session?.user?.email || "Email"}
-                    </Text>
-                  </div>
+        {/* Profile / Bottom actions */}
+        <div className="mt-auto p-3 border-t border-gray-200">
+          <Menu shadow="md" width={240} position="top-start" radius="md">
+            <Menu.Target>
+              <UnstyledButton className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-zinc-100 transition-colors">
+                <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
+                  {initials}
+                </Avatar>
+                <div className="flex-1 min-w-0 leading-tight">
+                  <Text size="sm" fw={550} className="truncate text-gray-900">
+                    {displayName}
+                  </Text>
+                  <Text size="xs" className="text-gray-500 font-normal mt-0.5 capitalize">
+                    {roleLabel}
+                  </Text>
                 </div>
-                <Menu.Divider />
-                <Menu.Item leftSection={<IconSettings size={14} />}>
-                  Cài đặt
-                </Menu.Item>
-                <Menu.Item leftSection={<IconArrowUpCircle size={14} />}>
-                  Nâng cấp gói
-                </Menu.Item>
-                <Menu.Item leftSection={<IconDownload size={14} />}>
-                  Cài ứng dụng
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item leftSection={<IconDeviceDesktop size={14} />}>
-                  Giao diện
-                </Menu.Item>
-                <Menu.Item leftSection={<IconLanguage size={14} />}>
-                  Ngôn ngữ
-                </Menu.Item>
-                <Menu.Item leftSection={<IconHelp size={14} />}>
-                  Trợ giúp
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={() => signOut()}>
-                  Đăng xuất
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </div>
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Quản trị viên</Menu.Label>
+              <div className="px-3 py-2 flex items-center gap-3">
+                <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
+                  {initials}
+                </Avatar>
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <Text size="sm" fw={700} className="truncate text-gray-900">
+                    {displayName}
+                  </Text>
+                  <Text size="10px" fw={700} className="uppercase tracking-wide text-blue-600 mt-0.5">
+                    {roleLabel}
+                  </Text>
+                  <Text size="xs" c="dimmed" className="truncate mt-0.5">
+                    {session?.user?.email || "Email"}
+                  </Text>
+                </div>
+              </div>
+              <Menu.Divider />
+              <Menu.Item leftSection={<IconSettings size={14} />}>
+                Cài đặt
+              </Menu.Item>
+              <Menu.Item leftSection={<IconArrowUpCircle size={14} />}>
+                Nâng cấp gói
+              </Menu.Item>
+              <Menu.Item leftSection={<IconDownload size={14} />}>
+                Cài ứng dụng
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item leftSection={<IconDeviceDesktop size={14} />}>
+                Giao diện
+              </Menu.Item>
+              <Menu.Item leftSection={<IconLanguage size={14} />}>
+                Ngôn ngữ
+              </Menu.Item>
+              <Menu.Item leftSection={<IconHelp size={14} />}>
+                Trợ giúp
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={() => signOut()}>
+                Đăng xuất
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </div>
       </aside>
 
@@ -216,7 +215,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-green-500" />
             </UnstyledButton>
 
-            <Badge color="teal" variant="light" size="md">
+            <Badge color="dark" variant="light" size="md">
               Admin workspace
             </Badge>
           </Group>
