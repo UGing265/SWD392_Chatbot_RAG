@@ -197,12 +197,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="mt-auto p-3 border-t border-gray-200">
           <Menu shadow="md" width={240} position="top-start" radius="md">
             <Menu.Target>
-              <UnstyledButton className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:!bg-zinc-200 active:scale-[0.98] transition-all duration-150">
-                <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
+              <UnstyledButton className="flex w-full items-center gap-3.5 rounded-xl p-3 text-left hover:!bg-zinc-100 active:scale-[0.98] transition-all duration-150 border border-transparent hover:border-gray-200/50">
+                <Avatar color="dark" radius="xl" size="md" className="font-bold text-sm">
                   {getInitials(session?.user?.name)}
                 </Avatar>
                 <div className="flex-1 min-w-0 leading-tight">
-                  <Text size="sm" fw={550} className="truncate text-gray-900">
+                  <Text size="sm" fw={600} className="truncate text-gray-900">
                     {session?.user?.name || "Người dùng"}
                   </Text>
                   <Text size="xs" className="text-gray-500 font-normal mt-0.5 capitalize">
