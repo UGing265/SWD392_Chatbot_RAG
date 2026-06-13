@@ -2,7 +2,7 @@
 
 import { useParams, redirect } from "next/navigation";
 import { AdminDashboardView } from "@/components/admin/dashboard/admin-dashboard-view";
-import { DocumentsView as LecturerDocumentsView } from "@/components/features/teacher-documents-view";
+import { DocumentsView as LecturerDocumentsView } from "@/components/lecturer/documents/documents-view";
 
 export default function Page() {
   const params = useParams();

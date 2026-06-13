@@ -2,18 +2,25 @@
 
 import { Suspense, useState, useMemo } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
-  ArrowRight,
-  CheckCircle2,
-  XCircle,
-  Lightbulb,
-  Trophy,
-  RotateCcw,
-  Loader2,
-  Eye,
-} from "lucide-react";
+  IconArrowRight,
+  IconCircleCheck,
+  IconCircleX,
+  IconBulb,
+  IconTrophy,
+  IconRefresh,
+  IconEye,
+} from "@tabler/icons-react";
+import {
+  Button,
+  Progress,
+  Loader,
+  Paper,
+  Text,
+  Group,
+  Stack,
+  Center,
+} from "@mantine/core";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -101,38 +108,39 @@ function QuizContent() {
 
   if (isFinished) {
     return (
-      <div className="w-full max-w-3xl mx-auto py-12 animate-fade-in-up text-center space-y-8">
-        <div className="relative inline-block">
-          <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full"></div>
+      <div className="w-full max-w-3xl mx-auto py-12 text-center space-y-8">
+        <Center className="relative">
+          <div className="absolute inset-0 bg-blue-500/10 blur-[50px] rounded-full"></div>
           {isLecturer ? (
-            <Eye className="w-32 h-32 text-primary mx-auto relative z-10 animate-fade-in-up" />
+            <IconEye size={96} className="text-blue-600 relative z-10" />
           ) : (
-            <Trophy className="w-32 h-32 text-warning mx-auto relative z-10 animate-fade-in-up" />
+            <IconTrophy size={96} className="text-yellow-500 relative z-10" />
           )}
-        </div>
+        </Center>
         <div>
-          <h1 className="text-4xl font-extrabold gradient-text mb-4">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
             {isLecturer ? "Xem lại bài tập" : "Hoàn thành bài tập!"}
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <Text size="lg" c="dimmed">
             {isLecturer ? (
               `Bạn đang xem nội dung của ${activeQuiz.length} câu hỏi.`
             ) : (
               <>
                 Bạn đã trả lời đúng{" "}
-                <span className="font-bold text-foreground text-2xl">
+                <span className="font-extrabold text-gray-900 text-2xl">
                   {score}/{activeQuiz.length}
                 </span>{" "}
                 câu hỏi.
               </>
             )}
-          </p>
+          </Text>
         </div>
-        <div className="flex justify-center gap-4 pt-8">
+        <Group justify="center" gap="md" className="pt-8">
           <Button
             variant="outline"
+            color="gray"
             size="lg"
-            className="rounded-xl h-14 px-8 text-base shadow-sm"
+            radius="md"
             onClick={() => router.push(`${rolePrefix}/practice`)}
           >
             Về danh sách
@@ -140,7 +148,9 @@ function QuizContent() {
           {!isLecturer && (
             <Button
               size="lg"
-              className="rounded-xl h-14 px-8 text-base shadow-soft hover:shadow-pop transition-all group"
+              color="blue"
+              radius="md"
+              leftSection={<IconRefresh size={18} />}
               onClick={() => {
                 setCurrentIndex(0);
                 setScore(0);
@@ -149,50 +159,48 @@ function QuizContent() {
                 setIsFinished(false);
               }}
             >
-              <RotateCcw className="w-5 h-5 mr-2 group-hover:-rotate-180 transition-transform duration-500" />{" "}
               Làm lại
             </Button>
           )}
-        </div>
+        </Group>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-8">
+    <div className="w-full max-w-4xl mx-auto py-8 px-4">
       {/* Header and Progress */}
       <div className="mb-8 space-y-4">
-        <div className="flex items-center justify-between text-sm font-semibold">
-          <span className="text-muted-foreground uppercase tracking-wider">Tiến trình học tập</span>
-          <span className="text-primary">
+        <Group justify="space-between" align="center" className="text-sm font-semibold">
+          <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">Tiến trình bài tập</Text>
+          <Text fw={700} color="blue">
             {currentIndex + 1} / {activeQuiz.length}
-          </span>
-        </div>
-        <Progress value={progress} className="h-3" />
+          </Text>
+        </Group>
+        <Progress value={progress} color="blue" size="md" radius="xl" />
       </div>
 
       {/* Main Question Card container */}
-      <div className="animate-fade-in-up">
-        <div className="relative bg-white/70 backdrop-blur-xl border border-border/60 rounded-3xl p-8 mb-8 shadow-pop">
-          <h2 className="text-3xl font-bold leading-tight mb-8">{currentQuestion.question}</h2>
+      <div>
+        <Paper withBorder p="xl" radius="lg" className="bg-white mb-8 shadow-sm">
+          <Text fw={900} className="text-2xl leading-tight mb-8 text-gray-900">
+            {currentQuestion.question}
+          </Text>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentQuestion.options.map((option: string, idx: number) => {
               const isSelected = selectedAnswer === idx;
               const isCorrect = currentQuestion.correct_answer === idx;
 
-              let stateStyles = "hover:bg-primary/5 hover:border-primary/30 text-foreground";
+              let stateStyles = "border-gray-200 hover:border-blue-500/40 hover:bg-blue-50/10 text-gray-900 bg-white";
 
               if (isAnswered) {
                 if (isCorrect) {
-                  stateStyles =
-                    "bg-emerald-500/10 border-emerald-500 text-emerald-700 ring-1 ring-emerald-500/50";
+                  stateStyles = "bg-emerald-50/20 border-emerald-500 text-emerald-800";
                 } else if (isSelected) {
-                  stateStyles =
-                    "bg-rose-500/10 border-rose-500 text-rose-700 ring-1 ring-rose-500/50";
+                  stateStyles = "bg-rose-50/20 border-rose-500 text-rose-800";
                 } else {
-                  stateStyles =
-                    "opacity-50 grayscale border-border/50 bg-muted/40 cursor-not-allowed";
+                  stateStyles = "opacity-50 border-gray-100 bg-zinc-50/50 cursor-not-allowed";
                 }
               }
 
@@ -202,8 +210,8 @@ function QuizContent() {
                   onClick={() => !isLecturer && handleSelect(idx)}
                   disabled={isAnswered && !isLecturer}
                   className={cn(
-                    "relative flex items-center p-5 text-left w-full h-full rounded-2xl border-2 transition-all duration-300",
-                    !isAnswered && !isLecturer && "cursor-pointer active:scale-[0.98]",
+                    "relative flex items-center p-5 text-left w-full h-full rounded-2xl border-2 transition-all duration-200",
+                    !isAnswered && !isLecturer && "cursor-pointer active:scale-[0.99]",
                     stateStyles,
                   )}
                 >
@@ -214,80 +222,85 @@ function QuizContent() {
                         ? "bg-emerald-500 border-emerald-500 text-white"
                         : isAnswered && isSelected && !isCorrect
                           ? "bg-rose-500 border-rose-500 text-white"
-                          : "border-muted-foreground/30 text-muted-foreground",
+                          : "border-gray-300 text-gray-500",
                     )}
                   >
                     {isAnswered && isCorrect ? (
-                      <CheckCircle2 className="w-5 h-5" />
+                      <IconCircleCheck size={18} />
                     ) : isAnswered && isSelected && !isCorrect ? (
-                      <XCircle className="w-5 h-5" />
+                      <IconCircleX size={18} />
                     ) : (
                       String.fromCharCode(65 + idx)
                     )}
                   </div>
-                  <span className="text-lg font-medium leading-snug">{option}</span>
+                  <span className="text-md font-semibold leading-snug">{option}</span>
                 </button>
               );
             })}
           </div>
-        </div>
+        </Paper>
 
         {/* Explanation Section */}
         {isAnswered && (
-          <div className="animate-fade-in-up space-y-6">
-            <div
+          <div className="space-y-6">
+            <Paper
+              withBorder
+              p="lg"
+              radius="lg"
               className={cn(
-                "p-6 rounded-2xl border",
                 selectedAnswer === currentQuestion.correct_answer
-                  ? "bg-emerald-500/10 border-emerald-500/20"
-                  : "bg-warning/10 border-warning/20",
+                  ? "bg-emerald-50/10 border-emerald-200"
+                  : "bg-amber-50/10 border-amber-200",
               )}
             >
-              <div className="flex items-start gap-4">
-                <div
+              <Group align="flex-start" gap="md" wrap="nowrap">
+                <Center
                   className={cn(
-                    "p-3 rounded-full mt-1",
+                    "p-3 rounded-full mt-1 shrink-0",
                     selectedAnswer === currentQuestion.correct_answer
-                      ? "bg-emerald-500/20 text-emerald-600"
-                      : "bg-warning/20 text-warning-foreground",
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700",
                   )}
                 >
-                  <Lightbulb className="w-6 h-6" />
-                </div>
+                  <IconBulb size={24} />
+                </Center>
                 <div>
-                  <h3
+                  <Text
+                    fw={900}
+                    size="lg"
                     className={cn(
-                      "text-xl font-bold mb-2",
+                      "mb-1",
                       isLecturer
-                        ? "text-primary"
+                        ? "text-blue-700"
                         : selectedAnswer === currentQuestion.correct_answer
-                          ? "text-emerald-700"
-                          : "text-warning-foreground",
+                          ? "text-emerald-800"
+                          : "text-amber-850",
                     )}
                   >
                     {isLecturer
                       ? "Nội dung giải thích:"
                       : selectedAnswer === currentQuestion.correct_answer
                         ? "Chính xác tuyệt đối!"
-                        : "Sai rồi, hãy cố gắng học hỏi từ lỗi sai nhé!"}
-                  </h3>
-                  <p className="text-base text-muted-foreground font-medium leading-relaxed">
+                        : "Chưa chính xác, hãy ôn lại kiến thức nhé!"}
+                  </Text>
+                  <Text size="sm" c="dimmed" fw={500} className="leading-relaxed">
                     {currentQuestion.explanation}
-                  </p>
+                  </Text>
                 </div>
-              </div>
-            </div>
+              </Group>
+            </Paper>
 
-            <div className="flex justify-end">
+            <Group justify="flex-end">
               <Button
-                size="lg"
-                className="h-14 px-8 text-lg font-bold rounded-xl shadow-soft group transition-all"
                 onClick={handleNext}
+                color="blue"
+                radius="md"
+                size="lg"
+                rightSection={<IconArrowRight size={18} />}
               >
                 {currentIndex < activeQuiz.length - 1 ? "Câu tiếp theo" : "Xem kết quả"}
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-            </div>
+            </Group>
           </div>
         )}
       </div>
@@ -299,10 +312,12 @@ export default function QuizGamificationPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-12 text-center h-[50vh] flex flex-col items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Đang tải cấu hình bài tập...</p>
-        </div>
+        <Center className="p-12 h-[50vh]">
+          <Stack gap="xs" align="center">
+            <Loader size="lg" color="blue" />
+            <Text size="sm" c="dimmed" fw={500}>Đang tải cấu hình bài tập...</Text>
+          </Stack>
+        </Center>
       }
     >
       <QuizContent />

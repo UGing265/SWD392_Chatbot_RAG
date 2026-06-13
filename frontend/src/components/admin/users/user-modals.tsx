@@ -22,7 +22,8 @@ export function CreateUserModal({
       title="Thêm tài khoản mới"
       centered
       size="md"
-      radius="lg"
+      radius="2xl"
+      overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
     >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
@@ -69,7 +70,7 @@ export function CreateUserModal({
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">Thêm tài khoản</Button>
+            <Button type="submit" color="dark">Thêm tài khoản</Button>
           </Group>
         </Stack>
       </form>
@@ -93,7 +94,8 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
       title="Cập nhật thông tin tài khoản"
       centered
       size="md"
-      radius="lg"
+      radius="2xl"
+      overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
     >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
@@ -133,7 +135,7 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">Cập nhật</Button>
+            <Button type="submit" color="dark">Cập nhật</Button>
           </Group>
         </Stack>
       </form>
@@ -165,7 +167,8 @@ export function ChangePasswordModal({
       title={`Đổi mật khẩu cho: ${userName}`}
       centered
       size="md"
-      radius="lg"
+      radius="2xl"
+      overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
     >
       <form onSubmit={onSubmit}>
         <Stack gap="md">
@@ -180,7 +183,7 @@ export function ChangePasswordModal({
             <Button variant="subtle" color="gray" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">
+            <Button type="submit" color="dark">
               Thay đổi mật khẩu
             </Button>
           </Group>

@@ -99,7 +99,6 @@ Always consult the following references before writing code for UI, Frontend, or
 | `docs/ERD.txt` | Database schema with all tables |
 | `docs/Architecture.md` | Models, architecture, flows |
 | `docs/planing/` | Implementation plans |
-| `docs/bao/` | Reference documents (C# project) |
 
 ---
 

@@ -23,7 +23,7 @@ export function AdminModerationView() {
       {/* Header */}
       <Group justify="space-between" align="flex-start">
         <div>
-          <Title order={2} style={{ fontFamily: "var(--font-heading)" }}>
+          <Title order={2}>
             Kiểm duyệt báo cáo tài liệu xấu
           </Title>
           <Text size="sm" c="dimmed">
@@ -35,7 +35,7 @@ export function AdminModerationView() {
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
           radius="xl"
-          color="blue"
+          color="dark"
         >
           Làm mới
         </Button>
@@ -57,14 +57,14 @@ export function AdminModerationView() {
       </Alert>
 
       {/* Main Table */}
-      <Paper withBorder radius="md" shadow="sm" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
         {loading ? (
           <Group justify="center" py="xl">
-            <Loader size="lg" color="blue" />
+            <Loader size="lg" color="dark" />
           </Group>
         ) : (
           <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover>
-            <Table.Thead bg="gray.0">
+            <Table.Thead style={{ borderBottomWidth: 1.5 }}>
               <Table.Tr>
                 <Table.Th>Tài liệu bị báo cáo</Table.Th>
                 <Table.Th>Người báo cáo</Table.Th>
@@ -105,14 +105,15 @@ export function AdminModerationView() {
                       <Text size="sm">{doc.reporterEmail}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Badge variant="light" color="orange" radius="md">
-                        {doc.reason}
-                      </Badge>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ height: 6, width: 6, borderRadius: "50%", backgroundColor: "var(--mantine-color-orange-5)" }} />
+                        <span style={{ fontSize: "14px", fontWeight: 500 }}>{doc.reason}</span>
+                      </div>
                     </Table.Td>
                     <Table.Td>
-                      <Badge variant="outline" color="blue" radius="md">
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", border: "1px solid var(--mantine-color-default-border)", padding: "2px 8px", borderRadius: "6px", color: "var(--mantine-color-dimmed)", backgroundColor: "rgba(0,0,0,0.02)" }}>
                         {doc.subjectCode}
-                      </Badge>
+                      </span>
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs" justify="flex-end">

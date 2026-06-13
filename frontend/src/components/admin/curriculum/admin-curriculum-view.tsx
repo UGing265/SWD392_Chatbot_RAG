@@ -83,7 +83,7 @@ export function AdminCurriculumView() {
       {/* Header section */}
       <Group justify="space-between" align="center">
         <div>
-          <Title order={2} style={{ fontFamily: "var(--font-heading)" }}>
+          <Title order={2}>
             Quản lý Học kỳ & Môn học
           </Title>
           <Text size="sm" c="dimmed">
@@ -96,6 +96,7 @@ export function AdminCurriculumView() {
           disabled={savingAction !== null}
           radius="xl"
           size="md"
+          color="dark"
         >
           Thêm học kỳ
         </Button>
@@ -109,9 +110,9 @@ export function AdminCurriculumView() {
 
       {/* Adding Term Form */}
       <Collapse {...({ in: addingTerm } as any)}>
-        <Paper withBorder p="md" radius="md" bg="blue.0" style={{ borderStyle: "dashed" }}>
+        <Paper withBorder p="md" radius="md" bg="transparent" style={{ borderStyle: "dashed" }}>
           <Stack gap="sm">
-            <Text size="sm" fw={700} c="blue">
+            <Text size="sm" fw={700} c="dimmed">
               Học kỳ mới
             </Text>
             <Group align="flex-end" gap="md">
@@ -136,7 +137,7 @@ export function AdminCurriculumView() {
                   disabled={!newTermName.trim() || savingAction === "create-term"}
                   loading={savingAction === "create-term"}
                   radius="md"
-                  color="blue"
+                  color="dark"
                 >
                   Lưu
                 </Button>
@@ -152,7 +153,7 @@ export function AdminCurriculumView() {
       {/* Main content */}
       {loading ? (
         <Group justify="center" py="xl">
-          <Loader size="lg" color="blue" />
+          <Loader size="lg" color="dark" />
         </Group>
       ) : sortedTerms.length === 0 ? (
         <Paper withBorder radius="md" p="xl" style={{ textAlign: "center", borderStyle: "dashed" }}>
@@ -171,13 +172,13 @@ export function AdminCurriculumView() {
             const isDeletingThisTerm = savingAction === `delete-term-${term.id}`;
 
             return (
-              <Paper key={term.id} withBorder radius="md" shadow="sm">
+              <Paper key={term.id} withBorder radius="md">
                 {/* Term Header row */}
                 <Group justify="space-between" p="md" align="center">
                   <Group gap="md" style={{ flex: 1 }}>
                     <ActionIcon
                       variant="light"
-                      color="blue"
+                      color="dark"
                       radius="md"
                       size="lg"
                       onClick={() => toggleTerm(term.id)}
@@ -244,7 +245,7 @@ export function AdminCurriculumView() {
                     <Group gap="xs">
                       <ActionIcon
                         variant="subtle"
-                        color="blue"
+                        color="dark"
                         onClick={() => startEditingTerm(term)}
                         disabled={savingAction !== null}
                         radius="md"
@@ -281,6 +282,7 @@ export function AdminCurriculumView() {
                           size="xs"
                           leftSection={<IconPlus size={14} />}
                           onClick={() => startAddingSubject(term.id)}
+                          color="dark"
                         >
                           Thêm môn học
                         </Button>
@@ -292,11 +294,11 @@ export function AdminCurriculumView() {
                           withBorder
                           p="sm"
                           radius="md"
-                          bg="gray.0"
+                          bg="transparent"
                           style={{ borderStyle: "dashed" }}
                         >
                           <Stack gap="xs">
-                            <Text size="xs" fw={700} c="blue">
+                            <Text size="xs" fw={700} c="dimmed">
                               Môn học mới
                             </Text>
                             <Group align="flex-end" gap="xs">
@@ -322,6 +324,7 @@ export function AdminCurriculumView() {
                                   radius="md"
                                   onClick={() => handleCreateSubject(term.id)}
                                   loading={savingAction === `create-subject-${term.id}`}
+                                  color="dark"
                                 >
                                   Lưu
                                 </Button>
@@ -365,7 +368,7 @@ export function AdminCurriculumView() {
                                 withBorder
                                 p="sm"
                                 radius="md"
-                                bg="gray.0"
+                                bg="transparent"
                                 style={{ transition: "background-color 150ms ease" }}
                               >
                                 {isEditingSubject ? (
@@ -424,7 +427,7 @@ export function AdminCurriculumView() {
                                       >
                                         <IconBook
                                           size={16}
-                                          style={{ color: "var(--mantine-color-blue-6)" }}
+                                          style={{ color: "var(--mantine-color-dark-6)" }}
                                         />
                                       </Paper>
                                       <div>
@@ -440,7 +443,7 @@ export function AdminCurriculumView() {
                                     <Group gap="xs">
                                       <ActionIcon
                                         variant="subtle"
-                                        color="blue"
+                                        color="dark"
                                         onClick={() => startEditingSubject(sub)}
                                         disabled={savingAction !== null}
                                         radius="md"

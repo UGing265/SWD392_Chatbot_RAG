@@ -258,7 +258,7 @@ export function AdminSettingsView() {
           Đặt lại mặc định
         </Button>
         <Button
-          color="blue"
+          color="dark"
           leftSection={<IconDeviceFloppy size={16} />}
           loading={saving}
           onClick={handleSave}

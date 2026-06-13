@@ -3,23 +3,29 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
-  BookOpen,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Download,
-  File,
-  FileText,
-  Globe,
-  Loader2,
-  Lock,
-  Share2,
-  Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+  IconArrowLeft,
+  IconBook,
+  IconCalendar,
+  IconChevronLeft,
+  IconChevronRight,
+  IconDownload,
+  IconFile,
+  IconFileText,
+  IconGlobe,
+  IconLock,
+  IconShare,
+  IconTrash,
+} from "@tabler/icons-react";
+import {
+  Button,
+  Badge,
+  Loader,
+  Paper,
+  Text,
+  Group,
+  Stack,
+  Center,
+} from "@mantine/core";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const CHUNK_PAGE_SIZE = 10;
@@ -213,7 +219,6 @@ export default function DocumentDetailPage() {
             },
           ],
         });
-        // setError(err instanceof Error ? err.message : "Không thể tải tài liệu này.");
       } finally {
         setLoading(false);
       }
@@ -282,242 +287,240 @@ export default function DocumentDetailPage() {
 
   if (loading && !document) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-zinc-50">
-        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
-          <Loader2 className="h-12 w-12 animate-spin text-[#0d8282]" />
-          <p className="font-medium text-muted-foreground">Đang tải thông tin tài liệu...</p>
-        </div>
-      </div>
+      <Center className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
+        <Stack gap="xs" align="center">
+          <Loader size="lg" color="blue" />
+          <Text size="sm" c="dimmed" fw={500}>Đang tải thông tin tài liệu...</Text>
+        </Stack>
+      </Center>
     );
   }
 
   if (error || !document) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-zinc-50 p-6">
-        <div className="text-center animate-in fade-in duration-500">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50">
-            <FileText className="h-10 w-10 text-red-500" />
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-zinc-900">Không thể mở tài liệu</h2>
-          <p className="mb-6 text-muted-foreground">
-            {error || "Tài liệu này không tồn tại hoặc bạn không có quyền truy cập."}
-          </p>
-          <Button
-            onClick={() => router.back()}
-            variant="outline"
-            className="rounded-xl border-zinc-200 hover:bg-zinc-100"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Quay lại
-          </Button>
+      <Center className="min-h-[calc(100vh-3.5rem)] bg-zinc-50 p-6">
+        <div className="text-center max-w-md">
+          <Paper withBorder p="xl" radius="lg" className="bg-white">
+            <Center className="mx-auto mb-6 h-20 w-20 rounded-full bg-red-50 text-red-500">
+              <IconFileText size={40} />
+            </Center>
+            <Text fw={905} size="lg" className="mb-2 text-gray-900">Không thể mở tài liệu</Text>
+            <Text size="sm" c="dimmed" className="mb-6 leading-relaxed">
+              {error || "Tài liệu này không tồn tại hoặc bạn không có quyền truy cập."}
+            </Text>
+            <Button
+              onClick={() => router.back()}
+              variant="outline"
+              color="gray"
+              radius="md"
+              leftSection={<IconArrowLeft size={16} />}
+            >
+              Quay lại
+            </Button>
+          </Paper>
         </div>
-      </div>
+      </Center>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
-      <div className="container mx-auto max-w-5xl p-6 py-8 md:py-12">
-        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50 py-8 px-4 md:px-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div>
           <Button
             onClick={() => router.back()}
-            variant="outline"
-            className="mb-6 rounded-xl border-zinc-200 hover:bg-white text-zinc-600"
+            variant="subtle"
+            color="gray"
+            leftSection={<IconArrowLeft size={16} />}
+            radius="md"
+            className="mb-6"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
 
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
-              <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Group gap="xs" mb="md" wrap="nowrap" className="overflow-x-auto pb-1">
                 <Badge
-                  variant="outline"
-                  className={
-                    document.visibility === "private"
-                      ? "border-zinc-200 bg-zinc-100 text-zinc-600 px-3 py-1 text-[13px]"
-                      : "border-[#0d8282]/20 bg-[#0d8282]/5 text-[#0d8282] px-3 py-1 text-[13px]"
-                  }
+                  color={document.visibility === "private" ? "gray" : "blue"}
+                  variant="light"
+                  size="md"
+                  leftSection={document.visibility === "private" ? <IconLock size={12} /> : <IconGlobe size={12} />}
                 >
-                  {document.visibility === "private" ? (
-                    <span className="flex items-center gap-1.5">
-                      <Lock className="h-3.5 w-3.5" />
-                      {visibilityLabel(document.visibility)}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 font-semibold">
-                      <Globe className="h-3.5 w-3.5" />
-                      {visibilityLabel(document.visibility)}
-                    </span>
-                  )}
+                  {visibilityLabel(document.visibility)}
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]"
-                >
+                <Badge color="blue" variant="outline" size="md">
                   {document.document_type_name || "Tài liệu"}
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className="border-zinc-200 bg-white text-zinc-600 px-3 py-1 text-[13px]"
-                >
+                <Badge color="teal" variant="light" size="md">
                   {document.status}
                 </Badge>
-              </div>
+              </Group>
 
-              <h1 className="mb-4 text-3xl font-bold text-[#0d8282] md:text-4xl leading-tight">
+              <Text fw={900} className="text-3xl text-gray-900 leading-tight mb-4">
                 {document.title}
-              </h1>
+              </Text>
 
               {document.description && (
-                <p className="max-w-3xl text-[15px] leading-relaxed text-zinc-500">
+                <Text size="sm" c="dimmed" className="max-w-3xl leading-relaxed">
                   {document.description}
-                </p>
+                </Text>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3 lg:flex-col lg:w-48 shrink-0">
+            <Group gap="sm" className="lg:flex-col lg:w-48 shrink-0">
               <Button
                 onClick={handleDownload}
-                className="rounded-xl bg-[#0d8282] hover:bg-[#0a6666] shadow-sm text-white h-11"
+                color="blue"
+                radius="md"
+                className="w-full h-11"
+                leftSection={<IconDownload size={16} />}
               >
-                <Download className="mr-2 h-4 w-4" />
                 Tải xuống
               </Button>
               <Button
                 onClick={handleShare}
                 variant="outline"
-                className="rounded-xl border-zinc-200 hover:bg-zinc-100 h-11"
+                color="gray"
+                radius="md"
+                className="w-full h-11 bg-white"
+                leftSection={<IconShare size={16} />}
               >
-                <Share2 className="mr-2 h-4 w-4" />
                 Chia sẻ
               </Button>
               {canManage && (
                 <Button
                   onClick={handleDelete}
                   variant="outline"
-                  className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 h-11"
+                  color="red"
+                  radius="md"
+                  className="w-full h-11 bg-white"
+                  leftSection={<IconTrash size={16} />}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
                   Xóa tài liệu
                 </Button>
               )}
-            </div>
+            </Group>
           </div>
         </div>
 
-        <div className="mb-10 grid gap-4 sm:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 delay-100 duration-500">
+        <div className="grid gap-4 sm:grid-cols-3">
           {[
-            { icon: BookOpen, label: "Môn học", value: document.subject_name || "Chưa có môn học" },
+            { icon: IconBook, label: "Môn học", value: document.subject_name || "Chưa có môn học" },
             {
-              icon: Calendar,
+              icon: IconCalendar,
               label: "Kỳ học",
               value: document.academic_term_name || "Chưa có kỳ học",
             },
-            { icon: File, label: "Ngôn ngữ", value: document.language_name || "Chưa xác định" },
+            { icon: IconFile, label: "Ngôn ngữ", value: document.language_name || "Chưa xác định" },
           ].map((stat, i) => (
-            <div key={i} className="rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0d8282]/10">
-                  <stat.icon className="h-5 w-5 text-[#0d8282]" />
-                </div>
-                <span className="text-sm font-semibold text-zinc-500">{stat.label}</span>
-              </div>
-              <p className="text-[15px] font-bold text-zinc-800 line-clamp-1">{stat.value}</p>
-            </div>
+            <Paper key={i} withBorder p="md" radius="lg" className="bg-white">
+              <Group gap="xs" mb="xs" align="center">
+                <Center className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600">
+                  <stat.icon size={18} />
+                </Center>
+                <Text size="xs" fw={700} c="dimmed">{stat.label}</Text>
+              </Group>
+              <Text fw={800} size="sm" className="text-gray-900 truncate">{stat.value}</Text>
+            </Paper>
           ))}
         </div>
 
-        <div className="flex flex-col gap-6">
+        <Stack gap="md">
           {primaryFile && (
-            <section className="rounded-2xl border border-zinc-200/60 bg-white p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 delay-150 duration-500">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0d8282]/10">
-                  <FileText className="h-6 w-6 text-[#0d8282]" />
-                </div>
+            <Paper
+              withBorder
+              p="md"
+              radius="lg"
+              className="bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <Group gap="md">
+                <Center className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+                  <IconFileText size={24} />
+                </Center>
                 <div>
-                  <p className="line-clamp-1 text-[15px] font-semibold text-zinc-800">
+                  <Text fw={700} size="sm" className="text-gray-900 line-clamp-1">
                     {primaryFile.original_filename}
-                  </p>
-                  <p className="text-[13px] text-zinc-500 mt-0.5">
+                  </Text>
+                  <Text size="xs" c="dimmed" className="mt-0.5">
                     {formatFileSize(primaryFile.file_size_bytes)}
                     {primaryFile.page_count ? ` • ${primaryFile.page_count} trang` : ""}
-                  </p>
+                  </Text>
                 </div>
-              </div>
+              </Group>
               <Button
                 onClick={handleDownload}
                 variant="outline"
-                className="shrink-0 rounded-xl border-zinc-200 hover:bg-zinc-50 text-[#0d8282]"
+                color="blue"
+                radius="md"
+                leftSection={<IconDownload size={16} />}
               >
-                <Download className="mr-2 h-4 w-4" />
                 Mở file gốc
               </Button>
-            </section>
+            </Paper>
           )}
 
-          <section className="rounded-3xl border border-zinc-200/60 bg-white p-6 md:p-10 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-250 duration-500">
-            <div className="mb-8 flex flex-col gap-3 border-b border-zinc-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <Paper withBorder p="xl" radius="lg" className="bg-white">
+            <Group justify="space-between" align="center" className="mb-6 border-b border-gray-100 pb-4">
               <div>
-                <h2 className="text-[17px] font-bold text-zinc-800 flex items-center gap-2">
-                  <span className="w-1.5 h-5 bg-[#0d8282] rounded-full"></span>
+                <Text fw={805} size="md" className="text-gray-900 flex items-center gap-2">
+                  <span className="w-1.5 h-4 bg-blue-600 rounded-full" />
                   Nội dung chi tiết
-                </h2>
-                <p className="mt-1 text-[13px] text-zinc-500">
-                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn
-                  văn bản
-                </p>
+                </Text>
+                <Text size="xs" c="dimmed" className="mt-1">
+                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn văn bản
+                </Text>
               </div>
-              {loading && <Loader2 className="h-5 w-5 animate-spin text-[#0d8282]" />}
-            </div>
+              {loading && <Loader size="xs" color="blue" />}
+            </Group>
 
             {document.chunks.length > 0 ? (
-              <div className="rounded-2xl border border-zinc-200/50 bg-zinc-50/80 p-6 md:p-10">
-                <div className="prose prose-zinc max-w-none text-[16px] leading-[1.8] text-zinc-800 whitespace-pre-wrap">
+              <Paper p="lg" radius="md" className="bg-zinc-50/80 border border-zinc-150">
+                <Text size="sm" className="leading-[1.8] text-gray-800 whitespace-pre-wrap font-medium">
                   {document.chunks.map((c) => c.content).join("\n\n")}
-                </div>
-              </div>
+                </Text>
+              </Paper>
             ) : (
-              <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center">
-                <div className="max-w-[300px]">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white border border-zinc-100 shadow-sm">
-                    <FileText className="h-8 w-8 text-zinc-400" />
-                  </div>
-                  <h3 className="mb-2 text-[16px] font-bold text-zinc-800">
-                    Chưa có nội dung trích xuất
-                  </h3>
-                  <p className="text-[14px] text-zinc-500 leading-relaxed">
+              <Center className="min-h-[250px] border border-dashed border-gray-200 rounded-lg p-6 text-center">
+                <Stack gap="xs" align="center" className="max-w-[300px]">
+                  <Center className="h-12 w-12 rounded-xl bg-zinc-50 border border-zinc-100 text-gray-400">
+                    <IconFileText size={24} />
+                  </Center>
+                  <Text fw={700} size="sm" className="text-gray-900">Chưa có nội dung trích xuất</Text>
+                  <Text size="xs" c="dimmed" className="leading-relaxed">
                     Tài liệu này có thể vẫn đang được hệ thống xử lý hoặc nội dung trống.
-                  </p>
-                </div>
-              </div>
+                  </Text>
+                </Stack>
+              </Center>
             )}
 
-            <div className="mt-12 flex items-center justify-between gap-3 border-t border-zinc-100 pt-8">
+            <Group justify="space-between" align="center" className="mt-8 pt-6 border-t border-gray-100">
               <Button
                 variant="outline"
-                className="rounded-xl border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
+                color="gray"
+                radius="md"
                 disabled={chunkPage <= 1 || loading}
                 onClick={() => setChunkPage((page) => Math.max(1, page - 1))}
+                leftSection={<IconChevronLeft size={16} />}
               >
-                <ChevronLeft className="mr-2 h-4 w-4" />
                 Trang trước
               </Button>
-              <span className="rounded-xl bg-zinc-100 px-4 py-2 text-[13px] font-bold text-zinc-600">
+              <Badge color="gray" variant="light" size="lg" radius="md">
                 {chunkPage} / {totalPages}
-              </span>
+              </Badge>
               <Button
                 variant="outline"
-                className="rounded-xl border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
+                color="gray"
+                radius="md"
                 disabled={chunkPage >= totalPages || loading}
                 onClick={() => setChunkPage((page) => Math.min(totalPages, page + 1))}
+                rightSection={<IconChevronRight size={16} />}
               >
                 Trang sau
-                <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
-          </section>
-        </div>
+            </Group>
+          </Paper>
+        </Stack>
       </div>
     </div>
   );

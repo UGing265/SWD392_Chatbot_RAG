@@ -58,6 +58,7 @@ export function AdminUsersView() {
           onClick={openCreateModal}
           size="md"
           radius="md"
+          color="dark"
         >
           Thêm người dùng
         </Button>
@@ -76,7 +77,7 @@ export function AdminUsersView() {
       />
 
       {/* Table Container */}
-      <Paper withBorder radius="lg" p="md" shadow="sm">
+      <Paper withBorder radius="md" p="md">
         {loading ? (
           <Center py={60}>
             <Loader size="lg" />

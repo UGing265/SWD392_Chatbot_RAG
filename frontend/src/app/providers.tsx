@@ -6,9 +6,9 @@ import { createTheme, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
 const theme = createTheme({
-  fontFamily: "Atkinson Hyperlegible, sans-serif",
+  fontFamily: "var(--font-sans), sans-serif",
   headings: {
-    fontFamily: "Crimson Pro, serif",
+    fontFamily: "var(--font-sans), sans-serif",
   },
   primaryColor: "blue",
   colors: {

@@ -1,4 +1,5 @@
-import { Table, Badge, ActionIcon, Group, Menu } from "@mantine/core";
+import { useState } from "react";
+import { Table, Badge, ActionIcon, Group, Menu, Popover, Button, Text, Modal } from "@mantine/core";
 import {
   IconLock,
   IconLockOpen,
@@ -28,122 +29,201 @@ interface UserTableProps {
 }
 
 export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }: UserTableProps) {
+  const [userToBlock, setUserToBlock] = useState<{ id: string; name: string; active: boolean } | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
+
   return (
-    <Table.ScrollContainer minWidth={800}>
-      <Table striped highlightOnHover verticalSpacing="md" withRowBorders>
-        <Table.Thead>
-          <Table.Tr style={{ borderBottomWidth: 1.5 }}>
-            <Table.Th
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                tracking: "wider",
-              }}
-            >
-              Tên người dùng
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                tracking: "wider",
-              }}
-            >
-              Email
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                tracking: "wider",
-              }}
-            >
-              Vai trò
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                tracking: "wider",
-              }}
-            >
-              Trạng thái
-            </Table.Th>
-            <Table.Th
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                tracking: "wider",
-              }}
-            />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {users.map((user) => (
-            <Table.Tr key={user.id} style={{ transition: "background-color 150ms ease" }}>
-              <Table.Td style={{ fontWeight: 600 }}>{user.name}</Table.Td>
-              <Table.Td style={{ color: "var(--mantine-color-dimmed)" }}>{user.email}</Table.Td>
-              <Table.Td>{user.role}</Table.Td>
-              <Table.Td>
-                <Badge
-                  color={user.active ? "green" : "red"}
-                  variant="light"
-                  size="sm"
-                  style={{ textTransform: "uppercase", fontWeight: 700 }}
-                >
-                  {user.status}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Group gap="xs" justify="flex-end">
-                  <ActionIcon
-                    variant="subtle"
-                    color={user.active ? "red" : "green"}
-                    onClick={() => onToggleBlock(user.id, user.active)}
-                    title={user.active ? "Khóa tài khoản" : "Mở khóa tài khoản"}
-                  >
-                    {user.active ? <IconLock size={16} /> : <IconLockOpen size={16} />}
-                  </ActionIcon>
-
-                  <Menu shadow="md" width={180} position="bottom-end" radius="md">
-                    <Menu.Target>
-                      <ActionIcon variant="subtle" color="gray">
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                      <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => onEdit(user)}>
-                        Sửa thông tin
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={<IconKey size={14} />}
-                        onClick={() => onPassword(user)}
-                      >
-                        Đổi mật khẩu
-                      </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => onDelete(user.id, user.name)}
-                        style={{ fontWeight: 600 }}
-                      >
-                        Xóa tài khoản
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
-              </Table.Td>
+    <>
+      <Table.ScrollContainer minWidth={800}>
+        <Table striped highlightOnHover verticalSpacing="md" withRowBorders>
+          <Table.Thead>
+            <Table.Tr style={{ borderBottomWidth: 1.5 }}>
+              <Table.Th
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Tên người dùng
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Email
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Vai trò
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Trạng thái
+              </Table.Th>
+              <Table.Th
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              />
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </Table.ScrollContainer>
+          </Table.Thead>
+          <Table.Tbody>
+            {users.map((user) => (
+              <Table.Tr key={user.id} style={{ transition: "background-color 150ms ease" }}>
+                <Table.Td style={{ fontWeight: 600 }}>{user.name}</Table.Td>
+                <Table.Td style={{ color: "var(--mantine-color-dimmed)" }}>{user.email}</Table.Td>
+                <Table.Td>{user.role}</Table.Td>
+                <Table.Td>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <span
+                      style={{
+                        height: 8,
+                        width: 8,
+                        borderRadius: "50%",
+                        backgroundColor: user.active ? "#22c55e" : "#ef4444",
+                        boxShadow: user.active 
+                          ? "0 0 8px rgba(34,197,94,0.4)" 
+                          : "0 0 8px rgba(239,68,68,0.4)",
+                      }}
+                    />
+                    <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {user.active ? "Hoạt động" : "Bị khóa"}
+                    </span>
+                  </div>
+                </Table.Td>
+                <Table.Td>
+                  <Group gap="xs" justify="flex-end">
+                    <ActionIcon
+                      variant="subtle"
+                      color={user.active ? "red" : "green"}
+                      onClick={() =>
+                        setUserToBlock({
+                          id: user.id,
+                          name: user.name,
+                          active: user.active,
+                        })
+                      }
+                      title={user.active ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                    >
+                      {user.active ? <IconLock size={16} /> : <IconLockOpen size={16} />}
+                    </ActionIcon>
+
+                    <Menu shadow="md" width={180} position="bottom-end" radius="md">
+                      <Menu.Target>
+                        <ActionIcon variant="subtle" color="gray">
+                          <IconDotsVertical size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+
+                      <Menu.Dropdown>
+                        <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => onEdit(user)}>
+                          Sửa thông tin
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconKey size={14} />}
+                          onClick={() => onPassword(user)}
+                        >
+                          Đổi mật khẩu
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => setUserToDelete({ id: user.id, name: user.name })}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Xóa tài khoản
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+
+      <Modal
+        opened={userToBlock !== null}
+        onClose={() => setUserToBlock(null)}
+        title={userToBlock?.active ? "Xác nhận khóa tài khoản" : "Xác nhận mở khóa tài khoản"}
+        centered
+        radius="2xl"
+        overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
+      >
+        <Text size="sm" mb="lg">
+          Bạn có chắc chắn muốn {userToBlock?.active ? "khóa" : "mở khóa"} tài khoản của{" "}
+          <strong>{userToBlock?.name}</strong>?
+        </Text>
+        <Group justify="flex-end" gap="xs">
+          <Button variant="subtle" color="gray" onClick={() => setUserToBlock(null)}>
+            Hủy
+          </Button>
+          <Button
+            color={userToBlock?.active ? "red" : "green"}
+            onClick={() => {
+              if (userToBlock) {
+                onToggleBlock(userToBlock.id, userToBlock.active);
+                setUserToBlock(null);
+              }
+            }}
+          >
+            {userToBlock?.active ? "Khóa tài khoản" : "Mở khóa"}
+          </Button>
+        </Group>
+      </Modal>
+
+      <Modal
+        opened={userToDelete !== null}
+        onClose={() => setUserToDelete(null)}
+        title="Xác nhận xóa tài khoản"
+        centered
+        radius="2xl"
+        overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
+      >
+        <Text size="sm" mb="lg">
+          Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của{" "}
+          <strong>{userToDelete?.name}</strong>? Thao tác này không thể hoàn tác.
+        </Text>
+        <Group justify="flex-end" gap="xs">
+          <Button variant="subtle" color="gray" onClick={() => setUserToDelete(null)}>
+            Hủy
+          </Button>
+          <Button
+            color="red"
+            onClick={() => {
+              if (userToDelete) {
+                onDelete(userToDelete.id, userToDelete.name);
+                setUserToDelete(null);
+              }
+            }}
+          >
+            Xóa vĩnh viễn
+          </Button>
+        </Group>
+      </Modal>
+    </>
   );
 }

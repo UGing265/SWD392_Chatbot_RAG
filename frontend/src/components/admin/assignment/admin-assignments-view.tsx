@@ -39,7 +39,7 @@ export function AdminAssignmentsView() {
     <Stack gap="xl" p="md" style={{ maxWidth: 800, margin: "0 auto" }}>
       {/* Header Section */}
       <div>
-        <Title order={2} style={{ fontFamily: "var(--font-heading)" }}>
+        <Title order={2}>
           Phân công môn học giảng dạy
         </Title>
         <Text size="sm" c="dimmed">
@@ -47,20 +47,22 @@ export function AdminAssignmentsView() {
         </Text>
       </div>
 
-      <Paper withBorder radius="md" p="xl" shadow="sm">
+      <Paper withBorder radius="md" p="xl">
         <Group gap="sm" mb="xl">
-          <Paper
-            p={8}
-            radius="md"
-            bg="blue.1"
+          <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              border: "1px solid var(--mantine-color-default-border)",
+              backgroundColor: "rgba(0,0,0,0.02)",
             }}
           >
-            <IconUserCheck size={20} style={{ color: "var(--mantine-color-blue-6)" }} />
-          </Paper>
+            <IconUserCheck size={18} style={{ color: "var(--mantine-color-text)" }} />
+          </div>
           <Text fw={700} size="lg">
             Phân công môn học cho giảng viên
           </Text>
@@ -115,11 +117,12 @@ export function AdminAssignmentsView() {
                           withBorder
                           p="md"
                           radius="md"
-                          bg={checked ? "blue.0" : "white"}
+                          bg="transparent"
                           onClick={() => !assignedToOther && toggleSubject(subject.id)}
                           style={{
                             cursor: assignedToOther ? "not-allowed" : "pointer",
-                            borderColor: checked ? "var(--mantine-color-blue-4)" : undefined,
+                            borderColor: checked ? "var(--mantine-color-text)" : undefined,
+                            borderWidth: checked ? "1.5px" : "1px",
                             opacity: assignedToOther ? 0.6 : 1,
                             transition: "all 150ms ease",
                           }}
@@ -131,7 +134,7 @@ export function AdminAssignmentsView() {
                                 disabled={assignedToOther}
                                 onChange={() => {}} // Click is handled by parent Paper
                                 radius="xs"
-                                color="blue"
+                                color="dark"
                               />
                               <div style={{ flex: 1 }}>
                                 <Text size="sm" fw={600}>
@@ -171,7 +174,7 @@ export function AdminAssignmentsView() {
               radius="md"
               size="md"
               fullWidth
-              color="blue"
+              color="dark"
             >
               Lưu phân công môn học
             </Button>

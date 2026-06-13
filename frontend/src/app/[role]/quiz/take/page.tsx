@@ -1,6 +1,6 @@
 "use client";
 
-import { TakeQuizView } from "@/components/features/take-quiz-view";
+import { TakeQuizView } from "@/components/student/quiz/take-quiz-view";
 
 export default function TakeQuizPage() {
   return <TakeQuizView />;

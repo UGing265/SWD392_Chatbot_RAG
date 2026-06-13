@@ -118,13 +118,6 @@ export function useUsers() {
 
   const handleToggleBlock = async (userId: string, active: boolean) => {
     const action = active ? "block" : "unblock";
-    if (
-      !confirm(
-        active ? "Bạn có chắc muốn khóa tài khoản này?" : "Bạn có chắc muốn mở khóa tài khoản này?",
-      )
-    ) {
-      return;
-    }
     try {
       await adminUserApi.toggleBlock(userId, action);
       notify.success(
@@ -180,13 +173,6 @@ export function useUsers() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (
-      !confirm(
-        `Bạn có chắc muốn xóa vĩnh viễn tài khoản "${userName}"? Thao tác này không thể hoàn tác.`,
-      )
-    ) {
-      return;
-    }
     try {
       await adminUserApi.deleteUser(userId);
       notify.success("Xóa tài khoản thành công", `Tài khoản của ${userName} đã bị xóa.`);

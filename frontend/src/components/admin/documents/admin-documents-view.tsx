@@ -104,7 +104,7 @@ export function AdminDocumentsView() {
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
           radius="xl"
-          color="blue"
+          color="dark"
         >
           Làm mới
         </Button>
@@ -114,7 +114,7 @@ export function AdminDocumentsView() {
       <Paper withBorder radius="md" shadow="sm" style={{ overflow: "hidden" }}>
         {loading ? (
           <Group justify="center" py="xl">
-            <Loader size="lg" color="blue" />
+            <Loader size="lg" color="dark" />
           </Group>
         ) : (
           <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover>
@@ -125,7 +125,7 @@ export function AdminDocumentsView() {
                     checked={documents.length > 0 && selected.size === documents.length}
                     onChange={toggleAll}
                     indeterminate={selected.size > 0 && selected.size < documents.length}
-                    color="blue"
+                    color="dark"
                   />
                 </Table.Th>
                 <Table.Th>Tên tài liệu</Table.Th>
@@ -155,7 +155,7 @@ export function AdminDocumentsView() {
                         <Checkbox
                           checked={selected.has(doc.id)}
                           onChange={() => toggleOne(doc.id)}
-                          color="blue"
+                          color="dark"
                         />
                       </Table.Td>
                       <Table.Td>
@@ -171,7 +171,7 @@ export function AdminDocumentsView() {
                       </Table.Td>
                       <Table.Td>
                         {doc.subject_name ? (
-                          <Badge variant="light" color="blue" radius="md">
+                          <Badge variant="light" color="dark" radius="md">
                             {doc.subject_name}
                           </Badge>
                         ) : (
@@ -182,7 +182,7 @@ export function AdminDocumentsView() {
                       </Table.Td>
                       <Table.Td>
                         <Group gap="xs" wrap="nowrap">
-                          <Avatar size="sm" radius="xl" color="blue">
+                          <Avatar size="sm" radius="xl" color="dark">
                             {doc.owner_initials}
                           </Avatar>
                           <Text size="sm">{doc.owner_name}</Text>
@@ -261,7 +261,7 @@ export function AdminDocumentsView() {
               total={totalPages}
               value={page}
               onChange={setPage}
-              color="blue"
+              color="dark"
               radius="md"
             />
           </Group>
@@ -282,7 +282,7 @@ export function AdminDocumentsView() {
           {["Tải lên", "Phân tích", "Chia đoạn", "Nhúng vector", "Lập chỉ mục"].map(
             (stage, idx) => (
               <Group key={stage} gap="xs" align="center">
-                <Badge variant="filled" color="blue" size="sm" circle>
+                <Badge variant="filled" color="dark" size="sm" circle>
                   {idx + 1}
                 </Badge>
                 <Text size="xs" fw={600} c="gray.7">
