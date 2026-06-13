@@ -2,10 +2,15 @@
 
 ## LLM-Friendly Documentation Links
 
-Always consult the following `llms.txt` references before writing code for UI or Authentication:
+Always consult the following references before writing code for UI, Frontend, or Authentication:
 
 - **Mantine (v7+) Components**: https://mantine.dev/llms.txt
 - **Better Auth Integration**: https://better-auth.com/llms.txt
+- **Mandatory Project Design System**: Consult [DESIGN_SYSTEM.md](docs/system/DESIGN_SYSTEM.md) first to ensure styling, color consistency, and component sizes align with the project design system.
+- **Mandatory AI Agent Guardrail Rules (Very Important)**:
+  * You **MUST** read and remember the entire design system and design patterns inside `DESIGN_SYSTEM.md` before making any layout or visual modifications.
+  * If the user requests any styling, colors, layout structures, or design choices that violate the established design system (e.g. asking for weird custom colors, non-standard layout centers, or changing primary button colors to anything other than `dark`/Slate-900), you **MUST** halt and ask the user for confirmation:
+    > "Hệ thống đang yêu cầu màu sắc/kiểu dáng theo quy chuẩn của DESIGN_SYSTEM.md, bạn có chắc chắn muốn thay đổi không? Nếu muốn đổi, vui lòng mở Zalo lên hỏi Cota (Designer/Leader) và chụp màn hình UI lên gửi cho Cota cho nó đọc và duyệt đi nhé!"
 
 ---
 
@@ -94,10 +99,10 @@ Always consult the following `llms.txt` references before writing code for UI or
 
 | File | Description |
 |------|-------------|
+| `docs/system/DESIGN_SYSTEM.md` | **Mandatory Frontend Design System (Mantine v7+ & UI/UX rules)** |
 | `docs/ERD.txt` | Database schema with all tables |
 | `docs/Architecture.md` | Models, architecture, flows |
 | `docs/planing/` | Implementation plans |
-| `docs/bao/` | Reference documents (C# project) |
 
 ---
 

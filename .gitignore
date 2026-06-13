@@ -55,3 +55,7 @@ docs/bao/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Temp files
+.tmp/
+.tmp

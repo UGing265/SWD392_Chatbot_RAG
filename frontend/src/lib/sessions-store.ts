@@ -21,8 +21,7 @@ export type Session = {
 const greetingMsg = (id: string): Message => ({
   id,
   role: "bot",
-  content:
-    "Xin chào! Tôi là StudyMate AI. Bạn cần tôi giúp gì trong phiên học này?",
+  content: "Xin chào! Tôi là StudyMate AI. Bạn cần tôi giúp gì trong phiên học này?",
 });
 
 export const seedMessages: Record<string, Message[]> = {
@@ -72,15 +71,17 @@ export const seedMessages: Record<string, Message[]> = {
       id: "m3",
       role: "bot",
       content: "Microservices là kiến trúc chia ứng dụng thành các dịch vụ nhỏ, độc lập.",
-      citations: [
-        { id: 1, title: "Kiến trúc phần mềm.pdf", pages: "Chương 5", type: "PDF" },
-      ],
+      citations: [{ id: 1, title: "Kiến trúc phần mềm.pdf", pages: "Chương 5", type: "PDF" }],
     },
   ],
   "4": [
     greetingMsg("m1"),
     { id: "m2", role: "user", content: "Vẽ use case cho hệ thống đặt vé." },
-    { id: "m3", role: "bot", content: "Hệ thống đặt vé cần các actor: Khách hàng, Quản trị viên, Hệ thống thanh toán..." },
+    {
+      id: "m3",
+      role: "bot",
+      content: "Hệ thống đặt vé cần các actor: Khách hàng, Quản trị viên, Hệ thống thanh toán...",
+    },
   ],
   "5": [
     greetingMsg("m1"),
@@ -102,7 +103,8 @@ export const seedMessages: Record<string, Message[]> = {
     {
       id: "m3",
       role: "bot",
-      content: "Test case cần bao gồm các kịch bản: thanh toán thành công, thất bại, hết hạn thẻ...",
+      content:
+        "Test case cần bao gồm các kịch bản: thanh toán thành công, thất bại, hết hạn thẻ...",
     },
   ],
 };
@@ -110,24 +112,75 @@ export const seedMessages: Record<string, Message[]> = {
 // ── Session list (mutable so new sessions can be pushed) ─────────────────────
 
 export const sessionList: Session[] = [
-  { id: "1", title: "Chương 3 — Phân tích yêu cầu phần mềm", time: "2 giờ trước", date: "Hôm nay", msgs: 14, status: "active", starred: true },
-  { id: "2", title: "Sự khác nhau giữa MVC và MVVM", time: "Hôm qua", date: "Hôm qua", msgs: 22, status: "done", starred: false },
-  { id: "3", title: "Tóm tắt kiến trúc microservices", time: "2 ngày trước", date: "Tuần này", msgs: 9, status: "done", starred: true },
-  { id: "4", title: "Use case cho hệ thống đặt vé", time: "3 ngày trước", date: "Tuần này", msgs: 31, status: "done", starred: false },
-  { id: "5", title: "Quy trình Scrum và vai trò", time: "5 ngày trước", date: "Tuần này", msgs: 12, status: "done", starred: false },
-  { id: "6", title: "Test case cho module thanh toán", time: "1 tuần trước", date: "Trước đó", msgs: 18, status: "done", starred: false },
+  {
+    id: "1",
+    title: "Chương 3 — Phân tích yêu cầu phần mềm",
+    time: "2 giờ trước",
+    date: "Hôm nay",
+    msgs: 14,
+    status: "active",
+    starred: true,
+  },
+  {
+    id: "2",
+    title: "Sự khác nhau giữa MVC và MVVM",
+    time: "Hôm qua",
+    date: "Hôm qua",
+    msgs: 22,
+    status: "done",
+    starred: false,
+  },
+  {
+    id: "3",
+    title: "Tóm tắt kiến trúc microservices",
+    time: "2 ngày trước",
+    date: "Tuần này",
+    msgs: 9,
+    status: "done",
+    starred: true,
+  },
+  {
+    id: "4",
+    title: "Use case cho hệ thống đặt vé",
+    time: "3 ngày trước",
+    date: "Tuần này",
+    msgs: 31,
+    status: "done",
+    starred: false,
+  },
+  {
+    id: "5",
+    title: "Quy trình Scrum và vai trò",
+    time: "5 ngày trước",
+    date: "Tuần này",
+    msgs: 12,
+    status: "done",
+    starred: false,
+  },
+  {
+    id: "6",
+    title: "Test case cho module thanh toán",
+    time: "1 tuần trước",
+    date: "Trước đó",
+    msgs: 18,
+    status: "done",
+    starred: false,
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 export function getMessages(sessionId: string): Message[] {
-  return seedMessages[sessionId] ?? [
-    {
-      id: "init",
-      role: "bot",
-      content: "Xin chào! Tôi là StudyMate AI, trợ lý học tập của bạn. Bạn cần tôi giúp gì hôm nay?",
-    },
-  ];
+  return (
+    seedMessages[sessionId] ?? [
+      {
+        id: "init",
+        role: "bot",
+        content:
+          "Xin chào! Tôi là StudyMate AI, trợ lý học tập của bạn. Bạn cần tôi giúp gì hôm nay?",
+      },
+    ]
+  );
 }
 
 export function addMessage(sessionId: string, msg: Message) {
