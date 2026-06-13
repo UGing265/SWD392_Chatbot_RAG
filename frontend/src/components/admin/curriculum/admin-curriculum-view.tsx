@@ -94,7 +94,7 @@ export function AdminCurriculumView() {
           leftSection={<IconPlus size={16} />}
           onClick={startAddingTerm}
           disabled={savingAction !== null}
-          radius="xl"
+          radius="lg"
           size="md"
           color="dark"
         >
@@ -103,14 +103,14 @@ export function AdminCurriculumView() {
       </Group>
 
       {error && (
-        <Alert icon={<IconAlertCircle size={16} />} title="Lỗi tải dữ liệu" color="red" radius="md">
+        <Alert icon={<IconAlertCircle size={16} />} title="Lỗi tải dữ liệu" color="red" radius="lg">
           {error}
         </Alert>
       )}
 
       {/* Adding Term Form */}
       <Collapse {...({ in: addingTerm } as any)}>
-        <Paper withBorder p="md" radius="md" bg="transparent" style={{ borderStyle: "dashed" }}>
+        <Paper withBorder p="md" radius="lg" bg="transparent" style={{ borderStyle: "dashed" }}>
           <Stack gap="sm">
             <Text size="sm" fw={700} c="dimmed">
               Học kỳ mới
@@ -121,7 +121,7 @@ export function AdminCurriculumView() {
                 value={newTermName}
                 onChange={(e) => setNewTermName(e.target.value)}
                 style={{ flex: 1 }}
-                radius="md"
+                radius="lg"
               />
               <NumberInput
                 label="Thứ tự học kỳ"
@@ -129,19 +129,19 @@ export function AdminCurriculumView() {
                 value={newTermOrder}
                 onChange={(val) => setNewTermOrder(Number(val))}
                 style={{ width: 120 }}
-                radius="md"
+                radius="lg"
               />
               <Group gap="xs">
                 <Button
                   onClick={handleCreateTerm}
                   disabled={!newTermName.trim() || savingAction === "create-term"}
                   loading={savingAction === "create-term"}
-                  radius="md"
+                  radius="lg"
                   color="dark"
                 >
                   Lưu
                 </Button>
-                <Button variant="subtle" color="gray" onClick={resetTermForm} radius="md">
+                <Button variant="subtle" color="gray" onClick={resetTermForm} radius="lg">
                   Hủy
                 </Button>
               </Group>
@@ -156,7 +156,7 @@ export function AdminCurriculumView() {
           <Loader size="lg" color="dark" />
         </Group>
       ) : sortedTerms.length === 0 ? (
-        <Paper withBorder radius="md" p="xl" style={{ textAlign: "center", borderStyle: "dashed" }}>
+        <Paper withBorder radius="lg" p="xl" style={{ textAlign: "center", borderStyle: "dashed" }}>
           <Stack align="center" gap="sm">
             <IconFolder size={48} style={{ opacity: 0.3 }} />
             <Text c="dimmed">Chưa có học kỳ nào. Hãy nhấn nút để thêm học kỳ mới.</Text>
@@ -172,14 +172,14 @@ export function AdminCurriculumView() {
             const isDeletingThisTerm = savingAction === `delete-term-${term.id}`;
 
             return (
-              <Paper key={term.id} withBorder radius="md">
+              <Paper key={term.id} withBorder radius="lg">
                 {/* Term Header row */}
                 <Group justify="space-between" p="md" align="center">
                   <Group gap="md" style={{ flex: 1 }}>
                     <ActionIcon
                       variant="light"
                       color="dark"
-                      radius="md"
+                      radius="lg"
                       size="lg"
                       onClick={() => toggleTerm(term.id)}
                     >
@@ -193,7 +193,7 @@ export function AdminCurriculumView() {
                           onChange={(e) => setEditingTermName(e.target.value)}
                           style={{ flex: 1 }}
                           size="sm"
-                          radius="md"
+                          radius="lg"
                           autoFocus
                         />
                         <NumberInput
@@ -202,12 +202,12 @@ export function AdminCurriculumView() {
                           onChange={(val) => setEditingTermOrder(Number(val))}
                           style={{ width: 100 }}
                           size="sm"
-                          radius="md"
+                          radius="lg"
                         />
                         <ActionIcon
                           variant="filled"
                           color="green"
-                          radius="md"
+                          radius="lg"
                           onClick={() => handleUpdateTerm(term.id)}
                           loading={isSavingThisTerm}
                           title="Lưu"
@@ -217,7 +217,7 @@ export function AdminCurriculumView() {
                         <ActionIcon
                           variant="light"
                           color="gray"
-                          radius="md"
+                          radius="lg"
                           onClick={() => setEditingTermId(null)}
                           title="Hủy"
                         >
@@ -248,7 +248,7 @@ export function AdminCurriculumView() {
                         color="dark"
                         onClick={() => startEditingTerm(term)}
                         disabled={savingAction !== null}
-                        radius="md"
+                        radius="lg"
                         title="Sửa học kỳ"
                       >
                         <IconEdit size={16} />
@@ -259,7 +259,7 @@ export function AdminCurriculumView() {
                         onClick={() => handleDeleteTerm(term)}
                         disabled={savingAction !== null}
                         loading={isDeletingThisTerm}
-                        radius="md"
+                        radius="lg"
                         title="Xóa học kỳ"
                       >
                         <IconTrash size={16} />
@@ -293,7 +293,7 @@ export function AdminCurriculumView() {
                         <Paper
                           withBorder
                           p="sm"
-                          radius="md"
+                          radius="lg"
                           bg="transparent"
                           style={{ borderStyle: "dashed" }}
                         >
@@ -307,7 +307,7 @@ export function AdminCurriculumView() {
                                 value={newSubjectCode}
                                 onChange={(e) => setNewSubjectCode(e.target.value)}
                                 style={{ width: 180 }}
-                                radius="md"
+                                radius="lg"
                                 size="sm"
                               />
                               <TextInput
@@ -315,13 +315,13 @@ export function AdminCurriculumView() {
                                 value={newSubjectName}
                                 onChange={(e) => setNewSubjectName(e.target.value)}
                                 style={{ flex: 1 }}
-                                radius="md"
+                                radius="lg"
                                 size="sm"
                               />
                               <Group gap="xs">
                                 <Button
                                   size="sm"
-                                  radius="md"
+                                  radius="lg"
                                   onClick={() => handleCreateSubject(term.id)}
                                   loading={savingAction === `create-subject-${term.id}`}
                                   color="dark"
@@ -333,7 +333,7 @@ export function AdminCurriculumView() {
                                   variant="subtle"
                                   color="gray"
                                   onClick={() => setAddingSubjectForTerm(null)}
-                                  radius="md"
+                                  radius="lg"
                                 >
                                   Hủy
                                 </Button>
@@ -348,7 +348,7 @@ export function AdminCurriculumView() {
                         <Paper
                           withBorder
                           p="md"
-                          radius="md"
+                          radius="lg"
                           style={{ borderStyle: "dashed", textAlign: "center" }}
                         >
                           <Text size="sm" c="dimmed">
@@ -367,7 +367,7 @@ export function AdminCurriculumView() {
                                 key={sub.id}
                                 withBorder
                                 p="sm"
-                                radius="md"
+                                radius="lg"
                                 bg="transparent"
                                 style={{ transition: "background-color 150ms ease" }}
                               >
@@ -378,7 +378,7 @@ export function AdminCurriculumView() {
                                       value={editingSubjectCode}
                                       onChange={(e) => setEditingSubjectCode(e.target.value)}
                                       style={{ width: 140 }}
-                                      radius="md"
+                                      radius="lg"
                                       size="sm"
                                     />
                                     <TextInput
@@ -386,14 +386,14 @@ export function AdminCurriculumView() {
                                       value={editingSubjectName}
                                       onChange={(e) => setEditingSubjectName(e.target.value)}
                                       style={{ flex: 1 }}
-                                      radius="md"
+                                      radius="lg"
                                       size="sm"
                                     />
                                     <Group gap="xs">
                                       <ActionIcon
                                         variant="filled"
                                         color="green"
-                                        radius="md"
+                                        radius="lg"
                                         size="lg"
                                         onClick={() => handleUpdateSubject(sub)}
                                         loading={isSavingSubject}
@@ -403,7 +403,7 @@ export function AdminCurriculumView() {
                                       <ActionIcon
                                         variant="light"
                                         color="gray"
-                                        radius="md"
+                                        radius="lg"
                                         size="lg"
                                         onClick={() => setEditingSubjectId(null)}
                                       >
@@ -416,7 +416,7 @@ export function AdminCurriculumView() {
                                     <Group gap="sm">
                                       <Paper
                                         p={6}
-                                        radius="md"
+                                        radius="lg"
                                         bg="white"
                                         style={{
                                           display: "flex",
@@ -446,7 +446,7 @@ export function AdminCurriculumView() {
                                         color="dark"
                                         onClick={() => startEditingSubject(sub)}
                                         disabled={savingAction !== null}
-                                        radius="md"
+                                        radius="lg"
                                         title="Sửa môn học"
                                       >
                                         <IconEdit size={14} />
@@ -457,7 +457,7 @@ export function AdminCurriculumView() {
                                         onClick={() => handleDeleteSubject(sub.id)}
                                         disabled={savingAction !== null}
                                         loading={isDeletingSubject}
-                                        radius="md"
+                                        radius="lg"
                                         title="Xóa môn học"
                                       >
                                         <IconTrash size={14} />

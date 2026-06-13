@@ -13,11 +13,7 @@ import {
   IconMessage2,
   IconSelector,
   IconSettings,
-  IconArrowUpCircle,
-  IconDownload,
-  IconDeviceDesktop,
-  IconLanguage,
-  IconHelp,
+  IconCrown,
   IconChevronRight,
   IconLogout,
   IconBell,
@@ -194,10 +190,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         )}
 
         {/* Profile / Bottom actions */}
-        <div className="mt-auto p-2 border-t border-gray-200">
-          <Menu shadow="md" width={240} position="top-start" radius="md">
+        <div className="mt-auto border-t border-gray-200">
+          <Menu shadow="md" width={240} position="top-start" radius="lg" offset={8}>
             <Menu.Target>
-              <UnstyledButton className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:!bg-zinc-200 active:scale-[0.98] transition-all duration-150">
+              <UnstyledButton className="flex w-full items-center gap-3 !px-5 !py-4 text-left hover:!bg-zinc-200 transition-colors duration-150">
                 <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
                   {getInitials(session?.user?.name)}
                 </Avatar>
@@ -212,46 +208,39 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </UnstyledButton>
             </Menu.Target>
 
-            <Menu.Dropdown>
-              <Menu.Label>Tài khoản</Menu.Label>
-              <div className="px-3 py-2 flex items-center gap-3">
-                <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
-                  {getInitials(session?.user?.name)}
-                </Avatar>
-                <div className="flex flex-col min-w-0 leading-tight">
-                  <Text size="sm" fw={700} className="truncate text-gray-900">
-                    {session?.user?.name || "Người dùng"}
-                  </Text>
-                  <Text size="10px" fw={700} className="uppercase tracking-wide text-blue-600 mt-0.5">
-                    {roleLabel}
-                  </Text>
-                  <Text size="xs" c="dimmed" className="truncate mt-0.5">
-                    {session?.user?.email || "Email"}
-                  </Text>
+            <Menu.Dropdown className="p-1" style={{ marginLeft: '16px' }}>
+              <Menu.Item
+                component={Link}
+                href={`/${session?.role || "student"}/change-password`}
+                className="!p-0 hover:bg-zinc-100 transition-colors duration-150"
+              >
+                <div className="px-3 py-3 flex items-center gap-3">
+                  <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
+                    {getInitials(session?.user?.name)}
+                  </Avatar>
+                  <div className="flex flex-col min-w-0 leading-tight">
+                    <Text size="sm" fw={600} className="truncate text-gray-900">
+                      {session?.user?.name || "Người dùng"}
+                    </Text>
+                    <Text size="xs" className="truncate text-gray-500 mt-0.5">
+                      {session?.user?.email || "Email"}
+                    </Text>
+                  </div>
                 </div>
-              </div>
+              </Menu.Item>
               <Menu.Divider />
-              <Menu.Item leftSection={<IconSettings size={14} />}>
+              <Menu.Item
+                component={Link}
+                href={`/${session?.role || "student"}/settings`}
+                leftSection={<IconSettings size={16} className="text-zinc-500" />}
+              >
                 Tất cả cài đặt
               </Menu.Item>
-              <Menu.Item leftSection={<IconArrowUpCircle size={14} />}>
+              <Menu.Item leftSection={<IconCrown size={16} className="text-zinc-500" />}>
                 Nâng cấp gói
               </Menu.Item>
-              <Menu.Item leftSection={<IconDownload size={14} />}>
-                Cài đặt app
-              </Menu.Item>
               <Menu.Divider />
-              <Menu.Item leftSection={<IconDeviceDesktop size={14} />}>
-                Giao diện
-              </Menu.Item>
-              <Menu.Item leftSection={<IconLanguage size={14} />}>
-                Ngôn ngữ
-              </Menu.Item>
-              <Menu.Item leftSection={<IconHelp size={14} />}>
-                Hỗ trợ
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconLogout size={14} />} onClick={() => signOut()}>
+              <Menu.Item color="red" leftSection={<IconLogout size={16} className="text-red-500" />} onClick={() => signOut()}>
                 Đăng xuất
               </Menu.Item>
             </Menu.Dropdown>

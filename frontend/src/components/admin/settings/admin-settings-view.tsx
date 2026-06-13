@@ -60,9 +60,9 @@ export function AdminSettingsView() {
       {/* Sections */}
       <Stack gap="md">
         {/* Section: RAG Engine */}
-        <Paper withBorder radius="md" p="xl" shadow="sm">
+        <Paper withBorder radius="lg" p="xl" shadow="sm">
           <Group gap="md" mb="md">
-            <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+            <ThemeIcon color="blue" variant="light" size="lg" radius="lg">
               <IconDatabase size={20} />
             </ThemeIcon>
             <div>
@@ -78,33 +78,33 @@ export function AdminSettingsView() {
               label="Embedding Model"
               value={embeddingModel}
               onChange={(e) => setEmbeddingModel(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
             <TextInput
               label="Vector Dimensions"
               value={vectorDimensions}
               onChange={(e) => setVectorDimensions(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
             <TextInput
               label="Chunk Size"
               value={chunkSize}
               onChange={(e) => setChunkSize(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
             <TextInput
               label="Similarity Threshold"
               value={similarityThreshold}
               onChange={(e) => setSimilarityThreshold(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
           </SimpleGrid>
         </Paper>
 
         {/* Section: Security */}
-        <Paper withBorder radius="md" p="xl" shadow="sm">
+        <Paper withBorder radius="lg" p="xl" shadow="sm">
           <Group gap="md" mb="md">
-            <ThemeIcon color="blue" variant="light" size="lg" radius="md">
+            <ThemeIcon color="blue" variant="light" size="lg" radius="lg">
               <IconShield size={20} />
             </ThemeIcon>
             <div>
@@ -166,9 +166,9 @@ export function AdminSettingsView() {
         </Paper>
 
         {/* Section: Notifications */}
-        <Paper withBorder radius="md" p="xl" shadow="sm">
+        <Paper withBorder radius="lg" p="xl" shadow="sm">
           <Group gap="md" mb="md">
-            <ThemeIcon color="orange" variant="light" size="lg" radius="md">
+            <ThemeIcon color="orange" variant="light" size="lg" radius="lg">
               <IconBell size={20} />
             </ThemeIcon>
             <div>
@@ -216,9 +216,9 @@ export function AdminSettingsView() {
         </Paper>
 
         {/* Section: API Keys */}
-        <Paper withBorder radius="md" p="xl" shadow="sm">
+        <Paper withBorder radius="lg" p="xl" shadow="sm">
           <Group gap="md" mb="md">
-            <ThemeIcon color="teal" variant="light" size="lg" radius="md">
+            <ThemeIcon color="teal" variant="light" size="lg" radius="lg">
               <IconKey size={20} />
             </ThemeIcon>
             <div>
@@ -234,13 +234,13 @@ export function AdminSettingsView() {
               label="Gemini API Key"
               value={geminiApiKey}
               onChange={(e) => setGeminiApiKey(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
             <TextInput
               label="Vector DB Connection string"
               value={vectorDbConnection}
               onChange={(e) => setVectorDbConnection(e.currentTarget.value)}
-              radius="md"
+              radius="lg"
             />
           </Stack>
         </Paper>
@@ -253,7 +253,7 @@ export function AdminSettingsView() {
           color="gray"
           leftSection={<IconRefresh size={16} />}
           onClick={handleReset}
-          radius="md"
+          radius="lg"
         >
           Đặt lại mặc định
         </Button>
@@ -262,7 +262,7 @@ export function AdminSettingsView() {
           leftSection={<IconDeviceFloppy size={16} />}
           loading={saving}
           onClick={handleSave}
-          radius="md"
+          radius="lg"
         >
           Lưu cài đặt
         </Button>

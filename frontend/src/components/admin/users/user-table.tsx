@@ -129,7 +129,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                       {user.active ? <IconLock size={16} /> : <IconLockOpen size={16} />}
                     </ActionIcon>
 
-                    <Menu shadow="md" width={180} position="bottom-end" radius="md">
+                    <Menu shadow="md" width={180} position="bottom-end" radius="lg">
                       <Menu.Target>
                         <ActionIcon variant="subtle" color="gray">
                           <IconDotsVertical size={16} />
@@ -178,7 +178,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
           <strong>{userToBlock?.name}</strong>?
         </Text>
         <Group justify="flex-end" gap="xs">
-          <Button variant="subtle" color="gray" onClick={() => setUserToBlock(null)}>
+          <Button variant="subtle" color="gray" onClick={() => setUserToBlock(null)} radius="lg">
             Hủy
           </Button>
           <Button
@@ -189,6 +189,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                 setUserToBlock(null);
               }
             }}
+            radius="lg"
           >
             {userToBlock?.active ? "Khóa tài khoản" : "Mở khóa"}
           </Button>
@@ -208,7 +209,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
           <strong>{userToDelete?.name}</strong>? Thao tác này không thể hoàn tác.
         </Text>
         <Group justify="flex-end" gap="xs">
-          <Button variant="subtle" color="gray" onClick={() => setUserToDelete(null)}>
+          <Button variant="subtle" color="gray" onClick={() => setUserToDelete(null)} radius="lg">
             Hủy
           </Button>
           <Button
@@ -219,6 +220,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                 setUserToDelete(null);
               }
             }}
+            radius="lg"
           >
             Xóa vĩnh viễn
           </Button>

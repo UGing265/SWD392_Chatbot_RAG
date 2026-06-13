@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useAssignments } from "@/hooks/admin/use-assignments";
 import {
   Button,
@@ -12,8 +13,9 @@ import {
   Select,
   Checkbox,
   Grid,
+  TextInput,
 } from "@mantine/core";
-import { IconBook, IconDeviceFloppy, IconUserCheck } from "@tabler/icons-react";
+import { IconBook, IconDeviceFloppy, IconUserCheck, IconSearch } from "@tabler/icons-react";
 
 export function AdminAssignmentsView() {
   const {
@@ -29,11 +31,19 @@ export function AdminAssignmentsView() {
     handleSave,
   } = useAssignments();
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Map lecturers into Mantine Select data format
   const selectData = lecturers.map((lec) => ({
     value: lec.id,
     label: `${lec.name} (${lec.email})`,
   }));
+
+  const filteredSubjects = subjects.filter(
+    (sub) =>
+      sub.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sub.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Stack gap="xl" p="md" style={{ maxWidth: 800, margin: "0 auto" }}>
@@ -47,7 +57,7 @@ export function AdminAssignmentsView() {
         </Text>
       </div>
 
-      <Paper withBorder radius="md" p="xl">
+      <Paper withBorder radius="lg" p="xl">
         <Group gap="sm" mb="xl">
           <div
             style={{
@@ -80,7 +90,7 @@ export function AdminAssignmentsView() {
               data={selectData}
               value={selectedLecturer}
               onChange={(val) => handleSelectLecturer(val || "")}
-              radius="md"
+              radius="lg"
               size="md"
               searchable
               clearable={false}
@@ -88,14 +98,21 @@ export function AdminAssignmentsView() {
             />
 
             <div>
-              <Text size="sm" fw={700} mb="xs">
-                Môn học phân công
-              </Text>
+              <Group justify="space-between" align="center" mb="xs">
+                <Text size="sm" fw={700}>
+                  Môn học phân công
+                </Text>
+                {subjects.length > 0 && (
+                  <Text size="xs" c="dimmed">
+                    Đã chọn {assignedSubjects.length} môn
+                  </Text>
+                )}
+              </Group>
               {subjects.length === 0 ? (
                 <Paper
                   withBorder
                   p="md"
-                  radius="md"
+                  radius="lg"
                   style={{ borderStyle: "dashed", textAlign: "center" }}
                 >
                   <Text size="sm" c="dimmed">
@@ -103,66 +120,92 @@ export function AdminAssignmentsView() {
                   </Text>
                 </Paper>
               ) : (
-                <Grid>
-                  {subjects.map((subject) => {
-                    const existing = assignedBySubject.get(subject.id);
-                    const assignedToOther = Boolean(
-                      existing && existing.userId !== selectedLecturer,
-                    );
-                    const checked = assignedSubjects.includes(subject.id);
+                <Stack gap="sm">
+                  <TextInput
+                    placeholder="Tìm kiếm môn học theo mã hoặc tên..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.currentTarget.value)}
+                    radius="lg"
+                    leftSection={<IconSearch size={16} />}
+                  />
 
-                    return (
-                      <Grid.Col key={subject.id} span={{ base: 12, sm: 6 }}>
-                        <Paper
-                          withBorder
-                          p="md"
-                          radius="md"
-                          bg="transparent"
-                          onClick={() => !assignedToOther && toggleSubject(subject.id)}
-                          style={{
-                            cursor: assignedToOther ? "not-allowed" : "pointer",
-                            borderColor: checked ? "var(--mantine-color-text)" : undefined,
-                            borderWidth: checked ? "1.5px" : "1px",
-                            opacity: assignedToOther ? 0.6 : 1,
-                            transition: "all 150ms ease",
-                          }}
-                        >
-                          <Group justify="space-between" wrap="nowrap">
-                            <Group gap="sm" style={{ flex: 1 }}>
-                              <Checkbox
-                                checked={checked}
-                                disabled={assignedToOther}
-                                onChange={() => {}} // Click is handled by parent Paper
-                                radius="xs"
-                                color="dark"
-                              />
-                              <div style={{ flex: 1 }}>
-                                <Text size="sm" fw={600}>
-                                  {subject.code}
-                                </Text>
-                                <Text size="xs" c="dimmed" truncate>
-                                  {subject.name}
-                                </Text>
-                              </div>
-                            </Group>
+                  {filteredSubjects.length === 0 ? (
+                    <Paper
+                      withBorder
+                      p="md"
+                      radius="lg"
+                      style={{ borderStyle: "dashed", textAlign: "center" }}
+                    >
+                      <Text size="sm" c="dimmed">
+                        Không tìm thấy môn học nào khớp với từ khóa tìm kiếm.
+                      </Text>
+                    </Paper>
+                  ) : (
+                    <div style={{ maxHeight: 320, overflowY: "auto", overflowX: "hidden", paddingRight: 4 }}>
+                      <Grid>
+                        {filteredSubjects.map((subject) => {
+                          const existing = assignedBySubject.get(subject.id);
+                          const assignedToOther = Boolean(
+                            existing && existing.userId !== selectedLecturer,
+                          );
+                          const checked = assignedSubjects.includes(subject.id);
 
-                            {assignedToOther && (
-                              <Text
-                                size="xs"
-                                c="red.6"
-                                style={{ maxWidth: 120 }}
-                                truncate
-                                title={existing?.lecturerEmail}
+                          return (
+                            <Grid.Col key={subject.id} span={{ base: 12, sm: 6 }}>
+                              <Paper
+                                withBorder
+                                p="md"
+                                radius="lg"
+                                bg="transparent"
+                                onClick={() => !assignedToOther && toggleSubject(subject.id)}
+                                style={{
+                                  cursor: assignedToOther ? "not-allowed" : "pointer",
+                                  borderColor: checked ? "var(--mantine-color-text)" : undefined,
+                                  borderWidth: checked ? "1.5px" : "1px",
+                                  opacity: assignedToOther ? 0.6 : 1,
+                                  transition: "all 150ms ease",
+                                }}
                               >
-                                Đã giao: {existing?.lecturerName || existing?.lecturerEmail}
-                              </Text>
-                            )}
-                          </Group>
-                        </Paper>
-                      </Grid.Col>
-                    );
-                  })}
-                </Grid>
+                                <Group justify="space-between" wrap="nowrap" style={{ width: "100%", minWidth: 0 }}>
+                                  <Group gap="sm" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
+                                    <Checkbox
+                                      checked={checked}
+                                      disabled={assignedToOther}
+                                      onChange={() => {}} // Click is handled by parent Paper
+                                      radius="xs"
+                                      color="dark"
+                                      style={{ flexShrink: 0 }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <Text size="sm" fw={600}>
+                                        {subject.code}
+                                      </Text>
+                                      <Text size="xs" c="dimmed" truncate style={{ display: "block" }}>
+                                        {subject.name}
+                                      </Text>
+                                    </div>
+                                  </Group>
+
+                                  {assignedToOther && (
+                                    <Text
+                                      size="xs"
+                                      c="red.6"
+                                      style={{ maxWidth: 120, flexShrink: 0 }}
+                                      truncate
+                                      title={existing?.lecturerEmail}
+                                    >
+                                      Đã giao: {existing?.lecturerName || existing?.lecturerEmail}
+                                    </Text>
+                                  )}
+                                </Group>
+                              </Paper>
+                            </Grid.Col>
+                          );
+                        })}
+                      </Grid>
+                    </div>
+                  )}
+                </Stack>
               )}
             </div>
 
@@ -171,7 +214,7 @@ export function AdminAssignmentsView() {
               onClick={handleSave}
               loading={saving}
               disabled={!selectedLecturer}
-              radius="md"
+              radius="lg"
               size="md"
               fullWidth
               color="dark"

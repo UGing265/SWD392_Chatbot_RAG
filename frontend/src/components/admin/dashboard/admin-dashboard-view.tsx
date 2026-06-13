@@ -64,7 +64,7 @@ export function AdminDashboardView() {
         <div>
           <button
             onClick={refresh}
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-[#111111] hover:bg-[#222222] dark:bg-[#f8fafc] dark:hover:bg-[#e2e8f0] text-white dark:text-[#111111] font-sans font-medium text-sm rounded-md transition-all active:scale-98 cursor-pointer border-0 shadow-none"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-[#111111] hover:bg-[#222222] dark:bg-[#f8fafc] dark:hover:bg-[#e2e8f0] text-white dark:text-[#111111] font-sans font-medium text-sm rounded-xl transition-all active:scale-98 cursor-pointer border-0 shadow-none"
           >
             <IconRefresh size={16} strokeWidth={2.2} />
             <span>Làm mới</span>
@@ -86,7 +86,7 @@ export function AdminDashboardView() {
               return (
                 <div
                   key={m.label}
-                  className={`border rounded-[10px] p-6 bg-white dark:bg-[#18181b] transition-all flex flex-col justify-between min-h-[160px] ${
+                  className={`border rounded-xl p-6 bg-white dark:bg-[#18181b] transition-all flex flex-col justify-between min-h-[160px] ${
                     isReported
                       ? "border-red-200 dark:border-red-950/40 hover:border-red-300 dark:hover:border-red-900"
                       : "border-[#EAEAEA] dark:border-[#333333] hover:border-[#CCCCCC] dark:hover:border-[#555555]"
@@ -96,7 +96,7 @@ export function AdminDashboardView() {
                     <span className="text-[11px] text-[#787774] dark:text-[#94a3b8] font-sans tracking-wider uppercase font-semibold">
                       {m.label}
                     </span>
-                    <div className="w-9 h-9 rounded-lg border border-border flex items-center justify-center shrink-0 text-[#787774] dark:text-[#94a3b8] bg-[#FCFCFB] dark:bg-[#1c1c21]">
+                    <div className="w-9 h-9 rounded-xl border border-border flex items-center justify-center shrink-0 text-[#787774] dark:text-[#94a3b8] bg-[#FCFCFB] dark:bg-[#1c1c21]">
                       <Icon size={18} strokeWidth={1.8} />
                     </div>
                   </div>
@@ -119,7 +119,7 @@ export function AdminDashboardView() {
           </div>
 
           {/* Recent Documents Table Section */}
-          <div className="border border-[#EAEAEA] dark:border-[#333333] rounded-[10px] bg-white dark:bg-[#18181b] overflow-hidden">
+          <div className="border border-[#EAEAEA] dark:border-[#333333] rounded-xl bg-white dark:bg-[#18181b] overflow-hidden">
             <div className="p-6 border-b border-[#EAEAEA] dark:border-[#333333] bg-[#FCFCFB] dark:bg-[#1b1b1f]">
               <h3 className="font-sans text-xl font-bold text-[#111111] dark:text-[#f8fafc] leading-tight">
                 Tiến trình hệ thống & Tài liệu mới tải lên

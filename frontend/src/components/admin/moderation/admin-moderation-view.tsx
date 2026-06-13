@@ -34,7 +34,7 @@ export function AdminModerationView() {
           variant="light"
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
-          radius="xl"
+          radius="lg"
           color="dark"
         >
           Làm mới
@@ -47,7 +47,7 @@ export function AdminModerationView() {
         color="orange"
         title="Lưu ý kiểm duyệt"
         icon={<IconAlertTriangle size={18} />}
-        radius="md"
+        radius="lg"
       >
         <Text size="sm">
           Danh sách tài liệu học tập bị sinh viên báo cáo lỗi (nội dung sai lệch, tài liệu trùng
@@ -57,7 +57,7 @@ export function AdminModerationView() {
       </Alert>
 
       {/* Main Table */}
-      <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
         {loading ? (
           <Group justify="center" py="xl">
             <Loader size="lg" color="dark" />
@@ -121,7 +121,7 @@ export function AdminModerationView() {
                           variant="outline"
                           color="gray"
                           size="xs"
-                          radius="md"
+                          radius="lg"
                           leftSection={<IconCheck size={14} />}
                           onClick={() => handleResolve(doc.id, "ignore")}
                         >
@@ -131,7 +131,7 @@ export function AdminModerationView() {
                           variant="filled"
                           color="red"
                           size="xs"
-                          radius="md"
+                          radius="lg"
                           leftSection={<IconTrash size={14} />}
                           onClick={() => handleResolve(doc.id, "delete")}
                         >

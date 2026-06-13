@@ -33,6 +33,7 @@ export function CreateUserModal({
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
+            radius="lg"
           />
           <TextInput
             label="Tên đăng nhập (Username)"
@@ -40,6 +41,7 @@ export function CreateUserModal({
             required
             value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })}
+            radius="lg"
           />
           <TextInput
             label="Địa chỉ Email"
@@ -48,6 +50,7 @@ export function CreateUserModal({
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            radius="lg"
           />
           <PasswordInput
             label="Mật khẩu"
@@ -55,6 +58,7 @@ export function CreateUserModal({
             required
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
+            radius="lg"
           />
           <Select
             label="Vai trò"
@@ -65,12 +69,13 @@ export function CreateUserModal({
             ]}
             value={form.roleId}
             onChange={(val) => setForm({ ...form, roleId: val || "3" })}
+            radius="lg"
           />
           <Group justify="flex-end" mt="lg">
-            <Button variant="subtle" color="gray" onClick={onClose}>
+            <Button variant="subtle" color="gray" onClick={onClose} radius="lg">
               Hủy
             </Button>
-            <Button type="submit" color="dark">Thêm tài khoản</Button>
+            <Button type="submit" color="dark" radius="lg">Thêm tài khoản</Button>
           </Group>
         </Stack>
       </form>
@@ -105,6 +110,7 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
+            radius="lg"
           />
           <TextInput
             label="Tên đăng nhập (Username)"
@@ -112,6 +118,7 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             required
             value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })}
+            radius="lg"
           />
           <TextInput
             label="Địa chỉ Email"
@@ -120,6 +127,7 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            radius="lg"
           />
           <Select
             label="Vai trò"
@@ -130,12 +138,13 @@ export function EditUserModal({ opened, onClose, onSubmit, form, setForm }: Edit
             ]}
             value={form.roleId}
             onChange={(val) => setForm({ ...form, roleId: val || "3" })}
+            radius="lg"
           />
           <Group justify="flex-end" mt="lg">
-            <Button variant="subtle" color="gray" onClick={onClose}>
+            <Button variant="subtle" color="gray" onClick={onClose} radius="lg">
               Hủy
             </Button>
-            <Button type="submit" color="dark">Cập nhật</Button>
+            <Button type="submit" color="dark" radius="lg">Cập nhật</Button>
           </Group>
         </Stack>
       </form>
@@ -178,12 +187,13 @@ export function ChangePasswordModal({
             required
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            radius="lg"
           />
           <Group justify="flex-end" mt="lg">
-            <Button variant="subtle" color="gray" onClick={onClose}>
+            <Button variant="subtle" color="gray" onClick={onClose} radius="lg">
               Hủy
             </Button>
-            <Button type="submit" color="dark">
+            <Button type="submit" color="dark" radius="lg">
               Thay đổi mật khẩu
             </Button>
           </Group>

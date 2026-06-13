@@ -34,10 +34,9 @@ We prioritize high-contrast, professional shades suited for long academic readin
 
 ### 2.3. Borders & Shadows
 *   **Border Radius:** 
-    *   `md` (8px) for buttons, small input fields.
-    *   `lg` (12px) for table container paper and small cards.
-    *   `2xl` (16px) for modals, main sidebar panels, and input fields.
-*   **Shadows:** Soft ambient shadows (`--shadow-soft` in globals.css) to raise surface cards off the violet background.
+    *   `lg` (12px) for buttons, input fields, table container paper, and small cards (for a soft, modern, premium aesthetic).
+    *   `2xl` (16px) for modals and main sidebar panels.
+*   **Shadows:** Soft ambient shadows (`--shadow-soft` in globals.css) to raise surface cards off the background.
 
 ---
 
@@ -52,6 +51,7 @@ We prioritize high-contrast, professional shades suited for long academic readin
 *   Forms must use `@mantine/form` or `react-hook-form` validation.
 *   Required inputs must display the asterisks (`withAsterisk`).
 *   Disable submit buttons and show a loading spinner (e.g., Mantine `Loader`) during async submissions.
+*   **Strict rule:** Always use `radius="lg"` for all form inputs and action buttons.
 
 ### 3.3. Dialogs & Modals (Mantine `Modal`)
 *   All dialog operations (creating user, editing subject, document upload) must use Mantine `<Modal centered radius="2xl">`.
@@ -98,3 +98,8 @@ All UI code changes must be verified against this checklist before code review:
 - [ ] Focus rings are visible for users navigating using keyboard Tab.
 
 ---
+
+## 7. AI & Agent Guardrail Rules (Mandatory)
+*   **Mandatory Reading:** Every AI assistant modifying or creating UI components in this repository MUST read and strictly adhere to this Design System.
+*   **Guardrails against custom styling:** If the user requests styling that deviates from this design system (e.g., custom accent colors, non-standard layout patterns, or changing primary button colors to anything other than `dark`/Slate-900), the AI **MUST** halt and warn the user, asking for confirmation:
+    > "Hệ thống đang yêu cầu màu sắc/kiểu dáng theo quy chuẩn của DESIGN_SYSTEM.md, bạn có chắc chắn muốn thay đổi không? Nếu muốn đổi, vui lòng mở Zalo lên hỏi Cota (Designer/Leader) và chụp màn hình gửi cho Cota duyệt trước nhé!"

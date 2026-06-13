@@ -57,7 +57,7 @@ export function AdminUsersView() {
           leftSection={<IconPlus size={16} />}
           onClick={openCreateModal}
           size="md"
-          radius="md"
+          radius="lg"
           color="dark"
         >
           Thêm người dùng
@@ -72,12 +72,12 @@ export function AdminUsersView() {
         onChange={(e) => setSearchQuery(e.target.value)}
         mb="lg"
         size="md"
-        radius="md"
+        radius="lg"
         style={{ maxWidth: 480 }}
       />
 
       {/* Table Container */}
-      <Paper withBorder radius="md" p="md">
+      <Paper withBorder radius="lg" p="md">
         {loading ? (
           <Center py={60}>
             <Loader size="lg" />

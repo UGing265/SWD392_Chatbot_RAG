@@ -95,7 +95,7 @@ export function AdminDocumentsView() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           leftSection={<IconSearch size={16} />}
-          radius="xl"
+          radius="lg"
           style={{ width: "100%", maxWidth: 400 }}
           size="md"
         />
@@ -103,7 +103,7 @@ export function AdminDocumentsView() {
           variant="light"
           leftSection={<IconRefresh size={16} />}
           onClick={refresh}
-          radius="xl"
+          radius="lg"
           color="dark"
         >
           Làm mới
@@ -111,7 +111,7 @@ export function AdminDocumentsView() {
       </Group>
 
       {/* Main Table */}
-      <Paper withBorder radius="md" shadow="sm" style={{ overflow: "hidden" }}>
+      <Paper withBorder radius="lg" shadow="sm" style={{ overflow: "hidden" }}>
         {loading ? (
           <Group justify="center" py="xl">
             <Loader size="lg" color="dark" />
@@ -171,7 +171,7 @@ export function AdminDocumentsView() {
                       </Table.Td>
                       <Table.Td>
                         {doc.subject_name ? (
-                          <Badge variant="light" color="dark" radius="md">
+                          <Badge variant="light" color="dark" radius="lg">
                             {doc.subject_name}
                           </Badge>
                         ) : (
@@ -197,7 +197,7 @@ export function AdminDocumentsView() {
                         <Badge
                           variant="dot"
                           color={config.color}
-                          radius="md"
+                          radius="lg"
                           leftSection={<StatusIcon size={12} />}
                         >
                           {config.label}
@@ -205,14 +205,14 @@ export function AdminDocumentsView() {
                       </Table.Td>
                       <Table.Td>
                         <Group gap="xs" justify="flex-end">
-                          {doc.status === "pending" && (
+                           {doc.status === "pending" && (
                             <>
                               <ActionIcon
                                 variant="subtle"
                                 color="green"
                                 onClick={() => handleApprove(doc.id)}
                                 title="Phê duyệt"
-                                radius="md"
+                                radius="lg"
                               >
                                 <IconThumbUp size={16} />
                               </ActionIcon>
@@ -221,7 +221,7 @@ export function AdminDocumentsView() {
                                 color="yellow"
                                 onClick={() => handleReject(doc.id)}
                                 title="Từ chối"
-                                radius="md"
+                                radius="lg"
                               >
                                 <IconThumbDown size={16} />
                               </ActionIcon>
@@ -232,7 +232,7 @@ export function AdminDocumentsView() {
                             color="red"
                             onClick={() => handleDelete(doc.id)}
                             title="Xóa"
-                            radius="md"
+                            radius="lg"
                           >
                             <IconTrash size={16} />
                           </ActionIcon>
@@ -262,14 +262,14 @@ export function AdminDocumentsView() {
               value={page}
               onChange={setPage}
               color="dark"
-              radius="md"
+              radius="lg"
             />
           </Group>
         )}
       </Paper>
 
       {/* Process pipeline info box */}
-      <Paper withBorder radius="md" p="md" bg="gray.0">
+      <Paper withBorder radius="lg" p="md" bg="gray.0">
         <Text size="sm" fw={700} mb="xs">
           Quy trình xử lý tài liệu tự động
         </Text>

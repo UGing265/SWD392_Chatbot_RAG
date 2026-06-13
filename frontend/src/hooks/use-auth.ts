@@ -253,10 +253,33 @@ export function useAuth() {
     }
   }, []);
 
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await authClient.changePassword({
+        newPassword,
+        currentPassword,
+        revokeOtherSessions: true,
+      });
+      if (error) {
+        notify.error("Đổi mật khẩu thất bại", error.message || "Mật khẩu hiện tại không chính xác.");
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+      notify.success("Đổi mật khẩu thành công!", "Mật khẩu của bạn đã được cập nhật.");
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err?.message || "Lỗi không xác định" };
+    }
+  }, []);
+
   return {
     signIn,
     signOut,
     forgetPassword,
+    changePassword,
     session,
     isLoading: isLoading || isSessionPending || isResolvingRole,
   };
