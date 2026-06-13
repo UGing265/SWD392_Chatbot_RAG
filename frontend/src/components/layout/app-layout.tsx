@@ -197,7 +197,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="mt-auto p-3 border-t border-gray-200">
           <Menu shadow="md" width={240} position="top-start" radius="md">
             <Menu.Target>
-              <UnstyledButton className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-zinc-100 transition-colors">
+              <UnstyledButton className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-zinc-200/60 active:scale-[0.98] transition-all duration-150">
                 <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
                   {getInitials(session?.user?.name)}
                 </Avatar>
