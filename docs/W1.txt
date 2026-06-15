@@ -1,6 +1,0 @@
-PBL:
-- UI/UX
-- Define 3 workflows
-- Use case diagram
-- Archiecture applied to app
-

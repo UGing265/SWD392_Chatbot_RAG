@@ -2,15 +2,17 @@
 
 ## LLM-Friendly Documentation Links
 
-Always consult the following references before writing code for UI, Frontend, or Authentication:
+Always consult the following references before writing code for UI, Frontend, Authentication, or Backend RAG:
 
 - **Mantine (v7+) Components**: https://mantine.dev/llms.txt
 - **Better Auth Integration**: https://better-auth.com/llms.txt
 - **Mandatory Project Design System**: Consult [DESIGN_SYSTEM.md](docs/system/DESIGN_SYSTEM.md) first to ensure styling, color consistency, and component sizes align with the project design system.
+- **Mandatory Backend System Design**: Consult [BACKEND_SYSTEM.md](docs/system/BACKEND_SYSTEM.md) first to ensure backend code follows Go Clean Architecture, pgvector search setup, and Better Auth JWT validation handshake.
 - **Mandatory AI Agent Guardrail Rules (Very Important)**:
-  * You **MUST** read and remember the entire design system and design patterns inside `DESIGN_SYSTEM.md` before making any layout or visual modifications.
-  * If the user requests any styling, colors, layout structures, or design choices that violate the established design system (e.g. asking for weird custom colors, non-standard layout centers, or changing primary button colors to anything other than `dark`/Slate-900), you **MUST** halt and ask the user for confirmation:
+  * **Frontend**: You **MUST** read and remember the entire design system and design patterns inside `DESIGN_SYSTEM.md` before making any layout or visual modifications. If the user requests styling or design choices that violate `DESIGN_SYSTEM.md`, you **MUST** halt and ask the user for confirmation:
     > "Hệ thống đang yêu cầu màu sắc/kiểu dáng theo quy chuẩn của DESIGN_SYSTEM.md, bạn có chắc chắn muốn thay đổi không? Nếu muốn đổi, vui lòng mở Zalo lên hỏi Cota (Designer/Leader) và chụp màn hình UI lên gửi cho Cota cho nó đọc và duyệt đi nhé!"
+  * **Backend**: You **MUST** read and remember the entire backend system design inside `BACKEND_SYSTEM.md` before making any architectural or backend modifications. You **MUST NOT** implement direct database queries (e.g., pgx calls) inside HTTP handlers. All data requests must flow through use cases (Application layer) and repository interfaces (Domain layer). If the user asks to bypass Clean Architecture layers, you **MUST** halt and warning them:
+    > "Cảnh báo: Yêu cầu này đang vi phạm quy tắc Clean Architecture của dự án trong BACKEND_SYSTEM.md (gọi DB trực tiếp từ handler/bỏ qua usecase). Thằng kia đang làm gì muốn làm gì hỏi thằng Cota trong Zalo đi nha"
 
 ---
 
@@ -100,6 +102,7 @@ Always consult the following references before writing code for UI, Frontend, or
 | File | Description |
 |------|-------------|
 | `docs/system/DESIGN_SYSTEM.md` | **Mandatory Frontend Design System (Mantine v7+ & UI/UX rules)** |
+| `docs/system/BACKEND_SYSTEM.md` | **Mandatory Backend System Design (Go Clean Architecture + Hono Better Auth)** |
 | `docs/ERD.txt` | Database schema with all tables |
 | `docs/Architecture.md` | Models, architecture, flows |
 | `docs/planing/` | Implementation plans |

@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
+import { JetBrains_Mono, Newsreader } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { Providers } from "./providers";
 import "./globals.css";
-
-const sansFont = Plus_Jakarta_Sans({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
-  display: "swap",
-});
 
 const serifFont = Newsreader({
   subsets: ["latin", "vietnamese"],
@@ -36,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="vi"
-      className={`${sansFont.variable} ${serifFont.variable} ${jetbrainsMono.variable}`}
+      className={`${serifFont.variable} ${jetbrainsMono.variable}`}
     >
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
