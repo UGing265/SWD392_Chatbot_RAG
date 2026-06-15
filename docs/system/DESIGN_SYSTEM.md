@@ -7,6 +7,7 @@ This document defines the visual guidelines, typography, colors, layout rules, a
 ## 1. Visual Direction & Style Match
 *   **Design Personality:** **AI-Native + Academic Scholarly**. Focuses on highly readable educational content, ambient gradients, card layouts, and responsive panels.
 *   **Aesthetic Principle:** Clean white surface panels on a minimalist light gray/white background, accented by a high-contrast monochrome design system (using black primary buttons for a premium editorial feel).
+*   **Certified Exception (Auth/Login UI):** The login screen is an authorized exception to the strict Mantine component rule. It uses a bespoke, premium UI layout featuring custom `SpotlightInput` (with interactive cursor spotlight radial-gradient tracking), specific serif typography (`font-serif`) for the logo, rounded corners (`rounded-[6px]`), and custom grid transition animations for input entry.
 
 ---
 
@@ -26,8 +27,8 @@ We prioritize high-contrast, professional shades suited for long academic readin
 | **Text Primary** | `var(--mantine-color-text)` | `#0F172A` (Slate-900) | Title, body text, readable content |
 | **Text Muted** | `var(--mantine-color-dimmed)` | `#475569` (Slate-600) | Secondary descriptions, file metadata |
 
-### 2.2. Typography (Google Fonts Integration)
-*   **Headings & Body UI Text:** `Plus Jakarta Sans` (A modern, clean, geometric sans-serif font for maximum legibility and UI visual quality. Loaded in `layout.tsx` and mapped to Mantine via `var(--font-sans)`).
+### 2.2. Typography (Google Fonts & CDN Integration)
+*   **Headings & Body UI Text:** `Google Sans` (A clean, geometric, premium sans-serif font face. Loaded via CDN variable-font in `globals.css` and mapped to Mantine via `var(--font-sans)`).
 *   **Secondary/Research Text:** `Newsreader` (A premium serif font for academic/research papers, used via the `.font-serif` utility class).
 *   **Monospace/Code:** `JetBrains Mono` (For JSON data views, configurations, and logs).
 *   **Line-Height:** 1.6 - 1.75 for reading lists, 1.5 for UI buttons and menus.
