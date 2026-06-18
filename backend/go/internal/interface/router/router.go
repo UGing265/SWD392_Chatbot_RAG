@@ -4,7 +4,10 @@ import (
 	"log"
 
 	"swd392-chatbot-rag/internal/application"
+	"swd392-chatbot-rag/internal/application/chatusecase"
+	"swd392-chatbot-rag/internal/infrastructure/embedding"
 	"swd392-chatbot-rag/internal/infrastructure/filestorage"
+	"swd392-chatbot-rag/internal/infrastructure/llm"
 	"swd392-chatbot-rag/internal/infrastructure/repository/postgres"
 	"swd392-chatbot-rag/internal/interface/handler"
 	"swd392-chatbot-rag/internal/interface/middleware"
@@ -67,10 +70,18 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		jobRepo, userRepo, auditRepo, s3Storage,
 	)
 
+	// Initialize Chat module
+	chatSessionRepo := postgres.NewChatSessionRepository(db)
+	msgRepo := postgres.NewMessageRepository(db)
+	embedClient := embedding.NewEmbeddingClient(cfg.GEMINI_API_KEY)
+	llmClient := llm.NewGeminiLLMClient(cfg.GEMINI_API_KEY, cfg.GEMINI_CHAT_MODEL)
+	chatUseCase := chatusecase.NewChatUseCase(chatSessionRepo, msgRepo, embedClient, llmClient)
+
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(db)
 	documentHandler := handler.NewDocumentHandler(docService)
 	adminHandler := handler.NewAdminHandler(docService)
+	chatHandler := handler.NewChatHandler(chatUseCase)
 
 	// Health check (public)
 	r.GET("/api/health", healthHandler.Health)
@@ -96,6 +107,14 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 
 		// Report document (student & lecturer)
 		protected.POST("/documents/:slug/report", middleware.RequireRoles(2, 3), documentHandler.Report)
+
+		// Chat routes (student & lecturer: roles 2, 3)
+		protected.GET("/chat/sessions", middleware.RequireRoles(2, 3), chatHandler.ListSessions)
+		protected.POST("/chat/sessions", middleware.RequireRoles(2, 3), chatHandler.CreateSession)
+		protected.GET("/chat/sessions/:id", middleware.RequireRoles(2, 3), chatHandler.GetSession)
+		protected.GET("/chat/sessions/:id/messages", middleware.RequireRoles(2, 3), chatHandler.GetHistory)
+		protected.POST("/chat/sessions/:id/messages", middleware.RequireRoles(2, 3), chatHandler.SendMessage)
+		protected.DELETE("/chat/sessions/:id", middleware.RequireRoles(2, 3), chatHandler.DeleteSession)
 
 		// Admin routes (requires Admin role: 1)
 		admin := protected.Group("/admin")
