@@ -180,11 +180,14 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 			}
 			metaBytes, _ := json.Marshal(metaMap)
 
+			chContent := strings.ToValidUTF8(tc.Content, "")
+			chContent = strings.ReplaceAll(chContent, "\x00", " ")
+
 			ch := &chunk.Chunk{
 				ID:         uuid.New(),
 				DocumentID: *job.DocumentID,
 				ChunkOrder: chunkIndex,
-				Content:    tc.Content,
+				Content:    chContent,
 				Metadata:   string(metaBytes),
 				CreatedAt:  time.Now(),
 			}

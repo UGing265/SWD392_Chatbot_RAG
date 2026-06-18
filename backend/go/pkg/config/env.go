@@ -9,6 +9,7 @@ type Config struct {
 	JWT_SECRET             string
 	JWT_EXPIRY             string
 	GEMINI_API_KEY         string
+	GEMINI_CHAT_MODEL      string
 	UPLOAD_DIR             string
 	MAX_FILE_SIZE          int64
 	AWS_ACCESS_KEY_ID      string
@@ -40,6 +41,7 @@ func Load() *Config {
 		JWT_SECRET:            getEnv("JWT_SECRET", "your-secret-key-min-32-characters-long"),
 		JWT_EXPIRY:            getEnv("JWT_EXPIRY", "24h"),
 		GEMINI_API_KEY:        getEnv("GEMINI_API_KEY", ""),
+		GEMINI_CHAT_MODEL:     getEnv("GEMINI_CHAT_MODEL", "gemini-2.5-flash"),
 		UPLOAD_DIR:            getEnv("UPLOAD_DIR", "./uploads"),
 		MAX_FILE_SIZE:         parseInt(getEnv("MAX_FILE_SIZE", "52428800")),
 		AWS_ACCESS_KEY_ID:     getEnv("AWS_ACCESS_KEY_ID", ""),
