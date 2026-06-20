@@ -1,33 +1,139 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 import { authClient } from "@/lib/auth-client";
 
+function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export type UserRole = "student" | "lecturer" | "admin";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+
+function getExplicitUserRole(user: unknown): UserRole | null {
+  const roleId = (user as any)?.roleId ?? (user as any)?.role_id;
+  if (roleId === 1) return "admin";
+  if (roleId === 2) return "lecturer";
+  if (roleId === 3) return "student";
+  return null;
+}
+
+async function resolveUserRole(user: unknown, token: string | null): Promise<UserRole> {
+  const explicitRole = getExplicitUserRole(user);
+  if (explicitRole) return explicitRole;
+
+  if (!token) return "student";
+
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const adminResponse = await fetch(`${API_BASE_URL}/api/admin/users`, { headers });
+  if (adminResponse.ok) return "admin";
+
+  const lecturerResponse = await fetch(`${API_BASE_URL}/api/documents/dashboard`, { headers });
+  if (lecturerResponse.ok) return "lecturer";
+
+  return "student";
+}
 
 export function useAuth() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvedRole, setResolvedRole] = useState<UserRole | null>(null);
+  const [isResolvingRole, setIsResolvingRole] = useState(false);
   const { data: sessionData, isPending: isSessionPending, refetch } = authClient.useSession();
 
-  // Ensure session token is stored in localStorage if session exists
+  // Keep the Go API bearer token aligned with the active Better Auth session.
   useEffect(() => {
-    if (sessionData && !localStorage.getItem("token")) {
-      const match = document.cookie.match(/(^|;)\s*better-auth\.session_token\s*=\s*([^;]+)/);
-      if (match) {
-        localStorage.setItem("token", match[2]);
-      }
+    if (!sessionData) {
+      setResolvedRole(null);
+      return;
     }
+
+    const match = document.cookie.match(/(^|;)\s*better-auth\.session_token\s*=\s*([^;]+)/);
+    const sessionToken = match?.[2] || localStorage.getItem("token");
+
+    if (match?.[2]) {
+      localStorage.setItem("token", match[2]);
+    }
+
+    let cancelled = false;
+    setResolvedRole(null);
+    setIsResolvingRole(true);
+
+    resolveUserRole(sessionData.user, sessionToken)
+      .then((role) => {
+        if (cancelled) return;
+        setResolvedRole(role);
+      })
+      .catch((err) => {
+        console.error("Failed to resolve user role:", err);
+        if (!cancelled) setResolvedRole("student");
+      })
+      .finally(() => {
+        if (!cancelled) setIsResolvingRole(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionData]);
 
-  const session = sessionData ? {
-    user: sessionData.user,
-    role: sessionData.user.email === "admin01@gmail.com"
-      ? "admin"
-      : (sessionData.user.email === "teacher@gmail.com" 
-        ? "lecturer" 
-        : ((sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student"))) as UserRole
-  } : null;
+  const session = sessionData
+    ? (() => {
+        let currentRole: UserRole = "student";
+
+        // 1. Try to get role from JWT token
+        if (typeof window !== "undefined") {
+          const token =
+            localStorage.getItem("token") ||
+            document.cookie.match(/(^|;)\s*access_token\s*=\s*([^;]+)/)?.[2];
+          if (token) {
+            const payload = decodeJwt(token);
+            if (payload && payload.role) {
+              currentRole = payload.role as UserRole;
+              return { user: sessionData.user, role: currentRole };
+            }
+          }
+        }
+
+        // 2. Try to get role from resolvedRole (async check)
+        if (resolvedRole) {
+          return { user: sessionData.user, role: resolvedRole };
+        }
+
+        // 3. Fallback to roleId/role_id mapping in sessionData.user
+        const userObj = sessionData.user as any;
+        const email = userObj.email || "";
+        if (email === "admin01@gmail.com") {
+          currentRole = "admin";
+        } else if (email === "teacher@gmail.com") {
+          currentRole = "lecturer";
+        } else {
+          const rId = userObj.roleId || userObj.role_id;
+          currentRole = Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student";
+        }
+
+        return {
+          user: sessionData.user,
+          role: currentRole,
+        };
+      })()
+    : null;
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -39,38 +145,81 @@ export function useAuth() {
       });
 
       if (error) {
-        toast.error("Đăng nhập thất bại", {
-          description: error.message || "Email hoặc mật khẩu không chính xác.",
-        });
+        notify.error("Đăng nhập thất bại", error.message || "Email hoặc mật khẩu không chính xác.");
         setIsLoading(false);
         return { success: false, error: error.message };
       }
 
       if (data) {
-        const token = data.token;
-        localStorage.setItem("token", token);
-        
-        const role = data.user.email === "admin01@gmail.com"
-          ? "admin"
-          : (data.user.email === "teacher@gmail.com"
-            ? "lecturer"
-            : ((data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student")));
+        // Retrieve the JWT token
+        const client = authClient as any;
+        let jwtToken;
+        try {
+          if (client.$fetch) {
+            const res = await client.$fetch("/token", { method: "GET" });
+            if (res.data) jwtToken = res.data.token;
+          } else {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:5000"}/api/auth/token`,
+            );
+            const tokenData = await res.json();
+            jwtToken = tokenData?.token;
+          }
+        } catch (e) {
+          console.error("Failed to fetch JWT token:", e);
+        }
 
-        document.cookie = "mock_auth=true; path=/; max-age=3600";
-        document.cookie = `mock_role=${role}; path=/; max-age=3600`;
+        if (!jwtToken) {
+          jwtToken = data.token;
+        }
 
-        toast.success("Đăng nhập thành công!", {
-          description: "Đang chuyển hướng...",
-        });
+        if (jwtToken) {
+          localStorage.setItem("token", jwtToken);
+          document.cookie = `access_token=${jwtToken}; path=/; max-age=3600`;
+        }
+
+        let role: UserRole = "student";
+        if (jwtToken) {
+          const payload = decodeJwt(jwtToken);
+          console.log("Decoded JWT payload:", payload);
+          if (payload && payload.role) {
+            role = payload.role as UserRole;
+          }
+        }
+
+        // Fallback for role resolution from data.user or email if not resolved via JWT
+        if (role === "student") {
+          const lowerEmail = email.toLowerCase();
+          if (lowerEmail === "admin01@gmail.com") {
+            role = "admin";
+          } else if (lowerEmail === "teacher@gmail.com") {
+            role = "lecturer";
+          } else {
+            let loginRId = (data.user as any).roleId || (data.user as any).role_id;
+            if (!loginRId) {
+              if (lowerEmail.includes("admin")) loginRId = 1;
+              else if (lowerEmail.includes("lecturer") || lowerEmail.includes("gv"))
+                loginRId = 2;
+              else loginRId = 3;
+            }
+            role = Number(loginRId) === 1 ? "admin" : Number(loginRId) === 2 ? "lecturer" : "student";
+          }
+        }
+
+        notify.success("Đăng nhập thành công!", "Đang chuyển hướng...");
 
         await refetch();
         setIsLoading(false);
 
+        const currentRole = role;
         setTimeout(() => {
-          if (role === "admin") {
-            router.push("/admin");
+          if (currentRole === "student") {
+            router.push(`/student/documents/shared`);
+          } else if (currentRole === "admin") {
+            router.push(`/admin`);
           } else {
-            router.push(`/${role}/documents/my`);
+            // Lecturer
+            router.push(`/lecturer/documents/my`);
           }
         }, 500);
 
@@ -80,7 +229,7 @@ export function useAuth() {
       setIsLoading(false);
       return { success: false, error: "Authentication failed" };
     },
-    [router, refetch]
+    [router, refetch],
   );
 
   const signOut = useCallback(async () => {
@@ -91,16 +240,61 @@ export function useAuth() {
       console.error("Failed to sign out from Better Auth:", err);
     }
     localStorage.removeItem("token");
-    document.cookie = "mock_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "mock_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setIsLoading(false);
     router.push("/login");
   }, [router]);
 
+  const forgetPassword = useCallback(async (email: string) => {
+    setIsLoading(true);
+    try {
+      // @ts-ignore - Better Auth types might not include forgetPassword if plugin isn't typed
+      const { data, error } = await authClient.forgetPassword({
+        email,
+        redirectTo: "/reset-password",
+      });
+      if (error) {
+        notify.error("Gửi yêu cầu thất bại", error.message || "Không thể gửi email khôi phục.");
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+      notify.success("Đã gửi email khôi phục", "Vui lòng kiểm tra hộp thư của bạn.");
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err?.message || "Lỗi không xác định" };
+    }
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await authClient.changePassword({
+        newPassword,
+        currentPassword,
+        revokeOtherSessions: true,
+      });
+      if (error) {
+        notify.error("Đổi mật khẩu thất bại", error.message || "Mật khẩu hiện tại không chính xác.");
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+      notify.success("Đổi mật khẩu thành công!", "Mật khẩu của bạn đã được cập nhật.");
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err?.message || "Lỗi không xác định" };
+    }
+  }, []);
+
   return {
     signIn,
     signOut,
+    forgetPassword,
+    changePassword,
     session,
-    isLoading: isLoading || isSessionPending,
+    isLoading: isLoading || isSessionPending || isResolvingRole,
   };
 }

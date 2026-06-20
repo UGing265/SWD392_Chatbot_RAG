@@ -16,9 +16,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"swd392-chatbot-rag/pkg/config"
 
-	_ "swd392-chatbot-rag/docs" // swag docs
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "swd392-chatbot-rag/docs" // swag docs
 )
 
 func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
@@ -62,12 +62,13 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	jobRepo := postgres.NewUploadJobRepository(db)
 	userRepo := postgres.NewUserRepository(db)
 	auditRepo := postgres.NewAuditLogRepository(db)
+	assignRepo := postgres.NewLecturerSubjectRepository(db)
 
 	// Initialize Service
 	docService := application.NewDocumentService(
 		docRepo, fileRepo, chunkRepo, chapterRepo, subjectRepo,
 		termRepo, typeRepo, langRepo, sourceRepo, reportRepo,
-		jobRepo, userRepo, auditRepo, s3Storage,
+		jobRepo, userRepo, auditRepo, assignRepo, s3Storage,
 	)
 
 	// Initialize Chat module
@@ -93,16 +94,16 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		// Lookups metadata (for student/lecturer)
 		protected.GET("/documents/lookups", documentHandler.GetMetadataLookups)
 
-		// Student & Lecturer documents list
-		protected.GET("/documents", middleware.RequireRoles(2, 3), documentHandler.List)
-
-		// Lecturer specific document actions
+		// Lecturer specific document actions (must be BEFORE :slug wildcard)
 		protected.GET("/documents/my", middleware.RequireRoles(2), documentHandler.MyDocuments)
 		protected.GET("/documents/dashboard", middleware.RequireRoles(2), documentHandler.Dashboard)
 		protected.POST("/documents/upload", middleware.RequireRoles(2), documentHandler.Upload)
 
-		// Details lookup by wildcard (must be registered after static paths)
+		// Student & Lecturer documents list
+		protected.GET("/documents", middleware.RequireRoles(2, 3), documentHandler.List)
 		protected.GET("/documents/:slug", middleware.RequireRoles(1, 2, 3), documentHandler.Details)
+
+		// Slug-based actions
 		protected.POST("/documents/:slug/edit", middleware.RequireRoles(2), documentHandler.Edit)
 		protected.POST("/documents/:slug/delete", middleware.RequireRoles(2), documentHandler.Delete)
 		protected.GET("/documents/:slug/delete-view", middleware.RequireRoles(2), documentHandler.DeleteViewData)
@@ -126,6 +127,11 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 			admin.GET("/users", adminHandler.Users)
 			admin.POST("/users/:id/block", adminHandler.BlockUser)
 			admin.POST("/users/:id/unblock", adminHandler.UnblockUser)
+
+			// Lecturer subject assignments
+			admin.GET("/user-subjects", adminHandler.LecturerSubjectAssignments)
+			admin.GET("/lecturers/:id/subjects", adminHandler.LecturerSubjects)
+			admin.PUT("/lecturers/:id/subjects", adminHandler.ReplaceLecturerSubjects)
 
 			// Documents review & management
 			admin.GET("/documents", adminHandler.Documents)

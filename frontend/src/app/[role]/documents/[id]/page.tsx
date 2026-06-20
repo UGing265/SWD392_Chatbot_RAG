@@ -1,413 +1,526 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, BookOpen, Calendar, Lock, Globe, Download, Share2, Trash2, Edit3, User, Clock, File } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  IconArrowLeft,
+  IconBook,
+  IconCalendar,
+  IconChevronLeft,
+  IconChevronRight,
+  IconDownload,
+  IconFile,
+  IconFileText,
+  IconGlobe,
+  IconLock,
+  IconShare,
+  IconTrash,
+} from "@tabler/icons-react";
+import {
+  Button,
+  Badge,
+  Loader,
+  Paper,
+  Text,
+  Group,
+  Stack,
+  Center,
+} from "@mantine/core";
 
-interface Document {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const CHUNK_PAGE_SIZE = 10;
+
+interface DocumentFile {
+  id: string;
+  original_filename: string;
+  file_url?: string | null;
+  mime_type?: string | null;
+  file_size_bytes: number;
+  page_count?: number | null;
+  extraction_status?: string;
+}
+
+interface DocumentChapter {
   id: string;
   title: string;
-  description: string;
-  subject_name: string;
-  academic_term_name: string;
+  summary?: string | null;
+  chapter_order: number;
+  start_page?: number | null;
+  end_page?: number | null;
+}
+
+interface DocumentChunk {
+  id: string;
+  chunk_order: number;
+  page_number?: number | null;
+  content: string;
+}
+
+interface DocumentDetails {
+  id: string;
+  title: string;
+  description?: string | null;
+  subject_name?: string | null;
+  academic_term_name?: string | null;
   visibility: string;
-  owner_email: string;
-  owner_name: string;
-  file_name: string;
-  file_size: number;
-  created_at: string;
-  updated_at: string;
-  document_type_name: string;
-  language_name: string;
+  status: string;
+  document_type_name?: string | null;
+  language_name?: string | null;
+  document_source_name?: string | null;
+  total_chunks: number;
+  total_chapters: number;
+  view_count: number;
+  download_count: number;
+  file_count: number;
+  files: DocumentFile[];
+  chapters: DocumentChapter[];
+  chunks: DocumentChunk[];
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function formatFileSize(bytes: number) {
+  if (!bytes) return "0 MB";
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function visibilityLabel(visibility: string) {
+  if (visibility === "private") return "Riêng tư";
+  if (visibility === "school_wide") return "Toàn trường";
+  return "Công khai";
 }
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const documentId = params.id as string;
-  const [document, setDocument] = useState<Document | null>(null);
+  const slug = params.id as string;
+  const role = params.role as string;
+  const [document, setDocument] = useState<DocumentDetails | null>(null);
+  const [chunkPage, setChunkPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string>("");
 
-  useEffect(() => {
-    const role = params.role as string;
-    setUserRole(role);
-
-    const mockDocument: Document = {
-      id: documentId,
-      title: "Giáo trình Lập trình Web - Chương 1-5",
-      description: "Giáo trình chi tiết về lập trình web bao gồm HTML, CSS, JavaScript và các framework hiện đại. Tài liệu được biên soạn cho sinh viên năm 2 ngành Công nghệ thông tin.",
-      subject_name: "Lập trình Web",
-      academic_term_name: "HK1 2024-2025",
-      visibility: "public",
-      owner_email: "lecturer@studymate.vn",
-      owner_name: "Nguyễn Văn A",
-      file_name: "lap-trinh-web-chuong-1-5.pdf",
-      file_size: 5242880,
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-20T14:45:00Z",
-      document_type_name: "PDF",
-      language_name: "Tiếng Việt",
-    };
-
-    const fetchDocument = async () => {
+  const fetchDocument = useCallback(
+    async (signal?: AbortSignal) => {
       setLoading(true);
+      setError(null);
+
       try {
-        const response = await fetch(`http://localhost:8080/api/documents/${documentId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+        const query = new URLSearchParams({
+          chunkPage: String(chunkPage),
+          chunkPageSize: String(CHUNK_PAGE_SIZE),
         });
-        if (response.ok) {
-          const data = await response.json();
-          const mappedDoc: Document = {
-            id: data.id,
-            title: data.title,
-            description: data.description || "Không có mô tả",
-            subject_name: data.subject_name || "Không có môn học",
-            academic_term_name: data.academic_term_name || "Không có kỳ học",
-            visibility: data.visibility,
-            owner_email: data.owner_email || "lecturer@studymate.vn",
-            owner_name: data.owner_name || "Giảng viên",
-            file_name: data.files && data.files.length > 0 ? data.files[0].original_filename : "document.pdf",
-            file_size: data.files && data.files.length > 0 ? data.files[0].file_size_bytes : 0,
-            created_at: data.created_at || new Date().toISOString(),
-            updated_at: data.updated_at || new Date().toISOString(),
-            document_type_name: data.document_type_name || "Tài liệu",
-            language_name: data.language_name || "Chưa xác định",
-          };
-          setDocument(mappedDoc);
-        } else {
-          console.warn("Failed to fetch document details, using mock data");
-          setDocument(mockDocument);
+
+        const response = await fetch(`${API_BASE_URL}/api/documents/${slug}?${query.toString()}`, {
+          headers: getAuthHeaders(),
+          signal,
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error || "Không thể tải tài liệu này.");
         }
+
+        const data = await response.json();
+        setDocument({
+          ...data,
+          files: Array.isArray(data.files) ? data.files : [],
+          chapters: Array.isArray(data.chapters) ? data.chapters : [],
+          chunks: Array.isArray(data.chunks) ? data.chunks : [],
+          total_chunks: data.total_chunks || 0,
+          total_chapters: data.total_chapters || 0,
+          view_count: data.view_count || 0,
+          download_count: data.download_count || 0,
+          file_count: data.file_count || 0,
+        });
       } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         console.error("Error fetching document details:", err);
-        setDocument(mockDocument);
+
+        // Fallback mock data for SWD392 preview
+        setDocument({
+          id: "mock-1",
+          title: "Bài giảng 1: Giới thiệu môn học Software Architecture",
+          description:
+            "Tài liệu này bao gồm tổng quan về môn học SWD392, các khái niệm cơ bản về kiến trúc phần mềm, vai trò của Software Architect và các mẫu kiến trúc phổ biến (Architectural Patterns). Đọc kỹ trước khi làm Quiz 1.",
+          subject_name: "SWD392 - Software Architecture",
+          academic_term_name: "Kỳ học 1 (Spring)",
+          visibility: "school_wide",
+          status: "Đã xử lý",
+          document_type_name: "Bài giảng (Slide)",
+          language_name: "Tiếng Việt",
+          total_chunks: 42,
+          total_chapters: 3,
+          view_count: 156,
+          download_count: 89,
+          file_count: 1,
+          files: [
+            {
+              id: "f1",
+              original_filename: "SWD392_Lec1_Intro.pdf",
+              file_size_bytes: 2500000,
+              page_count: 45,
+              extraction_status: "Hoàn tất",
+            },
+          ],
+          chapters: [
+            {
+              id: "c1",
+              title: "Chương 1: Tổng quan về Kiến trúc Phần mềm",
+              summary:
+                "Định nghĩa về Kiến trúc phần mềm, tầm quan trọng của nó trong vòng đời phát triển phần mềm (SDLC).",
+              chapter_order: 1,
+              start_page: 1,
+              end_page: 15,
+            },
+            {
+              id: "c2",
+              title: "Chương 2: Vai trò của Software Architect",
+              summary:
+                "Nhiệm vụ, kỹ năng cần thiết và trách nhiệm của một kiến trúc sư phần mềm trong team Agile.",
+              chapter_order: 2,
+              start_page: 16,
+              end_page: 30,
+            },
+            {
+              id: "c3",
+              title: "Chương 3: Các mẫu Kiến trúc phổ biến",
+              summary:
+                "Giới thiệu về Client-Server, Layered Architecture, Microservices và Event-Driven.",
+              chapter_order: 3,
+              start_page: 31,
+              end_page: 45,
+            },
+          ],
+          chunks: [
+            {
+              id: "ch1",
+              chunk_order: 0,
+              page_number: 1,
+              content:
+                "Chào mừng các bạn đến với môn học SWD392 - Software Architecture.\n\nTrong môn học này, chúng ta sẽ tìm hiểu về cách thiết kế một hệ thống phần mềm lớn, từ việc xác định các module, thành phần cốt lõi đến cách chúng giao tiếp với nhau.",
+            },
+            {
+              id: "ch2",
+              chunk_order: 1,
+              page_number: 3,
+              content:
+                "Định nghĩa: Kiến trúc phần mềm của một hệ thống là cấu trúc hoặc các cấu trúc của hệ thống, bao gồm các thành phần phần mềm, các thuộc tính có thể nhìn thấy từ bên ngoài của các thành phần đó và các mối quan hệ giữa chúng.",
+            },
+            {
+              id: "ch3",
+              chunk_order: 2,
+              page_number: 5,
+              content:
+                "Tại sao Kiến trúc phần mềm lại quan trọng?\n1. Nó đóng vai trò là phương tiện giao tiếp giữa các bên liên quan.\n2. Nó nắm bắt các quyết định thiết kế sớm, có ảnh hưởng sâu sắc đến sự phát triển, triển khai và bảo trì hệ thống.\n3. Nó là một mô hình trừu tượng, tương đối nhỏ của hệ thống, giúp chúng ta dễ hiểu và quản lý độ phức tạp.",
+            },
+          ],
+        });
       } finally {
         setLoading(false);
       }
-    };
+    },
+    [chunkPage, slug],
+  );
 
-    fetchDocument();
-  }, [documentId, params.role]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDocument(controller.signal);
+    return () => controller.abort();
+  }, [fetchDocument]);
+
+  useEffect(() => {
+    setChunkPage(1);
+  }, [slug]);
+
+  const primaryFile = document?.files[0] || null;
+  const totalPages = useMemo(() => {
+    const totalChunks = document?.total_chunks || document?.chunks.length || 0;
+    return Math.max(1, Math.ceil(totalChunks / CHUNK_PAGE_SIZE));
+  }, [document]);
+
+  const canManage = role === "teacher" || role === "lecturer";
 
   const handleDelete = async () => {
-    if (confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) {
-      try {
-        const response = await fetch(`http://localhost:8080/api/documents/${documentId}/delete`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        if (response.ok) {
-          router.back();
-        } else {
-          alert("Xóa tài liệu thất bại");
-        }
-      } catch (err) {
-        console.error("Error deleting document:", err);
-        alert("Xóa tài liệu thất bại");
+    if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/documents/${slug}/delete`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        router.push(`/${role}/documents/my`);
+        return;
       }
+
+      const payload = await response.json().catch(() => null);
+      alert(payload?.error || "Xóa tài liệu thất bại");
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      alert("Xóa tài liệu thất bại");
     }
   };
 
   const handleDownload = () => {
-    // Implement download logic
-    alert("Đang tải xuống tài liệu...");
+    if (primaryFile?.file_url) {
+      window.open(primaryFile.file_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    alert("Tài liệu này chưa có đường dẫn tải xuống.");
   };
 
-  const handleShare = () => {
-    // Implement share logic
-    alert("Đang sao chép liên kết...");
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("Đã sao chép liên kết tài liệu.");
+    } catch {
+      alert(url);
+    }
   };
 
-  if (loading) {
+  if (loading && !document) {
     return (
-      <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg animate-pulse" />
-          <p className="text-muted-foreground font-medium">Đang tải thông tin tài liệu...</p>
-        </div>
-      </div>
+      <Center className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
+        <Stack gap="xs" align="center">
+          <Loader size="lg" color="blue" />
+          <Text size="sm" c="dimmed" fw={500}>Đang tải thông tin tài liệu...</Text>
+        </Stack>
+      </Center>
     );
   }
 
   if (error || !document) {
     return (
-      <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-6">
-        <div className="text-center animate-in fade-in duration-500">
-          <div className="h-20 w-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-            <FileText className="h-10 w-10 text-red-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy tài liệu</h2>
-          <p className="text-muted-foreground mb-6">Tài liệu này không tồn tại hoặc bạn không có quyền truy cập.</p>
-          <Button onClick={() => router.back()} variant="outline" className="rounded-xl">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lại
-          </Button>
+      <Center className="min-h-[calc(100vh-3.5rem)] bg-zinc-50 p-6">
+        <div className="text-center max-w-md">
+          <Paper withBorder p="xl" radius="lg" className="bg-white">
+            <Center className="mx-auto mb-6 h-20 w-20 rounded-full bg-red-50 text-red-500">
+              <IconFileText size={40} />
+            </Center>
+            <Text fw={905} size="lg" className="mb-2 text-gray-900">Không thể mở tài liệu</Text>
+            <Text size="sm" c="dimmed" className="mb-6 leading-relaxed">
+              {error || "Tài liệu này không tồn tại hoặc bạn không có quyền truy cập."}
+            </Text>
+            <Button
+              onClick={() => router.back()}
+              variant="outline"
+              color="gray"
+              radius="md"
+              leftSection={<IconArrowLeft size={16} />}
+            >
+              Quay lại
+            </Button>
+          </Paper>
         </div>
-      </div>
+      </Center>
     );
   }
 
-  const canEdit = userRole === "teacher" || userRole === "lecturer";
-  const isOwner = document.owner_email === "lecturer@studymate.vn";
-
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="container mx-auto max-w-5xl p-6 py-8">
-        {/* Header */}
-        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50 py-8 px-4 md:px-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div>
           <Button
             onClick={() => router.back()}
-            variant="ghost"
-            className="mb-4 rounded-xl hover:bg-white/50"
+            variant="subtle"
+            color="gray"
+            leftSection={<IconArrowLeft size={16} />}
+            radius="md"
+            className="mb-6"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
             Quay lại
           </Button>
-          
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
+
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <Group gap="xs" mb="md" wrap="nowrap" className="overflow-x-auto pb-1">
                 <Badge
-                  variant={document.visibility === "public" ? "default" : "secondary"}
-                  className={`${
-                    document.visibility === "public"
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0"
-                      : "bg-gradient-to-r from-gray-500 to-slate-500 text-white border-0"
-                  }`}
+                  color={document.visibility === "private" ? "gray" : "blue"}
+                  variant="light"
+                  size="md"
+                  leftSection={document.visibility === "private" ? <IconLock size={12} /> : <IconGlobe size={12} />}
                 >
-                  {document.visibility === "public" ? (
-                    <span className="flex items-center gap-1.5">
-                      <Globe className="h-3.5 w-3.5" />
-                      Công khai
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <Lock className="h-3.5 w-3.5" />
-                      Riêng tư
-                    </span>
-                  )}
+                  {visibilityLabel(document.visibility)}
                 </Badge>
-                <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">
-                  {document.document_type_name}
+                <Badge color="blue" variant="outline" size="md">
+                  {document.document_type_name || "Tài liệu"}
                 </Badge>
-              </div>
-              
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 leading-tight">
+                <Badge color="teal" variant="light" size="md">
+                  {document.status}
+                </Badge>
+              </Group>
+
+              <Text fw={900} className="text-3xl text-gray-900 leading-tight mb-4">
                 {document.title}
-              </h1>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-                {document.description}
-              </p>
+              </Text>
+
+              {document.description && (
+                <Text size="sm" c="dimmed" className="max-w-3xl leading-relaxed">
+                  {document.description}
+                </Text>
+              )}
             </div>
 
-            <div className="flex flex-col gap-2">
+            <Group gap="sm" className="lg:flex-col lg:w-48 shrink-0">
               <Button
                 onClick={handleDownload}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-300"
+                color="blue"
+                radius="md"
+                className="w-full h-11"
+                leftSection={<IconDownload size={16} />}
               >
-                <Download className="h-4 w-4 mr-2" />
                 Tải xuống
               </Button>
               <Button
                 onClick={handleShare}
                 variant="outline"
-                className="rounded-xl border-2"
+                color="gray"
+                radius="md"
+                className="w-full h-11 bg-white"
+                leftSection={<IconShare size={16} />}
               >
-                <Share2 className="h-4 w-4 mr-2" />
                 Chia sẻ
               </Button>
-              {canEdit && isOwner && (
-                <>
-                  <Button
-                    variant="outline"
-                    className="rounded-xl border-2"
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Chỉnh sửa
-                  </Button>
-                  <Button
-                    onClick={handleDelete}
-                    variant="outline"
-                    className="rounded-xl border-2 border-red-200 text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Xóa
-                  </Button>
-                </>
+              {canManage && (
+                <Button
+                  onClick={handleDelete}
+                  variant="outline"
+                  color="red"
+                  radius="md"
+                  className="w-full h-11 bg-white"
+                  leftSection={<IconTrash size={16} />}
+                >
+                  Xóa tài liệu
+                </Button>
               )}
-            </div>
+            </Group>
           </div>
         </div>
 
-        {/* Document Info Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-          {/* Subject Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Môn học</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.subject_name}</p>
-          </div>
-
-          {/* Term Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
-                <Calendar className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Kỳ học</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.academic_term_name}</p>
-          </div>
-
-          {/* Language Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-md">
-                <File className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-600">Ngôn ngữ</span>
-            </div>
-            <p className="text-lg font-bold text-gray-900">{document.language_name}</p>
-          </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { icon: IconBook, label: "Môn học", value: document.subject_name || "Chưa có môn học" },
+            {
+              icon: IconCalendar,
+              label: "Kỳ học",
+              value: document.academic_term_name || "Chưa có kỳ học",
+            },
+            { icon: IconFile, label: "Ngôn ngữ", value: document.language_name || "Chưa xác định" },
+          ].map((stat, i) => (
+            <Paper key={i} withBorder p="md" radius="lg" className="bg-white">
+              <Group gap="xs" mb="xs" align="center">
+                <Center className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600">
+                  <stat.icon size={18} />
+                </Center>
+                <Text size="xs" fw={700} c="dimmed">{stat.label}</Text>
+              </Group>
+              <Text fw={800} size="sm" className="text-gray-900 truncate">{stat.value}</Text>
+            </Paper>
+          ))}
         </div>
 
-        {/* Owner & File Info */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-          {/* Owner Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-md">
-                <User className="h-6 w-6 text-white" />
-              </div>
+        <Stack gap="md">
+          {primaryFile && (
+            <Paper
+              withBorder
+              p="md"
+              radius="lg"
+              className="bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <Group gap="md">
+                <Center className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+                  <IconFileText size={24} />
+                </Center>
+                <div>
+                  <Text fw={700} size="sm" className="text-gray-900 line-clamp-1">
+                    {primaryFile.original_filename}
+                  </Text>
+                  <Text size="xs" c="dimmed" className="mt-0.5">
+                    {formatFileSize(primaryFile.file_size_bytes)}
+                    {primaryFile.page_count ? ` • ${primaryFile.page_count} trang` : ""}
+                  </Text>
+                </div>
+              </Group>
+              <Button
+                onClick={handleDownload}
+                variant="outline"
+                color="blue"
+                radius="md"
+                leftSection={<IconDownload size={16} />}
+              >
+                Mở file gốc
+              </Button>
+            </Paper>
+          )}
+
+          <Paper withBorder p="xl" radius="lg" className="bg-white">
+            <Group justify="space-between" align="center" className="mb-6 border-b border-gray-100 pb-4">
               <div>
-                <p className="text-sm font-semibold text-gray-600">Người tải lên</p>
-                <p className="text-lg font-bold text-gray-900">{document.owner_name}</p>
+                <Text fw={805} size="md" className="text-gray-900 flex items-center gap-2">
+                  <span className="w-1.5 h-4 bg-blue-600 rounded-full" />
+                  Nội dung chi tiết
+                </Text>
+                <Text size="xs" c="dimmed" className="mt-1">
+                  Trang nội dung {chunkPage}/{totalPages} • Tổng cộng {document.total_chunks} đoạn văn bản
+                </Text>
               </div>
-            </div>
-            <p className="text-sm text-muted-foreground">{document.owner_email}</p>
-          </div>
+              {loading && <Loader size="xs" color="blue" />}
+            </Group>
 
-          {/* File Info Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-600">Thông tin file</p>
-                <p className="text-lg font-bold text-gray-900">{document.file_name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {(document.file_size / 1024 / 1024).toFixed(2)} MB
-              </span>
-              <span>•</span>
-              <span>{new Date(document.created_at).toLocaleDateString("vi-VN")}</span>
-            </div>
-          </div>
-        </div>
+            {document.chunks.length > 0 ? (
+              <Paper p="lg" radius="md" className="bg-zinc-50/80 border border-zinc-150">
+                <Text size="sm" className="leading-[1.8] text-gray-800 whitespace-pre-wrap font-medium">
+                  {document.chunks.map((c) => c.content).join("\n\n")}
+                </Text>
+              </Paper>
+            ) : (
+              <Center className="min-h-[250px] border border-dashed border-gray-200 rounded-lg p-6 text-center">
+                <Stack gap="xs" align="center" className="max-w-[300px]">
+                  <Center className="h-12 w-12 rounded-xl bg-zinc-50 border border-zinc-100 text-gray-400">
+                    <IconFileText size={24} />
+                  </Center>
+                  <Text fw={700} size="sm" className="text-gray-900">Chưa có nội dung trích xuất</Text>
+                  <Text size="xs" c="dimmed" className="leading-relaxed">
+                    Tài liệu này có thể vẫn đang được hệ thống xử lý hoặc nội dung trống.
+                  </Text>
+                </Stack>
+              </Center>
+            )}
 
-        {/* Timestamps */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold text-gray-600 mb-1">Ngày tạo</p>
-              <p className="text-base text-gray-900">{new Date(document.created_at).toLocaleString("vi-VN")}</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-600 mb-1">Cập nhật lần cuối</p>
-              <p className="text-base text-gray-900">{new Date(document.updated_at).toLocaleString("vi-VN")}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* File Content Preview */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-400">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Nội dung tài liệu</h3>
-              <p className="text-sm text-muted-foreground">Xem trước nội dung file</p>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-6 border border-gray-200">
-            <div className="prose prose-sm max-w-none">
-              <h4 className="text-xl font-bold text-gray-900 mb-4">Chương 1: Giới thiệu về Lập trình Web</h4>
-              
-              <p className="text-gray-700 mb-4 leading-relaxed">
-                Lập trình web là nghệ thuật tạo ra các trang web động và tương tác. Trong chương này, chúng ta sẽ tìm hiểu về các khái niệm cơ bản của HTML, CSS và JavaScript.
-              </p>
-
-              <h5 className="text-lg font-semibold text-gray-900 mb-3">1.1 HTML (HyperText Markup Language)</h5>
-              <p className="text-gray-700 mb-4 leading-relaxed">
-                HTML là ngôn ngữ đánh dấu tiêu chuẩn để tạo cấu trúc cho các trang web. Nó sử dụng các thẻ (tags) để định nghĩa các phần tử như tiêu đề, đoạn văn, hình ảnh, liên kết, v.v.
-              </p>
-
-              <div className="bg-gray-900 rounded-lg p-4 mb-4 overflow-x-auto">
-                <code className="text-green-400 text-sm">
-                  {`<!DOCTYPE html>
-<html>
-<head>
-  <title>Trang web đầu tiên</title>
-</head>
-<body>
-  <h1>Xin chào thế giới!</h1>
-  <p>Đây là trang web đầu tiên của tôi.</p>
-</body>
-</html>`}
-                </code>
-              </div>
-
-              <h5 className="text-lg font-semibold text-gray-900 mb-3">1.2 CSS (Cascading Style Sheets)</h5>
-              <p className="text-gray-700 mb-4 leading-relaxed">
-                CSS được sử dụng để định kiểu cho các trang web. Nó cho phép bạn kiểm soát màu sắc, phông chữ, khoảng cách, bố cục và nhiều khía cạnh khác của giao diện người dùng.
-              </p>
-
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-4">
-                <p className="text-blue-900 text-sm font-medium">
-                  💡 <strong>Lưu ý:</strong> CSS có thể được viết trực tiếp trong file HTML, trong file riêng biệt (.css), hoặc sử dụng CSS frameworks như Bootstrap, Tailwind CSS.
-                </p>
-              </div>
-
-              <h5 className="text-lg font-semibold text-gray-900 mb-3">1.3 JavaScript</h5>
-              <p className="text-gray-700 leading-relaxed">
-                JavaScript là ngôn ngữ lập trình cho phép tạo ra nội dung động, tương tác với người dùng, và thực hiện các tính năng phức tạp trên trang web.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Hiển thị trang 1-5 / 25 trang
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl" disabled>
+            <Group justify="space-between" align="center" className="mt-8 pt-6 border-t border-gray-100">
+              <Button
+                variant="outline"
+                color="gray"
+                radius="md"
+                disabled={chunkPage <= 1 || loading}
+                onClick={() => setChunkPage((page) => Math.max(1, page - 1))}
+                leftSection={<IconChevronLeft size={16} />}
+              >
                 Trang trước
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl">
+              <Badge color="gray" variant="light" size="lg" radius="md">
+                {chunkPage} / {totalPages}
+              </Badge>
+              <Button
+                variant="outline"
+                color="gray"
+                radius="md"
+                disabled={chunkPage >= totalPages || loading}
+                onClick={() => setChunkPage((page) => Math.min(totalPages, page + 1))}
+                rightSection={<IconChevronRight size={16} />}
+              >
                 Trang sau
               </Button>
-            </div>
-          </div>
-        </div>
+            </Group>
+          </Paper>
+        </Stack>
       </div>
     </div>
   );

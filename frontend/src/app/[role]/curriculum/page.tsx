@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AdminCurriculumView } from "@/components/features/admin-curriculum-view";
+import { AdminCurriculumView } from "@/components/admin/curriculum/admin-curriculum-view";
 
 export default function Page() {
   const params = useParams();

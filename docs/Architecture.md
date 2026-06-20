@@ -1,4 +1,4 @@
-# SWD392 Chatbot RAG - Models, Architecture & Flows
+﻿# SWD392 Chatbot RAG - Models, Architecture & Flows
 
 ## Overview
 
@@ -263,8 +263,8 @@ backend/
 │   └── jwt/
 │       └── jwt.go               # JWT encode/decode
 │
-└── migrations/
-    └── 001_initial.sql
+├── database/
+│   └── swd391_dangerous_malware.sql
 ```
 
 ### 2.2 Dependency Rule

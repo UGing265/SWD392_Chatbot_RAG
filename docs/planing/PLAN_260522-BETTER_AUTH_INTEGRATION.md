@@ -1,4 +1,4 @@
-# Plan: Add Username to Docs + Better Auth Integration
+﻿# Plan: Add Username to Docs + Better Auth Integration
 
 ## Context
 
@@ -135,6 +135,6 @@ Better Auth uses `sub` claim instead of `user_id`. The updated JWT service handl
 ## Next Steps
 
 1. Generate Better Auth schema: `npx @better-auth/cli generate`
-2. Run database migrations
+2. Import `backend/database/swd391_dangerous_malware.sql`
 3. Ensure BETTER_AUTH_SECRET matches Go backend JWT secret
 4. Test full auth flow

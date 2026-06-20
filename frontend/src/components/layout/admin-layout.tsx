@@ -3,31 +3,61 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-  Upload,
-  HelpCircle,
-  LogOut,
-  Search,
-  Bell,
-  LayoutGrid,
-  Crown,
-  Command,
-  ShieldCheck,
-  BookOpen,
-} from "lucide-react";
+  IconLayoutDashboard,
+  IconUsers,
+  IconTerminal2,
+  IconBook,
+  IconShieldCheck,
+  IconClipboardList,
+  IconSelector,
+  IconSettings,
+  IconCrown,
+  IconChevronRight,
+  IconLogout,
+  IconBell,
+  IconLayoutSidebar,
+} from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { Menu, Avatar, Text, Group, Stack, Badge, UnstyledButton } from "@mantine/core";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "", label: "Bảng điều khiển", icon: LayoutDashboard, end: true },
-  { to: "/users", label: "Quản lý tài khoản", icon: Users },
-  { to: "/assignment", label: "Phân công môn học", icon: Command },
-  { to: "/curriculum", label: "Quản lý học kỳ", icon: BookOpen },
-  { to: "/moderation", label: "Kiểm duyệt tài liệu", icon: ShieldCheck },
+  { to: "", label: "Bảng điều khiển", icon: IconLayoutDashboard, end: true },
+  { to: "/users", label: "Quản lý tài khoản", icon: IconUsers },
+  { to: "/assignment", label: "Phân công môn học", icon: IconTerminal2 },
+  { to: "/curriculum", label: "Quản lý học kỳ", icon: IconBook },
+  { to: "/moderation", label: "Kiểm duyệt tài liệu", icon: IconShieldCheck },
 ];
+
+function getRoleLabel(role?: string) {
+  if (role === "admin") return "Admin";
+  if (role === "lecturer" || role === "teacher") return "Lecturer";
+  if (role === "student") return "Student";
+  return "User";
+}
+
+function getInitials(name?: string | null) {
+  if (!name) return "U";
+
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function getPageTitle(pathname: string) {
+  const current = nav.find((item) => {
+    const fullPath = `/admin${item.to}`;
+
+    if (item.end) return pathname === fullPath || pathname === `${fullPath}/`;
+    return pathname.startsWith(fullPath);
+  });
+
+  return current?.label || "Admin";
+}
 
 function SidebarItem({
   to,
@@ -37,150 +67,151 @@ function SidebarItem({
 }: {
   to: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: any;
   active: boolean;
 }) {
   return (
     <Link
       href={to}
-      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ${active
-        ? "bg-card text-foreground shadow-soft"
-        : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
-        }`}
-    >
-      {active && (
-        <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors",
+        active
+          ? "bg-zinc-200/50 text-gray-900"
+          : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900",
       )}
+    >
       <Icon
-        className={`h-[17px] w-[17px] ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
-        strokeWidth={1.75}
+        size={18}
+        className={cn(
+          active ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900",
+        )}
       />
-      <span>{label}</span>
+      <span className="flex-1">{label}</span>
     </Link>
   );
 }
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const basePath = "/admin";
+  const displayName = session?.user?.name || "Người dùng";
+  const roleLabel = getRoleLabel(session?.role || "admin");
+  const initials = getInitials(displayName);
+  const pageTitle = getPageTitle(pathname);
 
   const isActive = (to: string, end?: boolean) => {
     const full = `${basePath}${to}`;
+
     if (end) return pathname === full || pathname === `${full}/`;
     return pathname.startsWith(full);
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar/70 backdrop-blur md:flex">
-        <div className="px-5 pt-5 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="relative">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground shadow-soft">
-                <Crown className="h-4 w-4" strokeWidth={2} />
-              </div>
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-secondary" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-[15px] font-semibold tracking-tight text-foreground">
-                StudyMate <span className="font-normal text-primary-deep">Admin</span>
-              </div>
-              <div className="text-[10px] tabular-nums uppercase tracking-wider text-muted-foreground">
-                v0.4 · RAG
-              </div>
-            </div>
-          </div>
+    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-blue-100">
+      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-gray-200 bg-zinc-50 md:flex">
+        {/* Brand */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-3.5">
+          <Link href={basePath} className="text-[18px] font-bold tracking-tight text-gray-900 px-1">
+            StudyMate
+          </Link>
+          <UnstyledButton className="rounded-lg p-1.5 text-gray-400 hover:bg-zinc-150 hover:text-gray-900 transition-colors">
+            <IconLayoutSidebar size={18} />
+          </UnstyledButton>
         </div>
 
-        <div className="px-3 pb-3">
-          <button className="group flex w-full items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card">
-            <Search className="h-3.5 w-3.5" />
-            <span className="flex-1 text-left">Tìm mọi thứ…</span>
-            <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 tabular-nums text-[10px]">
-              <Command className="h-2.5 w-2.5" />K
-            </kbd>
-          </button>
-        </div>
-
-        <nav className="flex flex-col gap-0.5 px-3">
-          {nav.map((n) => (
+        <nav className="flex flex-col gap-1 px-3">
+          {nav.map((item) => (
             <SidebarItem
-              key={n.to}
-              to={`${basePath}${n.to}`}
-              label={n.label}
-              icon={n.icon}
-              active={isActive(n.to, n.end)}
+              key={item.to}
+              to={`${basePath}${item.to}`}
+              label={item.label}
+              icon={item.icon}
+              active={isActive(item.to, item.end)}
             />
           ))}
         </nav>
 
+        {/* Profile / Bottom actions */}
+        <div className="mt-auto border-t border-gray-200">
+          <Menu shadow="md" width={240} position="top-start" radius="lg" offset={8}>
+            <Menu.Target>
+              <UnstyledButton className="flex w-full items-center gap-3 !px-5 !py-4 text-left hover:!bg-zinc-200 transition-colors duration-150">
+                <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
+                  {initials}
+                </Avatar>
+                <div className="flex-1 min-w-0 leading-tight">
+                  <Text size="sm" fw={550} className="truncate text-gray-900">
+                    {displayName}
+                  </Text>
+                  <Text size="xs" className="text-gray-500 font-normal mt-0.5 capitalize">
+                    {roleLabel}
+                  </Text>
+                </div>
+              </UnstyledButton>
+            </Menu.Target>
 
-        <div className="mt-auto p-4">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">
-                MA
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">Minh An</div>
-                <div className="truncate text-[10px] text-muted-foreground uppercase tracking-wider">Admin</div>
-              </div>
-              <button
-                onClick={() => signOut()}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                title="Đăng xuất"
+            <Menu.Dropdown className="p-1" style={{ marginLeft: '16px' }}>
+              <Menu.Item
+                component={Link}
+                href="/admin/change-password"
+                className="!p-0 hover:bg-zinc-100 transition-colors duration-150"
               >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+                <div className="px-3 py-3 flex items-center gap-3">
+                  <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
+                    {initials}
+                  </Avatar>
+                  <div className="flex flex-col min-w-0 leading-tight">
+                    <Text size="sm" fw={600} className="truncate text-gray-900">
+                      {displayName}
+                    </Text>
+                    <Text size="xs" className="truncate text-gray-500 mt-0.5">
+                      {session?.user?.email || "Email"}
+                    </Text>
+                  </div>
+                </div>
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                component={Link}
+                href="/admin/settings"
+                leftSection={<IconSettings size={16} className="text-zinc-500" />}
+              >
+                Cài đặt
+              </Menu.Item>
+              <Menu.Item leftSection={<IconCrown size={16} className="text-zinc-500" />}>
+                Nâng cấp gói
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item color="red" leftSection={<IconLogout size={16} className="text-red-500" />} onClick={() => signOut()}>
+                Đăng xuất
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/70 px-4 backdrop-blur-md md:px-6">
-          <div className="flex flex-1 items-center gap-4">
-            <div className="relative hidden max-w-sm flex-1 lg:max-w-md sm:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={
-                  pathname === '/admin' || pathname === '/admin/'
-                    ? "Search analytics..."
-                    : pathname.includes('documents')
-                      ? "Global search for documents..."
-                      : "Global search..."
-                }
-                className="h-9 w-full rounded-full border border-border bg-muted/30 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
-              />
-            </div>
-
-            {(pathname === '/admin' || pathname === '/admin/') && (
-              <div className="ml-4 hidden h-14 items-center gap-6 lg:flex">
-              </div>
-            )}
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white/70 px-6 backdrop-blur-md md:px-8">
+          <div className="flex min-w-0 items-center gap-4">
+            <Text size="sm" fw={700} className="truncate text-gray-900 md:max-w-[500px]">
+              {pageTitle}
+            </Text>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-              <Bell className="h-4 w-4" />
-            </button>
+          <Group gap="sm">
+            <UnstyledButton className="relative rounded-md p-2 text-gray-400 transition-colors hover:bg-zinc-100 hover:text-gray-600">
+              <IconBell size={20} />
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-green-500" />
+            </UnstyledButton>
 
-            {(pathname === '/admin' || pathname === '/admin/') ? (
-              <button className="hidden h-9 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary/90 sm:flex">
-                New Session
-              </button>
-            ) : (
-              <button className="hidden h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:flex">
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-            )}
-
-          </div>
+            <Badge color="dark" variant="light" size="md">
+              Admin workspace
+            </Badge>
+          </Group>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

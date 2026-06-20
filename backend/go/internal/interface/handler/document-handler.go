@@ -592,14 +592,26 @@ func (h *DocumentHandler) Dashboard(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Router /api/documents/lookups [get]
 func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
-	subjects, _ := h.service.GetSubjects(c.Request.Context())
+	var subjects interface{}
+	if roleIDVal, exists := c.Get("role_id"); exists && roleIDVal.(int16) == 2 {
+		userID := c.MustGet("user_id").(uuid.UUID)
+		assignedSubjects, err := h.service.GetAssignedSubjectsByLecturer(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		subjects = assignedSubjects
+	} else {
+		allSubjects, _ := h.service.GetSubjects(c.Request.Context())
+		subjects = allSubjects
+	}
 	types, _ := h.service.GetDocumentTypes(c.Request.Context())
 	langs, _ := h.service.GetLanguages(c.Request.Context())
 	sources, _ := h.service.GetDocumentSources(c.Request.Context())
 	terms, _ := h.service.GetAcademicTerms(c.Request.Context())
 
 	c.JSON(http.StatusOK, gin.H{
-		"subjects":         subjects,
+		"subjects":        subjects,
 		"documentTypes":   types,
 		"languages":       langs,
 		"documentSources": sources,

@@ -45,6 +45,10 @@ type AcademicTermInput struct {
 	Order int    `json:"order"`
 }
 
+type LecturerSubjectAssignmentInput struct {
+	SubjectIDs []string `json:"subjectIds"`
+}
+
 // Users godoc
 // @Summary List all users
 // @Description Get a list of all users in the system (Admin only)
@@ -111,6 +115,92 @@ func (h *AdminHandler) UnblockUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "User unblocked successfully"})
+}
+
+// LecturerSubjectAssignments godoc
+// @Summary List lecturer subject assignments
+// @Description Get all lecturer-subject assignments (Admin only)
+// @Tags admin-assignments
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} application.LecturerSubjectAssignmentDto
+// @Failure 500 {object} map[string]string
+// @Router /api/admin/user-subjects [get]
+func (h *AdminHandler) LecturerSubjectAssignments(c *gin.Context) {
+	assignments, err := h.service.GetLecturerSubjectAssignments(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, assignments)
+}
+
+// LecturerSubjects godoc
+// @Summary Get lecturer subjects
+// @Description Get subjects assigned to a lecturer (Admin only)
+// @Tags admin-assignments
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Lecturer user ID (UUID)"
+// @Success 200 {array} application.LecturerSubjectAssignmentDto
+// @Failure 400 {object} map[string]string
+// @Router /api/admin/lecturers/{id}/subjects [get]
+func (h *AdminHandler) LecturerSubjects(c *gin.Context) {
+	lecturerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lecturer ID format"})
+		return
+	}
+
+	assignments, err := h.service.GetLecturerSubjectAssignmentsByLecturer(c.Request.Context(), lecturerID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, assignments)
+}
+
+// ReplaceLecturerSubjects godoc
+// @Summary Replace lecturer subject assignments
+// @Description Assign multiple subjects to one lecturer. A subject can only be assigned to one lecturer.
+// @Tags admin-assignments
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Lecturer user ID (UUID)"
+// @Param body body handler.LecturerSubjectAssignmentInput true "Subject IDs"
+// @Success 200 {array} application.LecturerSubjectAssignmentDto
+// @Failure 400 {object} map[string]string
+// @Router /api/admin/lecturers/{id}/subjects [put]
+func (h *AdminHandler) ReplaceLecturerSubjects(c *gin.Context) {
+	lecturerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lecturer ID format"})
+		return
+	}
+
+	var input LecturerSubjectAssignmentInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	subjectIDs := make([]uuid.UUID, 0, len(input.SubjectIDs))
+	for _, rawID := range input.SubjectIDs {
+		subjectID, err := uuid.Parse(rawID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid subject ID format: " + rawID})
+			return
+		}
+		subjectIDs = append(subjectIDs, subjectID)
+	}
+
+	assignments, err := h.service.ReplaceLecturerSubjectAssignments(c.Request.Context(), lecturerID, subjectIDs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, assignments)
 }
 
 // Documents godoc
