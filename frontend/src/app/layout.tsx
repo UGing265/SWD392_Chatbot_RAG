@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Newsreader } from "next/font/google";
 import { Toaster } from "sonner";
+import { ColorSchemeScript } from "@mantine/core";
 
 import { Providers } from "./providers";
 import "./globals.css";
@@ -31,7 +32,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="vi"
       className={`${serifFont.variable} ${jetbrainsMono.variable}`}
+      data-mantine-color-scheme="dark"
     >
+      <head>
+        <ColorSchemeScript defaultColorScheme="dark" />
+      </head>
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
         <Toaster position="top-right" richColors />
