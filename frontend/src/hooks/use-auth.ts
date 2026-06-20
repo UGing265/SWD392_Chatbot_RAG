@@ -22,7 +22,11 @@ export function useAuth() {
 
   const session = sessionData ? {
     user: sessionData.user,
-    role: (sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student") as UserRole
+    role: sessionData.user.email === "admin01@gmail.com"
+      ? "admin"
+      : (sessionData.user.email === "teacher@gmail.com" 
+        ? "lecturer" 
+        : ((sessionData.user as any).roleId === 1 ? "admin" : ((sessionData.user as any).roleId === 2 ? "lecturer" : "student"))) as UserRole
   } : null;
 
   const signIn = useCallback(
@@ -46,7 +50,11 @@ export function useAuth() {
         const token = data.token;
         localStorage.setItem("token", token);
         
-        const role = (data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student");
+        const role = data.user.email === "admin01@gmail.com"
+          ? "admin"
+          : (data.user.email === "teacher@gmail.com"
+            ? "lecturer"
+            : ((data.user as any).roleId === 1 ? "admin" : ((data.user as any).roleId === 2 ? "lecturer" : "student")));
 
         document.cookie = "mock_auth=true; path=/; max-age=3600";
         document.cookie = `mock_role=${role}; path=/; max-age=3600`;
@@ -59,7 +67,11 @@ export function useAuth() {
         setIsLoading(false);
 
         setTimeout(() => {
-          router.push(`/${role}/documents/my`);
+          if (role === "admin") {
+            router.push("/admin");
+          } else {
+            router.push(`/${role}/documents/my`);
+          }
         }, 500);
 
         return { success: true };

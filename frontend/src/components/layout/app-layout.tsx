@@ -48,7 +48,6 @@ const nav = [
   { to: "/upload", label: "Tải lên", icon: Upload, badge: undefined, lecturerOnly: true },
   { to: "/documents/my", label: "Tài liệu của tôi", icon: FileText, badge: "12", lecturerOnly: true },
   { to: "/documents/shared", label: "Tài liệu", icon: FileText, badge: undefined },
-  { to: "/practice", label: "Luyện Tập", icon: BookOpen, badge: "Mới" },
   { to: "/sessions", label: "Phiên hội thoại", icon: History, badge: "6", studentOnly: true },
   { to: "/settings", label: "Cài đặt", icon: Settings },
 ];

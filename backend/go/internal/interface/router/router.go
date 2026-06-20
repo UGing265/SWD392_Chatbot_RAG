@@ -95,12 +95,14 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 
 		// Student & Lecturer documents list
 		protected.GET("/documents", middleware.RequireRoles(2, 3), documentHandler.List)
-		protected.GET("/documents/:slug", middleware.RequireRoles(1, 2, 3), documentHandler.Details)
 
 		// Lecturer specific document actions
 		protected.GET("/documents/my", middleware.RequireRoles(2), documentHandler.MyDocuments)
 		protected.GET("/documents/dashboard", middleware.RequireRoles(2), documentHandler.Dashboard)
 		protected.POST("/documents/upload", middleware.RequireRoles(2), documentHandler.Upload)
+
+		// Details lookup by wildcard (must be registered after static paths)
+		protected.GET("/documents/:slug", middleware.RequireRoles(1, 2, 3), documentHandler.Details)
 		protected.POST("/documents/:slug/edit", middleware.RequireRoles(2), documentHandler.Edit)
 		protected.POST("/documents/:slug/delete", middleware.RequireRoles(2), documentHandler.Delete)
 		protected.GET("/documents/:slug/delete-view", middleware.RequireRoles(2), documentHandler.DeleteViewData)

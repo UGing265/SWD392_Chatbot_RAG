@@ -225,7 +225,7 @@ func (h *ChatHandler) DeleteSession(c *gin.Context) {
 		return
 	}
 
-	if err := h.useCase.DeleteSession(c.Request.Context(), userID, sessionID); err != nil {
+	if err := h.useCase.DeleteSession(c.Request.Context(), sessionID, userID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

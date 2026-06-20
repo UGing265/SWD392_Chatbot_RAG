@@ -3,10 +3,19 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Search, FileText, Loader2, Trash2, BookOpen, Calendar, Lock, Globe, FolderOpen, ArrowUpDown } from "lucide-react";
+import { Search, FileText, Loader2, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface Document {
   id: string;
@@ -29,6 +38,7 @@ export function MyDocumentsView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "subject" | "term">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const useMockData = () => {
     const mockDocuments: Document[] = [
@@ -112,7 +122,7 @@ export function MyDocumentsView() {
   );
 
   const handleDelete = async (docId: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+    if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
 
     try {
       const response = await fetch(`http://localhost:8080/api/documents/${docId}/delete`, {
@@ -130,135 +140,167 @@ export function MyDocumentsView() {
     }
   };
 
+  const toggleAll = () => {
+    if (selected.size === filteredDocuments.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filteredDocuments.map((d) => d.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto max-w-6xl p-6 py-12">
-        {/* Header */}
-        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
-              <FolderOpen className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Tài liệu của tôi
-              </h1>
-              <p className="text-muted-foreground">Quản lý tài liệu cá nhân của bạn</p>
-            </div>
-          </div>
+    <div className="p-4 md:p-6 lg:p-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Tài liệu của tôi
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">Quản lý tài liệu cá nhân của bạn</p>
+      </div>
 
-          {/* Search and Sort Controls */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Tìm kiếm tài liệu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 rounded-xl border-gray-200 focus:border-blue-400"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={sortBy} onValueChange={(value: "date" | "subject" | "term") => setSortBy(value)}>
-                <SelectTrigger className="w-[180px] rounded-xl">
-                  <SelectValue placeholder="Sắp xếp theo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Ngày tạo</SelectItem>
-                  <SelectItem value="subject">Môn học</SelectItem>
-                  <SelectItem value="term">Kỳ học</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                className="rounded-xl"
-              >
-                <ArrowUpDown className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      {/* Search & Sort Controls */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 max-w-md w-full">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm tài liệu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-11 w-full rounded-2xl border border-border/60 bg-white pl-11 pr-4 text-sm shadow-soft focus:border-primary/40 focus:outline-none focus:ring-4 focus:ring-primary/5"
+          />
         </div>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Select value={sortBy} onValueChange={(value: "date" | "subject" | "term") => setSortBy(value)}>
+            <SelectTrigger className="w-[180px] rounded-xl bg-white shadow-soft">
+              <SelectValue placeholder="Sắp xếp theo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Ngày tạo</SelectItem>
+              <SelectItem value="subject">Môn học</SelectItem>
+              <SelectItem value="term">Kỳ học</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            className="rounded-xl bg-white shadow-soft h-10 w-10 shrink-0"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-        {/* Documents Grid */}
+      {/* Table wrapper */}
+      <div className="rounded-2xl border border-border/60 bg-white shadow-soft overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-20 animate-in fade-in duration-500">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : filteredDocuments.length === 0 ? (
-          <div className="text-center py-20 animate-in fade-in duration-500">
-            <div className="flex h-24 w-24 items-center justify-center mx-auto mb-6 rounded-3xl bg-gradient-to-br from-gray-100 to-gray-200">
-              <FileText className="h-12 w-12 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có tài liệu nào</h3>
-            <p className="text-muted-foreground">Bắt đầu tải lên tài liệu của bạn</p>
+          <div className="py-20 text-center text-muted-foreground">
+            <FileText className="mx-auto mb-4 h-12 w-12 opacity-35" />
+            <h3 className="text-lg font-semibold text-foreground mb-1">Chưa có tài liệu nào</h3>
+            <p className="text-sm">Bắt đầu bằng việc tải lên tài liệu mới của bạn.</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            {filteredDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => router.push(`/${role}/documents/${doc.slug || doc.id}`)}
-                className="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <FileText className="h-7 w-7 text-white" />
-                  </div>
-                  <span
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-                      doc.visibility === "public"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {doc.visibility === "public" ? (
-                      <span className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        Công khai
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 pl-5">
+                  <Checkbox
+                    checked={filteredDocuments.length > 0 && selected.size === filteredDocuments.length}
+                    onCheckedChange={toggleAll}
+                  />
+                </TableHead>
+                <TableHead>Tên tài liệu</TableHead>
+                <TableHead>Môn học</TableHead>
+                <TableHead>Kỳ học</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead>Phạm vi</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="pr-5 text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDocuments.map((doc) => {
+                const isCompleted = doc.status === "completed";
+                const isProcessing = doc.status === "processing" || doc.status === "pending";
+
+                return (
+                  <TableRow key={doc.id}>
+                    <TableCell className="pl-5">
+                      <Checkbox
+                        checked={selected.has(doc.id)}
+                        onCheckedChange={() => toggleOne(doc.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground max-w-[240px] truncate">
+                      <button
+                        onClick={() => router.push(`/${role}/documents/${doc.slug || doc.id}`)}
+                        className="hover:text-primary hover:underline text-left font-semibold"
+                      >
+                        {doc.title}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      {doc.subject_name ? (
+                        <span className="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-sky-100 text-sky-700">
+                          {doc.subject_name}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {doc.academic_term_name || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(doc.created_at).toLocaleDateString("vi-VN")}
+                    </TableCell>
+                    <TableCell>
+                      <span className={cn(
+                        "inline-flex items-center gap-1 text-xs font-medium",
+                        doc.visibility === "public" || doc.visibility === "school_wide" ? "text-emerald-600" : "text-gray-500"
+                      )}>
+                        {doc.visibility === "public" || doc.visibility === "school_wide" ? "Công khai" : "Riêng tư"}
                       </span>
-                    ) : (
-                      <span className="flex items-center gap-1">
-                        <Lock className="h-3 w-3" />
-                        Riêng tư
+                    </TableCell>
+                    <TableCell>
+                      <span className={cn(
+                        "inline-flex items-center gap-1.5 text-xs font-semibold",
+                        isCompleted ? "text-emerald-600" : (isProcessing ? "text-blue-600" : "text-red-600")
+                      )}>
+                        {isCompleted ? "Hoàn thành" : (isProcessing ? "Đang xử lý" : "Thất bại")}
                       </span>
-                    )}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {doc.title}
-                </h3>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <BookOpen className="h-4 w-4 text-blue-500" />
-                    <span>{doc.subject_name || "Không có môn học"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Calendar className="h-4 w-4 text-purple-500" />
-                    <span>{doc.academic_term_name || "Không có kỳ học"}</span>
-                  </div>
-                </div>
-                {doc.description && (
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{doc.description}</p>
-                )}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-xs text-gray-400">
-                    {new Date(doc.created_at).toLocaleDateString("vi-VN")}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(doc.id)}
-                    className="h-9 w-9 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    </TableCell>
+                    <TableCell className="pr-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(doc.id);
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          title="Xóa tài liệu"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
       </div>
     </div>

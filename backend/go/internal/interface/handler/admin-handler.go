@@ -23,7 +23,7 @@ func NewAdminHandler(service *application.DocumentService) *AdminHandler {
 type SubjectInput struct {
 	Code           string  `json:"code" binding:"required"`
 	Name           string  `json:"name" binding:"required"`
-	AcademicTermID *string `json:"academicTermId"`
+	AcademicTermID *string `json:"academic_term_id"`
 }
 
 type DocumentTypeInput struct {

@@ -131,7 +131,7 @@ func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.
 		LEFT JOIN languages l ON d.language_id = l.id
 		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
-		WHERE d.status = 'completed' AND (u.role_id = 1 OR u.role_id = 2) AND d.visibility <> 'private'
+		WHERE d.status IN ('completed', 'approved') AND (u.role_id = 1 OR u.role_id = 2) AND d.visibility <> 'private'
 	`)
 
 	var args []interface{}
@@ -251,7 +251,7 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 		LEFT JOIN languages l ON d.language_id = l.id
 		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
-		WHERE d.owner_user_id = $1 AND d.status = 'completed'
+		WHERE d.owner_user_id = $1 AND d.status IN ('completed', 'approved')
 	`)
 
 	args := []interface{}{ownerID}

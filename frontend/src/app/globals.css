@@ -138,8 +138,7 @@
     -webkit-font-smoothing: antialiased;
     background-image:
       radial-gradient(at 12% 8%, oklch(0.95 0.035 240 / 0.55) 0px, transparent 50%),
-      radial-gradient(at 88% 12%, oklch(0.96 0.03 290 / 0.5) 0px, transparent 50%),
-      radial-gradient(at 50% 96%, oklch(0.96 0.035 160 / 0.4) 0px, transparent 50%);
+      radial-gradient(at 88% 12%, oklch(0.96 0.015 240 / 0.3) 0px, transparent 50%);
     background-attachment: fixed;
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CloudUpload, FileText, CheckCircle2, Loader2, X, BookOpen, Calendar, Lock, Globe } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { CloudUpload, FileText, CheckCircle2, Loader2, X, BookOpen, Calendar, Lock, Globe, Languages, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface Subject {
   id: string;
@@ -24,20 +26,46 @@ interface AcademicTerm {
   name: string;
 }
 
+interface DocumentType {
+  id: string;
+  name: string;
+}
+
+interface Language {
+  id: string;
+  name: string;
+}
+
+interface DocumentSource {
+  id: string;
+  name: string;
+}
+
 export function UploadView() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const role = pathname.split("/")[1] || "lecturer";
+
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [termId, setTermId] = useState("");
+  const [typeId, setTypeId] = useState("");
+  const [langId, setLangId] = useState("");
+  const [sourceId, setSourceId] = useState("");
   const [visibility, setVisibility] = useState("private");
+  
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
-  useEffect(() => {
-    // Mock data for development
+  const useMockData = () => {
     const mockSubjects: Subject[] = [
       { id: "1", name: "Lập trình Web" },
       { id: "2", name: "Cơ sở dữ liệu" },
@@ -51,8 +79,58 @@ export function UploadView() {
       { id: "3", name: "HK1 2025-2026" },
     ];
 
+    const mockTypes: DocumentType[] = [
+      { id: "1", name: "Slide Bài giảng" },
+      { id: "2", name: "Giáo trình" },
+      { id: "3", name: "Đề thi" },
+    ];
+
+    const mockLangs: Language[] = [
+      { id: "1", name: "Tiếng Việt" },
+      { id: "2", name: "Tiếng Anh" },
+    ];
+
+    const mockSources: DocumentSource[] = [
+      { id: "1", name: "Tự soạn" },
+      { id: "2", name: "Sưu tầm" },
+    ];
+
     setSubjects(mockSubjects);
     setTerms(mockTerms);
+    setDocumentTypes(mockTypes);
+    setLanguages(mockLangs);
+    setDocumentSources(mockSources);
+  };
+
+  const fetchLookups = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/documents/lookups", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSubjects(data.subjects || []);
+        const sortedTerms = (data.academicTerms || []).sort(
+          (a: any, b: any) => (a.term_order || 0) - (b.term_order || 0)
+        );
+        setTerms(sortedTerms);
+        setDocumentTypes(data.documentTypes || []);
+        setLanguages(data.languages || []);
+        setDocumentSources(data.documentSources || []);
+      } else {
+        console.warn("Failed to fetch lookups, falling back to mock data");
+        useMockData();
+      }
+    } catch (error) {
+      console.error("Failed to fetch lookups:", error);
+      useMockData();
+    }
+  };
+
+  useEffect(() => {
+    fetchLookups();
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +144,18 @@ export function UploadView() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) {
+      alert("Vui lòng chọn file.");
+      return;
+    }
+    if (!subjectId) {
+      alert("Vui lòng chọn môn học.");
+      return;
+    }
+    if (!termId) {
+      alert("Vui lòng chọn kỳ học.");
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
@@ -76,6 +165,16 @@ export function UploadView() {
     formData.append("subject_id", subjectId);
     formData.append("academic_term_id", termId);
     formData.append("visibility", visibility);
+
+    if (typeId && typeId !== "none") {
+      formData.append("document_type_id", typeId);
+    }
+    if (langId && langId !== "none") {
+      formData.append("language_id", langId);
+    }
+    if (sourceId && sourceId !== "none") {
+      formData.append("document_source_id", sourceId);
+    }
 
     try {
       const response = await fetch("http://localhost:8080/api/documents/upload", {
@@ -91,6 +190,7 @@ export function UploadView() {
         setTimeout(() => {
           setUploaded(false);
           resetForm();
+          router.push(`/${role}/documents/my`);
         }, 2000);
       } else {
         const error = await response.json();
@@ -110,6 +210,9 @@ export function UploadView() {
     setDescription("");
     setSubjectId("");
     setTermId("");
+    setTypeId("");
+    setLangId("");
+    setSourceId("");
     setVisibility("private");
   };
 
@@ -122,184 +225,248 @@ export function UploadView() {
 
   if (uploaded) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center p-6">
         <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-200">
-            <CheckCircle2 className="h-12 w-12 text-white" />
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-soft">
+            <CheckCircle2 className="h-10 w-10 animate-bounce" />
           </div>
-          <h2 className="mb-3 text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <h2 className="mb-2 text-2xl font-bold text-foreground">
             Tải lên thành công!
           </h2>
-          <p className="text-muted-foreground text-lg">Tài liệu của bạn đang được xử lý</p>
+          <p className="text-muted-foreground text-sm">Tài liệu của bạn đang được xử lý</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto max-w-4xl p-6 py-12">
-        {/* Header */}
-        <div className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="inline-flex items-center justify-center mb-4 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2">
-            <CloudUpload className="h-4 w-4 mr-2 text-blue-600" />
-            <span className="text-sm font-medium text-blue-700">Tài liệu giáo dục</span>
-          </div>
-          <h1 className="mb-3 text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Tải lên tài liệu mới
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Chia sẻ tài liệu giảng dạy với sinh viên của bạn. Hỗ trợ PDF, DOC, DOCX, PPT, PPTX
-          </p>
+    <div className="p-4 md:p-6 lg:p-8 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Tải lên tài liệu mới
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Chia sẻ tài liệu giảng dạy với sinh viên của bạn. Hỗ trợ PDF, DOC, DOCX, PPT, PPTX.
+        </p>
+      </div>
+
+      <form onSubmit={handleUpload} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* File Upload Area */}
+        <div className="relative group">
+          <input
+            type="file"
+            id="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="file"
+            className={cn(
+              "relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-10 md:p-14 transition-all duration-300",
+              file
+                ? "border-primary bg-primary-soft/30 shadow-soft"
+                : "border-border bg-white hover:border-primary/50 hover:bg-muted/15 hover:shadow-soft"
+            )}
+          >
+            {file ? (
+              <div className="flex w-full items-center gap-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
+                  <FileText className="h-8 w-8" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate font-semibold text-base text-foreground">{file.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    removeFile();
+                  }}
+                  disabled={uploading}
+                  className="h-10 w-10 rounded-full hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm group-hover:scale-105 transition-transform duration-300">
+                  <CloudUpload className="h-8 w-8" />
+                </div>
+                <p className="mb-1 font-semibold text-lg text-foreground">Kéo và thả file vào đây</p>
+                <p className="text-sm text-muted-foreground">hoặc nhấp để chọn file từ máy tính</p>
+                <div className="mt-5 flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="px-2.5 py-1 rounded-md bg-muted">PDF</span>
+                  <span className="px-2.5 py-1 rounded-md bg-muted">DOC</span>
+                  <span className="px-2.5 py-1 rounded-md bg-muted">DOCX</span>
+                  <span className="px-2.5 py-1 rounded-md bg-muted">PPT</span>
+                  <span className="px-2.5 py-1 rounded-md bg-muted">PPTX</span>
+                </div>
+              </>
+            )}
+          </label>
         </div>
 
-        <form onSubmit={handleUpload} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-          {/* File Upload Area */}
-          <div className="relative group">
-            <input
-              type="file"
-              id="file"
-              accept=".pdf,.doc,.docx,.ppt,.pptx"
-              onChange={handleFileChange}
-              className="hidden"
+        {/* Document Details */}
+        <div className="rounded-2xl border border-border/60 bg-white p-6 md:p-8 shadow-soft space-y-6">
+          <div className="grid gap-2">
+            <Label htmlFor="title" className="text-sm font-semibold text-foreground">Tiêu đề tài liệu</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Nhập tiêu đề tài liệu"
+              required
               disabled={uploading}
+              className="h-11 text-sm rounded-xl border border-border bg-white focus-visible:ring-1 focus-visible:ring-primary shadow-soft"
             />
-            <label
-              htmlFor="file"
-              className={`relative flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-16 transition-all duration-300 ${
-                file
-                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg shadow-blue-100"
-                  : "border-gray-300 bg-white hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 hover:shadow-lg hover:shadow-blue-100"
-              }`}
-            >
-              {file ? (
-                <div className="flex w-full items-center gap-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
-                    <FileText className="h-10 w-10 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-semibold text-lg text-gray-900">{file.name}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      removeFile();
-                    }}
-                    disabled={uploading}
-                    className="h-12 w-12 rounded-full hover:bg-red-50 hover:text-red-600"
-                  >
-                    <X className="h-6 w-6" />
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <CloudUpload className="h-10 w-10 text-white" />
-                  </div>
-                  <p className="mb-2 font-semibold text-xl text-gray-900">Kéo và thả file vào đây</p>
-                  <p className="text-gray-500">hoặc nhấp để chọn file từ máy tính</p>
-                  <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
-                    <span className="px-3 py-1 rounded-full bg-gray-100">PDF</span>
-                    <span className="px-3 py-1 rounded-full bg-gray-100">DOC</span>
-                    <span className="px-3 py-1 rounded-full bg-gray-100">DOCX</span>
-                    <span className="px-3 py-1 rounded-full bg-gray-100">PPT</span>
-                    <span className="px-3 py-1 rounded-full bg-gray-100">PPTX</span>
-                  </div>
-                </>
-              )}
-            </label>
           </div>
 
-          {/* Document Details */}
-          <div className="bg-white rounded-3xl shadow-xl shadow-gray-100 p-8 space-y-6">
+          <div className="grid gap-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-foreground">Mô tả ngắn gọn</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Mô tả ngắn về nội dung tài liệu..."
+              rows={3}
+              disabled={uploading}
+              className="rounded-xl border border-border bg-white text-sm focus-visible:ring-1 focus-visible:ring-primary resize-none shadow-soft"
+            />
+          </div>
+
+          {/* Academic Info */}
+          <div className="grid gap-6 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="title" className="text-base font-semibold text-gray-700">Tiêu đề tài liệu</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Nhập tiêu đề tài liệu"
-                required
-                disabled={uploading}
-                className="h-12 text-base rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-              />
+              <Label htmlFor="subject" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Môn học *
+              </Label>
+              <Select value={subjectId} onValueChange={setSubjectId} disabled={uploading}>
+                <SelectTrigger id="subject" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
+                  <SelectValue placeholder="Chọn môn học" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description" className="text-base font-semibold text-gray-700">Mô tả ngắn gọn</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả ngắn về nội dung tài liệu..."
-                rows={3}
-                disabled={uploading}
-                className="rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
-              />
+              <Label htmlFor="term" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                Kỳ học *
+              </Label>
+              <Select value={termId} onValueChange={setTermId} disabled={uploading}>
+                <SelectTrigger id="term" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
+                  <SelectValue placeholder="Chọn kỳ học" />
+                </SelectTrigger>
+                <SelectContent>
+                  {terms.map((term) => (
+                    <SelectItem key={term.id} value={term.id}>
+                      {term.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="subject" className="text-base font-semibold text-gray-700 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                  Môn học
-                </Label>
-                <Select value={subjectId} onValueChange={setSubjectId} disabled={uploading}>
-                  <SelectTrigger id="subject" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Chọn môn học" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="term" className="text-base font-semibold text-gray-700 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-purple-600" />
-                  Kỳ học
-                </Label>
-                <Select value={termId} onValueChange={setTermId} disabled={uploading}>
-                  <SelectTrigger id="term" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Chọn kỳ học" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {terms.map((term) => (
-                      <SelectItem key={term.id} value={term.id}>
-                        {term.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Additional Document Metadata */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="documentType" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Loại tài liệu
+              </Label>
+              <Select value={typeId} onValueChange={setTypeId} disabled={uploading}>
+                <SelectTrigger id="documentType" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
+                  <SelectValue placeholder="Chọn loại học liệu (tùy chọn)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Không chọn</SelectItem>
+                  {documentTypes.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="visibility" className="text-base font-semibold text-gray-700">Quyền riêng tư</Label>
+              <Label htmlFor="language" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Languages className="h-4 w-4 text-primary" />
+                Ngôn ngữ
+              </Label>
+              <Select value={langId} onValueChange={setLangId} disabled={uploading}>
+                <SelectTrigger id="language" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
+                  <SelectValue placeholder="Chọn ngôn ngữ (tùy chọn)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Không chọn</SelectItem>
+                  {languages.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="documentSource" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Database className="h-4 w-4 text-primary" />
+                Nguồn tài liệu
+              </Label>
+              <Select value={sourceId} onValueChange={setSourceId} disabled={uploading}>
+                <SelectTrigger id="documentSource" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
+                  <SelectValue placeholder="Chọn nguồn (tùy chọn)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Không chọn</SelectItem>
+                  {documentSources.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="visibility" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Globe className="h-4 w-4 text-primary" />
+                Quyền riêng tư
+              </Label>
               <Select value={visibility} onValueChange={setVisibility} disabled={uploading}>
-                <SelectTrigger id="visibility" className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                <SelectTrigger id="visibility" className="h-11 rounded-xl border border-border bg-white focus:ring-1 focus:ring-primary shadow-soft">
                   <SelectValue placeholder="Chọn quyền riêng tư" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">
                     <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-gray-500" />
+                      <Lock className="h-4 w-4 text-muted-foreground" />
                       <span>Riêng tư (chỉ mình tôi)</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="public">
+                  <SelectItem value="school_wide">
                     <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-green-500" />
+                      <Globe className="h-4 w-4 text-emerald-600" />
                       <span>Công khai (tài liệu chung)</span>
                     </div>
                   </SelectItem>
@@ -307,26 +474,26 @@ export function UploadView() {
               </Select>
             </div>
           </div>
+        </div>
 
-          <Button
-            type="submit"
-            className="w-full h-14 text-base font-semibold rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-blue-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-300"
-            disabled={!file || uploading}
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                Đang tải lên...
-              </>
-            ) : (
-              <>
-                <CloudUpload className="mr-3 h-5 w-5" />
-                Tải lên tài liệu
-              </>
-            )}
-          </Button>
-        </form>
-      </div>
+        <Button
+          type="submit"
+          className="w-full h-12 text-sm font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft transition-all duration-300"
+          disabled={!file || uploading}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Đang tải lên...
+            </>
+          ) : (
+            <>
+              <CloudUpload className="mr-2 h-4 w-4" />
+              Tải lên tài liệu
+            </>
+          )}
+        </Button>
+      </form>
     </div>
   );
 }
