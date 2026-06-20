@@ -32,8 +32,6 @@ const nav = [
   { to: "/documents/shared", label: "Tài liệu chung", icon: IconBook },
   { to: "/documents/my", label: "Tài liệu riêng", icon: IconFileText, lecturerOnly: true },
   { to: "/upload", label: "Upload Tài liệu", icon: IconUpload, lecturerOnly: true },
-  { to: "/quiz/create", label: "Tạo Quiz", icon: IconPlus, lecturerOnly: true },
-  { to: "/quiz/take", label: "Làm Quiz", icon: IconClipboardList, studentOnly: true },
 ];
 
 function getRoleLabel(role?: string) {

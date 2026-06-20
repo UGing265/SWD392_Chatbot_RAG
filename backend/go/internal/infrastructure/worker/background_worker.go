@@ -182,6 +182,10 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 
 			chContent := strings.ToValidUTF8(tc.Content, "")
 			chContent = strings.ReplaceAll(chContent, "\x00", " ")
+			chContent = strings.TrimSpace(chContent)
+			if chContent == "" {
+				continue
+			}
 
 			ch := &chunk.Chunk{
 				ID:         uuid.New(),

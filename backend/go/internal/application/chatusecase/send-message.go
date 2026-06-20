@@ -16,7 +16,7 @@ import (
 const (
 	topKChunks         = 5
 	maxHistoryMessages = 20
-	similarityThreshold = 0.6
+	similarityThreshold = 0.5
 	outOfScopeReply    = "Xin lỗi, thông tin này không có trong giáo trình. Vui lòng tham khảo thêm tài liệu khác hoặc hỏi giảng viên trên lớp."
 )
 

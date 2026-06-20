@@ -62,11 +62,11 @@ export function MyDocumentsView() {
         {/* Header */}
         <div className="mb-8">
           <Group gap="md" align="center" mb="lg">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#0EA5E9] shadow-lg text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111111] shadow-lg text-white">
               <IconFolderOpen size={24} />
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-[#0EA5E9] bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-[#f8fafc]">
                 Tài liệu của tôi
               </h1>
               <Text c="dimmed">Quản lý tài liệu cá nhân của bạn</Text>
@@ -82,7 +82,7 @@ export function MyDocumentsView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               size="md"
-              radius="md"
+              radius="lg"
               style={{ minWidth: "250px" }}
             />
             <Group gap="xs">
@@ -95,14 +95,14 @@ export function MyDocumentsView() {
                   { value: "term", label: "Kỳ học" },
                 ]}
                 size="md"
-                radius="md"
+                radius="lg"
                 w={180}
               />
               <ActionIcon
                 variant="outline"
                 color="gray"
                 size="lg"
-                radius="md"
+                radius="lg"
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                 style={{ height: "42px", width: "42px" }}
               >
@@ -115,13 +115,13 @@ export function MyDocumentsView() {
         {/* Documents Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader size="xl" color="blue" />
+            <Loader size="xl" color="dark" />
           </div>
         ) : documents.length === 0 ? (
           <div className="text-center py-20">
             <Paper
               withBorder
-              radius="24px"
+              radius="lg"
               p="xl"
               bg="#ffffff"
               className="max-w-md mx-auto flex flex-col items-center justify-center py-12"
@@ -144,16 +144,16 @@ export function MyDocumentsView() {
                 padding="lg"
                 radius="lg"
                 withBorder
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-gray-100 hover:border-blue-200 bg-white"
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-gray-100 hover:border-zinc-800 bg-white"
               >
                 <Group justify="space-between" align="start" mb="md">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#0EA5E9] shadow-lg group-hover:scale-105 transition-transform duration-300 text-white">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#111111] shadow-lg group-hover:scale-105 transition-transform duration-300 text-white">
                     <IconFileText size={28} />
                   </div>
                   <Badge
                     variant="light"
                     color={doc.visibility === "public" ? "green" : "gray"}
-                    radius="xl"
+                    radius="lg"
                     py="md"
                     px="md"
                     leftSection={
@@ -167,18 +167,18 @@ export function MyDocumentsView() {
                 <Text
                   fw={700}
                   size="lg"
-                  className="mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors text-gray-900"
+                  className="mb-3 line-clamp-2 group-hover:text-[#111111] transition-colors text-gray-900"
                 >
                   {doc.title}
                 </Text>
 
                 <Stack gap="xs" mb="lg">
                   <Group gap="xs" className="text-gray-500 text-sm">
-                    <IconBook size={16} className="text-blue-500" />
+                    <IconBook size={16} className="text-zinc-500" />
                     <Text size="sm">{doc.subject_name || "Không có môn học"}</Text>
                   </Group>
                   <Group gap="xs" className="text-gray-500 text-sm">
-                    <IconCalendar size={16} className="text-purple-500" />
+                    <IconCalendar size={16} className="text-zinc-500" />
                     <Text size="sm">{doc.academic_term_name || "Không có kỳ học"}</Text>
                   </Group>
                 </Stack>
@@ -201,8 +201,8 @@ export function MyDocumentsView() {
                   <ActionIcon
                     variant="subtle"
                     color="red"
-                    onClick={(e) => handleDelete(e, doc.id)}
-                    radius="md"
+                    onClick={(e) => handleDelete(e, doc.slug)}
+                    radius="lg"
                     size="lg"
                     className="hover:bg-red-50"
                   >

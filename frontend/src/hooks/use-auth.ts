@@ -118,15 +118,8 @@ export function useAuth() {
 
         // 3. Fallback to roleId/role_id mapping in sessionData.user
         const userObj = sessionData.user as any;
-        const email = userObj.email || "";
-        if (email === "admin01@gmail.com") {
-          currentRole = "admin";
-        } else if (email === "teacher@gmail.com") {
-          currentRole = "lecturer";
-        } else {
-          const rId = userObj.roleId || userObj.role_id;
-          currentRole = Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student";
-        }
+        const rId = userObj.roleId || userObj.role_id;
+        currentRole = Number(rId) === 1 ? "admin" : Number(rId) === 2 ? "lecturer" : "student";
 
         return {
           user: sessionData.user,
@@ -187,23 +180,10 @@ export function useAuth() {
           }
         }
 
-        // Fallback for role resolution from data.user or email if not resolved via JWT
+        // Fallback for role resolution from data.user if not resolved via JWT
         if (role === "student") {
-          const lowerEmail = email.toLowerCase();
-          if (lowerEmail === "admin01@gmail.com") {
-            role = "admin";
-          } else if (lowerEmail === "teacher@gmail.com") {
-            role = "lecturer";
-          } else {
-            let loginRId = (data.user as any).roleId || (data.user as any).role_id;
-            if (!loginRId) {
-              if (lowerEmail.includes("admin")) loginRId = 1;
-              else if (lowerEmail.includes("lecturer") || lowerEmail.includes("gv"))
-                loginRId = 2;
-              else loginRId = 3;
-            }
-            role = Number(loginRId) === 1 ? "admin" : Number(loginRId) === 2 ? "lecturer" : "student";
-          }
+          const loginRId = (data.user as any).roleId || (data.user as any).role_id;
+          role = Number(loginRId) === 1 ? "admin" : Number(loginRId) === 2 ? "lecturer" : "student";
         }
 
         notify.success("Đăng nhập thành công!", "Đang chuyển hướng...");

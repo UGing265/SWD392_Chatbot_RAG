@@ -78,7 +78,7 @@ export function CreateQuizView() {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-zinc-50">
         <Stack align="center" gap="md">
-          <Center className="h-24 w-24 rounded-full bg-blue-600 shadow-lg shadow-blue-100">
+          <Center className="h-24 w-24 rounded-full bg-[#111111] shadow-lg">
             <IconCheck size={48} className="text-white" />
           </Center>
           <Text size="xl" fw={900} className="text-gray-900 text-center">
@@ -98,7 +98,7 @@ export function CreateQuizView() {
         {/* Header Section */}
         <Paper withBorder p="xl" radius="lg" className="bg-white">
           <Group gap="md" mb="xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#111111] text-white shadow-md">
               <IconHelp size={28} />
             </div>
             <div>
@@ -115,7 +115,7 @@ export function CreateQuizView() {
               placeholder="VD: Bài kiểm tra giữa kỳ 1"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              radius="md"
+              radius="lg"
               size="md"
             />
 
@@ -125,14 +125,14 @@ export function CreateQuizView() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               minRows={3}
-              radius="md"
+              radius="lg"
             />
 
             <div className="grid gap-6 md:grid-cols-2">
               <Select
                 label={
                   <Group gap={4} align="center">
-                    <IconCalendar size={14} className="text-blue-500" />
+                    <IconCalendar size={14} className="text-zinc-500" />
                     <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">Kỳ học</Text>
                   </Group>
                 }
@@ -140,13 +140,13 @@ export function CreateQuizView() {
                 value={termId}
                 onChange={setTermId}
                 data={terms.map((t) => ({ value: t.id, label: t.name }))}
-                radius="md"
+                radius="lg"
               />
 
               <Select
                 label={
                   <Group gap={4} align="center">
-                    <IconBook size={14} className="text-blue-500" />
+                    <IconBook size={14} className="text-zinc-500" />
                     <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">Môn học</Text>
                   </Group>
                 }
@@ -154,7 +154,7 @@ export function CreateQuizView() {
                 value={subjectId}
                 onChange={setSubjectId}
                 data={subjects.map((s) => ({ value: s.id, label: s.name }))}
-                radius="md"
+                radius="lg"
               />
             </div>
           </Stack>
@@ -173,7 +173,7 @@ export function CreateQuizView() {
                     placeholder="Nhập nội dung câu hỏi..."
                     value={q.text}
                     onChange={(e) => updateQuestionText(q.id, e.target.value)}
-                    radius="md"
+                    radius="lg"
                     size="sm"
                   />
                 </div>
@@ -183,7 +183,7 @@ export function CreateQuizView() {
                     color="red"
                     variant="subtle"
                     size="lg"
-                    radius="md"
+                    radius="lg"
                   >
                     <IconTrash size={20} />
                   </ActionIcon>
@@ -206,7 +206,7 @@ export function CreateQuizView() {
                       placeholder={`Lựa chọn ${oIndex + 1}`}
                       value={opt.text}
                       onChange={(e) => updateOptionText(q.id, opt.id, e.target.value)}
-                      radius="md"
+                      radius="lg"
                       className="flex-1"
                       styles={{
                         input: opt.isCorrect
@@ -229,7 +229,7 @@ export function CreateQuizView() {
 
                 <Button
                   variant="subtle"
-                  color="blue"
+                  color="gray"
                   onClick={() => addOption(q.id)}
                   leftSection={<IconPlus size={14} />}
                   className="w-fit"
@@ -251,10 +251,10 @@ export function CreateQuizView() {
         >
           <Button
             variant="outline"
-            color="blue"
+            color="gray"
             onClick={addQuestion}
             leftSection={<IconPlus size={16} />}
-            radius="md"
+            radius="lg"
           >
             Thêm câu hỏi mới
           </Button>
@@ -262,9 +262,9 @@ export function CreateQuizView() {
           <Button
             onClick={handleSave}
             disabled={saving || !title || !termId || !subjectId}
-            color="blue"
+            color="dark"
             leftSection={<IconDeviceFloppy size={16} />}
-            radius="md"
+            radius="lg"
           >
             {saving ? "Đang lưu..." : "Lưu Quiz"}
           </Button>

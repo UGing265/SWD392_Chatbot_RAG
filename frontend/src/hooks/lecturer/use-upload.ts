@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 export interface Subject {
   id: string;
   name: string;
+  academicTermId?: string;
 }
 
 export interface AcademicTerm {
@@ -19,8 +20,8 @@ export function useUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [subjectId, setSubjectId] = useState("");
-  const [termId, setTermId] = useState("");
+  const [subjectId, setSubjectIdRaw] = useState("");
+  const [termId, setTermIdRaw] = useState("");
   const [chapterId, setChapterId] = useState("");
   const [visibility, setVisibility] = useState("private");
   const [uploading, setUploading] = useState(false);
@@ -30,30 +31,68 @@ export function useUpload() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
 
   useEffect(() => {
-    // Mock data for development
-    const mockSubjects: Subject[] = [
-      { id: "1", name: "Lập trình Web" },
-      { id: "2", name: "Cơ sở dữ liệu" },
-      { id: "3", name: "Toán cao cấp" },
-      { id: "4", name: "Mạng máy tính" },
-    ];
+    const fetchLookups = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:8080/api/documents/lookups", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch lookups");
+        const data = await res.json();
 
-    const mockTerms: AcademicTerm[] = [
-      { id: "1", name: "HK1 2024-2025" },
-      { id: "2", name: "HK2 2024-2025" },
-      { id: "3", name: "HK1 2025-2026" },
-    ];
+        // 1. Get assigned subjects for the lecturer
+        const apiSubjects = data.subjects || [];
+        const mappedSubjects: Subject[] = apiSubjects.map((s: any) => ({
+          id: s.id,
+          name: `${s.code} - ${s.name}`,
+          academicTermId: s.academic_term_id || "",
+        }));
+        setSubjects(mappedSubjects);
 
-    const mockChapters: Chapter[] = [
-      { id: "1", name: "Chương 1: Tổng quan" },
-      { id: "2", name: "Chương 2: Cơ sở lý thuyết" },
-      { id: "3", name: "Chương 3: Phương pháp nghiên cứu" },
-    ];
+        // 2. Filter terms: only include terms associated with the assigned subjects
+        const assignedTermIds = new Set(apiSubjects.map((s: any) => s.academic_term_id).filter(Boolean));
+        const apiTerms = data.academicTerms || [];
+        const mappedTerms: AcademicTerm[] = apiTerms
+          .filter((t: any) => assignedTermIds.has(t.id))
+          .map((t: any) => ({
+            id: t.id,
+            name: t.name,
+          }));
+        setTerms(mappedTerms);
 
-    setSubjects(mockSubjects);
-    setTerms(mockTerms);
-    setChapters(mockChapters);
+        // Keep mock chapters since chapters are dynamically generated after upload
+        const mockChapters: Chapter[] = [
+          { id: "1", name: "Chương 1: Tổng quan" },
+          { id: "2", name: "Chương 2: Cơ sở lý thuyết" },
+          { id: "3", name: "Chương 3: Phương pháp nghiên cứu" },
+        ];
+        setChapters(mockChapters);
+      } catch (err) {
+        console.error("Failed to fetch lookups in useUpload:", err);
+      }
+    };
+    fetchLookups();
   }, []);
+
+  const setSubjectId = (id: string) => {
+    setSubjectIdRaw(id);
+    if (id) {
+      const sub = subjects.find((s) => s.id === id);
+      if (sub && sub.academicTermId) {
+        setTermIdRaw(sub.academicTermId);
+      }
+    }
+  };
+
+  const setTermId = (id: string) => {
+    setTermIdRaw(id);
+    if (id && subjectId) {
+      const sub = subjects.find((s) => s.id === subjectId);
+      if (sub && sub.academicTermId !== id) {
+        setSubjectIdRaw("");
+      }
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -69,8 +108,8 @@ export function useUpload() {
     setFile(null);
     setTitle("");
     setDescription("");
-    setSubjectId("");
-    setTermId("");
+    setSubjectIdRaw("");
+    setTermIdRaw("");
     setChapterId("");
     setVisibility("private");
   };

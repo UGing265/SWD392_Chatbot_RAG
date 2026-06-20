@@ -206,11 +206,11 @@ export function SharedDocumentsView() {
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
           <Group justify="space-between" align="center" className="mb-4">
             <Group gap="md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111111] text-white shadow-lg">
                 <IconFolderOpen size={24} />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold text-teal-600">Tài liệu chung</h1>
+                <h1 className="text-3xl font-extrabold text-[#111111]">Tài liệu chung</h1>
                 <Group gap="xs" className="text-sm font-semibold text-gray-500 mt-1">
                   <span
                     className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedTerm ? "text-gray-900" : ""}`}
@@ -249,7 +249,7 @@ export function SharedDocumentsView() {
                 variant="outline"
                 color="gray"
                 onClick={handleBack}
-                radius="md"
+                radius="lg"
               >
                 Quay lại
               </Button>
@@ -265,7 +265,7 @@ export function SharedDocumentsView() {
               .map(([year, yearTerms]) => (
                 <div key={year}>
                   <Group gap="xs" mb="md">
-                    <IconCalendar size={20} className="text-teal-600" />
+                    <IconCalendar size={20} className="text-[#111111]" />
                     <h2 className="text-lg font-bold text-gray-800">
                       Năm học {year}
                     </h2>
@@ -277,15 +277,15 @@ export function SharedDocumentsView() {
                         onClick={() => setSelectedTerm(term)}
                         withBorder
                         p="md"
-                        radius="md"
-                        className="cursor-pointer hover:border-teal-600 hover:shadow-md transition-all group bg-white"
+                        radius="lg"
+                        className="cursor-pointer hover:border-zinc-800 hover:shadow-md transition-all group bg-white"
                       >
                         <Group gap="md">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
                             <IconFolderOpen size={24} />
                           </div>
                           <div>
-                            <h3 className="text-base font-bold text-gray-800 group-hover:text-teal-600 transition-colors">
+                            <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors">
                               {term.name}
                             </h3>
                             <Text size="xs" c="dimmed" className="mt-0.5">Bấm để chọn kỳ học</Text>
@@ -301,7 +301,7 @@ export function SharedDocumentsView() {
           /* Level 2: Select Subject */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Group gap="xs" mb="md">
-              <IconBook size={20} className="text-teal-600" />
+              <IconBook size={20} className="text-[#111111]" />
               <h2 className="text-lg font-bold text-gray-800">
                 Chọn Môn Học
               </h2>
@@ -315,15 +315,15 @@ export function SharedDocumentsView() {
                     onClick={() => setSelectedSubject(subject)}
                     withBorder
                     p="md"
-                    radius="md"
-                    className="cursor-pointer hover:border-teal-600 hover:shadow-md transition-all group bg-white"
+                    radius="lg"
+                    className="cursor-pointer hover:border-zinc-800 hover:shadow-md transition-all group bg-white"
                   >
                     <Group gap="md">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
                         <IconBook size={24} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-gray-800 group-hover:text-teal-600 transition-colors line-clamp-2">
+                        <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors line-clamp-2">
                           {subject.name}
                         </h3>
                         <Text size="xs" c="dimmed" className="mt-1">Bấm để xem tài liệu</Text>
@@ -346,7 +346,7 @@ export function SharedDocumentsView() {
                 placeholder="Tìm kiếm tài liệu..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.currentTarget.value)}
-                radius="md"
+                radius="lg"
                 size="md"
                 leftSection={<IconSearch size={18} className="text-gray-400" />}
               />
@@ -355,7 +355,7 @@ export function SharedDocumentsView() {
 
             {loading ? (
               <div className="flex items-center justify-center py-20 animate-in fade-in duration-500">
-                <Loader size="lg" color="teal" />
+                <Loader size="lg" color="dark" />
               </div>
             ) : filteredDocuments.length === 0 ? (
               <div className="py-20 text-center bg-white rounded-[2rem] border border-gray-200 shadow-sm animate-in fade-in duration-500">
@@ -380,16 +380,16 @@ export function SharedDocumentsView() {
                     withBorder
                     p="lg"
                     radius="lg"
-                    className="group cursor-pointer hover:shadow-xl hover:border-teal-600/45 hover:-translate-y-1 transition-all duration-300 bg-white"
+                    className="group cursor-pointer hover:shadow-xl hover:border-zinc-800 hover:-translate-y-1 transition-all duration-300 bg-white"
                   >
                     <Group justify="space-between" align="start" mb="md">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 transition-colors group-hover:bg-teal-600 group-hover:text-white">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700 transition-colors group-hover:bg-[#111111] group-hover:text-white">
                         <IconFileText size={28} />
                       </div>
                       <Badge
-                        color="teal"
+                        color="gray"
                         variant="light"
-                        radius="md"
+                        radius="lg"
                         py="sm"
                         leftSection={<IconWorld size={12} />}
                       >
@@ -397,7 +397,7 @@ export function SharedDocumentsView() {
                       </Badge>
                     </Group>
 
-                    <Text fw={700} size="md" className="mb-3 line-clamp-2 text-gray-900 group-hover:text-teal-600 transition-colors">
+                    <Text fw={700} size="md" className="mb-3 line-clamp-2 text-gray-900 group-hover:text-[#111111] transition-colors">
                       {doc.title}
                     </Text>
 

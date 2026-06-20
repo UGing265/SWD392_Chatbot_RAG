@@ -19,6 +19,7 @@ export interface Chapter {
 
 export interface Material {
   id: string;
+  slug: string;
   resource: string;
   subjectId: string;
   date: string;
@@ -155,6 +156,7 @@ export function useLecturerDocuments() {
 
         return {
           id: doc.id,
+          slug: doc.slug,
           resource: doc.title,
           subjectId: doc.subject_id || "",
           date: new Date(doc.created_at).toLocaleDateString("en-US", {
@@ -202,7 +204,7 @@ export function useLecturerDocuments() {
     if (currentMaterial?.id) {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:8080/api/documents/${currentMaterial.id}/delete`, {
+        const res = await fetch(`http://localhost:8080/api/documents/${currentMaterial.slug}/delete`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });

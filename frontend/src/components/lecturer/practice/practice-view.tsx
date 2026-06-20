@@ -58,10 +58,10 @@ export function TeacherPracticeView() {
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-[#f8fafc] font-sans">
             Quiz Intelligence Lab
           </h1>
-          <Text size="sm" c="dimmed" className="mt-1 font-medium">
+          <Text size="sm" c="dimmed" className="mt-1 font-sans font-normal">
             Quản lý bài tập, theo dõi tiến độ sinh viên và tối ưu hóa câu hỏi bằng AI.
           </Text>
         </div>
@@ -69,15 +69,15 @@ export function TeacherPracticeView() {
           <Button
             variant="outline"
             color="gray"
-            radius="md"
+            radius="lg"
             leftSection={<IconClipboardText size={16} />}
           >
             Báo cáo học tập
           </Button>
           <Button
             onClick={() => setIsGenerateModalOpen(true)}
-            color="blue"
-            radius="md"
+            color="dark"
+            radius="lg"
             leftSection={<IconPlus size={16} />}
           >
             Tạo Quiz mới
@@ -85,7 +85,7 @@ export function TeacherPracticeView() {
         </Group>
       </div>
 
-      <Tabs value={activeTab} onChange={setActiveTab} variant="outline" radius="md">
+      <Tabs value={activeTab} onChange={setActiveTab} variant="outline" radius="lg">
         <Tabs.List className="mb-6">
           <Tabs.Tab value="dashboard">Dashboard</Tabs.Tab>
           <Tabs.Tab value="results">Kết quả sinh viên</Tabs.Tab>
@@ -98,7 +98,7 @@ export function TeacherPracticeView() {
               {/* Stats Grid */}
               <div className="grid gap-4 sm:grid-cols-3">
                 <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
                     <IconClipboardText size={20} />
                   </div>
                   <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
@@ -113,7 +113,7 @@ export function TeacherPracticeView() {
                 </Paper>
 
                 <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
                     <IconUsers size={20} />
                   </div>
                   <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
@@ -128,7 +128,7 @@ export function TeacherPracticeView() {
                 </Paper>
 
                 <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
                     <IconTarget size={20} />
                   </div>
                   <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
@@ -136,7 +136,7 @@ export function TeacherPracticeView() {
                   </Text>
                   <Group align="baseline" gap="xs" mt="xs">
                     <span className="text-2xl font-extrabold text-gray-900">74.2%</span>
-                    <Text size="xs" fw={700} color="indigo">
+                    <Text size="xs" fw={700} color="zinc">
                       Ổn định
                     </Text>
                   </Group>
@@ -196,10 +196,10 @@ export function TeacherPracticeView() {
               <Paper withBorder p="md" radius="lg" className="bg-white">
                 <Group justify="space-between" mb="md">
                   <Group gap="xs">
-                    <IconHelp size={18} className="text-blue-500" />
+                    <IconHelp size={18} className="text-zinc-500" />
                     <Text fw={700} className="text-gray-900">Bài Quiz đã tạo gần đây</Text>
                   </Group>
-                  <Button variant="subtle" color="blue" size="xs" fw={700}>
+                  <Button variant="subtle" color="gray" size="xs" fw={700}>
                     Xem lịch sử
                   </Button>
                 </Group>
@@ -224,10 +224,10 @@ export function TeacherPracticeView() {
                       withBorder
                       p="md"
                       radius="lg"
-                      className="cursor-pointer hover:shadow-md transition-all hover:border-blue-500/30 group bg-white"
+                      className="cursor-pointer hover:shadow-md transition-all hover:border-zinc-800 group bg-white"
                     >
                       <Group justify="space-between" align="start" mb="xs" wrap="nowrap">
-                        <Text fw={700} size="sm" className="text-gray-800 group-hover:text-blue-600 transition-colors">
+                        <Text fw={700} size="sm" className="text-gray-800 group-hover:text-[#111111] transition-colors">
                           {quiz.title}
                         </Text>
                         <ActionIcon variant="subtle" color="gray" size="sm">
@@ -258,7 +258,7 @@ export function TeacherPracticeView() {
               <Paper
                 p="md"
                 radius="lg"
-                className="bg-gradient-to-br from-[#0b4870] to-[#12669e] text-white shadow-lg overflow-hidden relative group"
+                className="bg-[#111111] text-white shadow-lg overflow-hidden relative group"
               >
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all duration-700" />
                 <Stack gap="md" className="relative z-10">
@@ -267,7 +267,7 @@ export function TeacherPracticeView() {
                   </div>
                   <div>
                     <Text fw={800} size="lg">AI Quiz Generator</Text>
-                    <Text size="xs" className="text-blue-100/90 leading-relaxed font-medium mt-1">
+                    <Text size="xs" className="text-zinc-300 leading-relaxed font-medium mt-1">
                       Tại sao phải soạn câu hỏi thủ công? Để AI trích xuất nội dung từ tài liệu bài giảng của bạn.
                     </Text>
                   </div>
@@ -275,7 +275,7 @@ export function TeacherPracticeView() {
                     onClick={() => setIsGenerateModalOpen(true)}
                     variant="white"
                     color="dark"
-                    radius="md"
+                    radius="lg"
                     rightSection={<IconArrowRight size={16} />}
                   >
                     Thử nghiệm RAG AI
@@ -286,7 +286,7 @@ export function TeacherPracticeView() {
               <Paper withBorder p="md" radius="lg" className="bg-white">
                 <Group justify="space-between" mb="sm">
                   <Text fw={700} size="sm" className="text-gray-900">Học phần đang dạy</Text>
-                  <Button variant="subtle" color="blue" size="xs" fw={700}>
+                  <Button variant="subtle" color="gray" size="xs" fw={700}>
                     Xem tất cả
                   </Button>
                 </Group>
@@ -331,7 +331,7 @@ export function TeacherPracticeView() {
             <Group justify="space-between" p="md" className="border-b border-gray-100 bg-zinc-50/50">
               <Text fw={700} size="sm" className="text-gray-800">
                 Danh sách sinh viên hoàn thành Quiz:{" "}
-                <span className="text-blue-600 font-extrabold underline decoration-2 underline-offset-4">
+                <span className="text-[#111111] font-bold underline decoration-2 underline-offset-4">
                   Chương 4 - MLN111
                 </span>
               </Text>
@@ -339,7 +339,7 @@ export function TeacherPracticeView() {
                 placeholder="Tìm sinh viên..."
                 leftSection={<IconSearch size={14} className="text-gray-400" />}
                 size="xs"
-                radius="md"
+                radius="lg"
               />
             </Group>
 
@@ -398,8 +398,9 @@ export function TeacherPracticeView() {
         opened={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
         title="AI Quiz Generator (RAG)"
-        radius="lg"
+        radius="2xl"
         centered
+        overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
       >
         <Stack gap="md">
           <Text size="xs" c="dimmed" fw={500}>
@@ -410,7 +411,7 @@ export function TeacherPracticeView() {
             <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
               Chọn Học phần & Tài liệu
             </Text>
-            <NativeSelect radius="md">
+            <NativeSelect radius="lg">
               <option>MLN111 - Giáo trình Kinh tế Chính trị</option>
               <option>MLN101 - Tài liệu Triết học Mác-Lênin</option>
             </NativeSelect>
@@ -421,7 +422,7 @@ export function TeacherPracticeView() {
               <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
                 Số lượng câu hỏi
               </Text>
-              <NativeSelect radius="md">
+              <NativeSelect radius="lg">
                 <option>10 Câu</option>
                 <option>20 Câu</option>
                 <option>30 Câu</option>
@@ -431,7 +432,7 @@ export function TeacherPracticeView() {
               <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
                 Độ khó gợi ý
               </Text>
-              <NativeSelect radius="md">
+              <NativeSelect radius="lg">
                 <option>Adaptive (AI)</option>
                 <option>Cơ bản</option>
                 <option>Nâng cao</option>
@@ -439,8 +440,8 @@ export function TeacherPracticeView() {
             </Stack>
           </div>
 
-          <Paper withBorder p="sm" radius="md" className="bg-blue-50/30 border-blue-100 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <Paper withBorder p="sm" radius="lg" className="bg-zinc-50 border-zinc-200 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-[#111111] flex items-center justify-center text-white shrink-0">
               <IconSparkles size={20} />
             </div>
             <div>
@@ -452,7 +453,7 @@ export function TeacherPracticeView() {
           </Paper>
 
           <Group justify="flex-end" mt="lg">
-            <Button variant="outline" color="gray" onClick={() => setIsGenerateModalOpen(false)}>
+            <Button variant="outline" color="gray" radius="lg" onClick={() => setIsGenerateModalOpen(false)}>
               Hủy bỏ
             </Button>
             <Button
@@ -460,7 +461,8 @@ export function TeacherPracticeView() {
                 setIsGenerateModalOpen(false);
                 setIsViewQuizOpen(true);
               }}
-              color="blue"
+              color="dark"
+              radius="lg"
             >
               Bắt đầu khởi tạo
             </Button>
@@ -474,8 +476,9 @@ export function TeacherPracticeView() {
         onClose={() => setIsViewQuizOpen(false)}
         title="Preview: Quiz MLN111 - Ch4"
         size="lg"
-        radius="lg"
+        radius="2xl"
         centered
+        overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
       >
         <Stack gap="md">
           <Text size="xs" c="dimmed" fw={500}>
@@ -491,9 +494,9 @@ export function TeacherPracticeView() {
                 radius="lg"
                 className="relative overflow-hidden group bg-zinc-50/50"
               >
-                <div className="absolute top-0 left-0 bottom-0 w-1 bg-blue-600" />
+                <div className="absolute top-0 left-0 bottom-0 w-1 bg-[#111111]" />
                 <Group justify="space-between" align="center" mb="xs">
-                  <Text size="xs" fw={900} className="uppercase text-blue-600 tracking-wider">
+                  <Text size="xs" fw={900} className="uppercase text-[#111111] tracking-wider">
                     Câu hỏi {num}
                   </Text>
                   <Group gap={4}>
@@ -543,10 +546,10 @@ export function TeacherPracticeView() {
           </Stack>
 
           <Group justify="flex-end" mt="lg">
-            <Button variant="outline" color="gray" onClick={() => setIsViewQuizOpen(false)}>
+            <Button variant="outline" color="gray" radius="lg" onClick={() => setIsViewQuizOpen(false)}>
               Quay lại
             </Button>
-            <Button onClick={() => setIsViewQuizOpen(false)} color="blue">
+            <Button onClick={() => setIsViewQuizOpen(false)} color="dark" radius="lg">
               Công khai bài Quiz
             </Button>
           </Group>
