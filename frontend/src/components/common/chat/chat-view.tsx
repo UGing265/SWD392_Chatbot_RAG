@@ -87,7 +87,7 @@ function RichInputBox({
       withBorder
       p="md"
       radius="lg"
-      className="shadow-sm hover:shadow-md transition-shadow bg-white"
+      className="shadow-sm hover:shadow-md transition-shadow !bg-[#0d0d0d] border-white/5"
     >
       <Textarea
         ref={textareaRef}
@@ -104,11 +104,17 @@ function RichInputBox({
             fontSize: "16px",
             lineHeight: "1.6",
             padding: 0,
-            color: "var(--mantine-color-gray-9)",
+            color: "white",
           },
         }}
       />
-      <Group justify="space-between" align="center" mt="md" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}>
+      <Group
+        justify="space-between"
+        align="center"
+        mt="md"
+        pt="xs"
+        style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
+      >
         <Group gap="xs">
           <Button
             onClick={() => setScopeOpen(!scopeOpen)}
@@ -117,7 +123,15 @@ function RichInputBox({
             radius="xl"
             size="xs"
             leftSection={<IconBook size={14} />}
-            rightSection={<IconChevronDown size={12} style={{ transform: scopeOpen ? "rotate(180deg)" : "none", transition: "transform 150ms ease" }} />}
+            rightSection={
+              <IconChevronDown
+                size={12}
+                style={{
+                  transform: scopeOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 150ms ease",
+                }}
+              />
+            }
           >
             {scopeOpen ? "Đóng chọn tài liệu" : "Chọn tài liệu môn học"}
           </Button>
@@ -150,7 +164,7 @@ function RichInputBox({
           <ActionIcon
             onClick={handleSend}
             disabled={!input.trim()}
-            color="dark"
+            color="blue"
             radius="xl"
             size="md"
           >
@@ -187,13 +201,17 @@ function DocumentSelector({
               withBorder
               p="sm"
               radius="md"
-              className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all"
+              className="cursor-pointer border-white/5 hover:border-blue-500/40 hover:bg-blue-50/5 group transition-all !bg-[#0d0d0d]"
             >
               <Group gap="sm" wrap="nowrap">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/40 group-hover:bg-blue-500/20 group-hover:text-blue-400 transition-colors">
                   <IconBook size={16} />
                 </div>
-                <Text size="sm" fw={600} className="truncate text-gray-800 group-hover:text-blue-600 transition-colors">
+                <Text
+                  size="sm"
+                  fw={600}
+                  className="truncate text-white/70 group-hover:text-blue-400 transition-colors"
+                >
                   {sub.name}
                 </Text>
               </Group>
@@ -233,8 +251,17 @@ function DocumentSelector({
       </Group>
 
       {subjectDocs.length === 0 ? (
-        <Paper withBorder p="md" radius="md" style={{ borderStyle: "dashed" }} bg="zinc-50/50" className="text-center">
-          <Text size="sm" c="dimmed">Không có tài liệu nào trong môn học này.</Text>
+        <Paper
+          withBorder
+          p="md"
+          radius="md"
+          style={{ borderStyle: "dashed" }}
+          bg="zinc-50/50"
+          className="text-center"
+        >
+          <Text size="sm" c="dimmed">
+            Không có tài liệu nào trong môn học này.
+          </Text>
         </Paper>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -249,24 +276,20 @@ function DocumentSelector({
                 radius="md"
                 className={`cursor-pointer transition-all ${
                   selected
-                    ? "border-blue-500 bg-blue-50/10 text-blue-600"
-                    : "border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-800 bg-white"
+                    ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                    : "border-white/10 hover:border-white/20 text-white/50 hover:text-white bg-[#0d0d0d]"
                 }`}
               >
                 <Group gap="sm" wrap="nowrap">
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      selected ? "bg-blue-600 text-white" : "bg-gray-150 text-gray-500"
+                      selected ? "bg-blue-600 text-white" : "bg-white/5 text-white/40"
                     }`}
                   >
-                    {selected ? (
-                      <IconCircleCheck size={16} />
-                    ) : (
-                      <IconFileText size={16} />
-                    )}
+                    {selected ? <IconCircleCheck size={16} /> : <IconFileText size={16} />}
                   </div>
                   <div className="flex flex-col overflow-hidden">
-                    <Text size="xs" fw={700} className="truncate leading-tight text-gray-900">
+                    <Text size="xs" fw={700} className="truncate leading-tight text-white/90">
                       {doc.title}
                     </Text>
                     <Text size="10px" className="tracking-wider uppercase opacity-70 mt-0.5">
@@ -369,12 +392,12 @@ export function ChatView() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-zinc-50">
+    <div className="flex h-full flex-col bg-[#171717]">
       {/* Home View Header (Hidden in thread) */}
       {isHome && (
         <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
           <div className="mb-8">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-white text-center">
               StudyMate AI
             </h1>
           </div>
@@ -430,14 +453,18 @@ export function ChatView() {
                       withBorder
                       p="lg"
                       radius="lg"
-                      className="flex-1 space-y-6 rounded-tl-sm bg-white shadow-sm"
+                      className="flex-1 space-y-6 rounded-tl-sm !bg-[#0d0d0d] border-white/5 shadow-sm"
                     >
                       {/* Sources Section - Card grid */}
                       {msg.citations && (
                         <div className="space-y-3">
-                          <Group gap="xs" align="center" className="text-gray-400">
+                          <Group gap="xs" align="center" className="text-white/60">
                             <IconBook size={16} />
-                            <Text size="xs" fw={700} className="tracking-wider uppercase">
+                            <Text
+                              size="xs"
+                              fw={700}
+                              className="tracking-wider uppercase text-white/60"
+                            >
                               Nguồn tham khảo
                             </Text>
                           </Group>
@@ -448,20 +475,24 @@ export function ChatView() {
                                 withBorder
                                 p="xs"
                                 radius="md"
-                                className="flex flex-col gap-2 hover:border-blue-500/30 transition-all cursor-pointer shadow-sm bg-white"
+                                className="flex flex-col gap-2 border-white/5 hover:border-blue-500/30 transition-all cursor-pointer shadow-sm !bg-[#0d0d0d]"
                               >
                                 <Group gap="xs" wrap="nowrap">
-                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-50 text-gray-500">
+                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/10 text-white/90">
                                     <IconFileText size={12} />
                                   </div>
-                                  <Text size="xs" fw={700} c="dimmed">
+                                  <Text size="xs" fw={700} className="text-white/90">
                                     {idx}.{i + 1}
                                   </Text>
                                 </Group>
-                                <Text size="xs" fw={600} className="line-clamp-2 leading-tight text-gray-900">
+                                <Text
+                                  size="xs"
+                                  fw={600}
+                                  className="line-clamp-2 leading-tight text-white"
+                                >
                                   {cite.title}
                                 </Text>
-                                <Text size="10px" c="dimmed" mt="auto">
+                                <Text size="10px" className="text-white/80 mt-auto">
                                   {cite.pages}
                                 </Text>
                               </Paper>
@@ -473,22 +504,22 @@ export function ChatView() {
                       {/* Bot Message Content */}
                       <div className="flex gap-4">
                         <div className="flex-1 space-y-4">
-                          <div className="text-[15px] leading-[1.6] text-gray-900 font-normal whitespace-pre-wrap">
+                          <div className="text-[15px] leading-[1.6] text-white font-normal whitespace-pre-wrap">
                             {msg.content}
                           </div>
                           {msg.bullets && (
                             <ul className="mt-4 space-y-3">
                               {msg.bullets.map((bullet, i) => (
                                 <li key={i} className="flex gap-3 text-[14px] leading-relaxed">
-                                  <span className="text-gray-500 shrink-0 mt-0.5 font-bold inline-flex items-center justify-center h-5 w-5 rounded-full bg-zinc-50 border border-gray-150 text-[10px]">
+                                  <span className="text-white/80 shrink-0 mt-0.5 font-bold inline-flex items-center justify-center h-5 w-5 rounded-full bg-white/10 border border-white/10 text-[10px]">
                                     {i + 1}
                                   </span>
                                   <span
-                                    className="text-gray-700"
+                                    className="text-white/90"
                                     dangerouslySetInnerHTML={{
                                       __html: bullet.replace(
                                         /\*\*(.*?)\*\*/g,
-                                        "<strong class='font-semibold text-gray-900'>$1</strong>",
+                                        "<strong class='font-semibold text-white'>$1</strong>",
                                       ),
                                     }}
                                   />
@@ -504,31 +535,33 @@ export function ChatView() {
                         justify="space-between"
                         align="center"
                         pt="md"
-                        style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}
+                        style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
                       >
                         <Group gap="xs">
                           <Button
                             variant="subtle"
-                            color="gray"
+                            color="gray.4"
                             size="xs"
                             leftSection={<IconCopy size={14} />}
+                            className="hover:bg-white/5"
                           >
                             Sao chép
                           </Button>
                           <Button
                             variant="subtle"
-                            color="gray"
+                            color="gray.4"
                             size="xs"
                             leftSection={<IconRotate2 size={14} />}
+                            className="hover:bg-white/5"
                           >
                             Viết lại
                           </Button>
                         </Group>
                         <Group gap={4}>
-                          <ActionIcon variant="subtle" color="gray">
+                          <ActionIcon variant="subtle" color="gray.4" className="hover:bg-white/5">
                             <IconThumbUp size={16} />
                           </ActionIcon>
-                          <ActionIcon variant="subtle" color="gray">
+                          <ActionIcon variant="subtle" color="gray.4" className="hover:bg-white/5">
                             <IconThumbDown size={16} />
                           </ActionIcon>
                         </Group>
@@ -537,9 +570,13 @@ export function ChatView() {
                       {/* Related Questions - Only for the latest bot message */}
                       {msg.role === "bot" && idx === messages.length - 1 && (
                         <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                          <Group gap="xs" align="center" className="text-gray-400">
+                          <Group gap="xs" align="center" className="text-white/60">
                             <IconPlus size={16} />
-                            <Text size="xs" fw={700} className="tracking-wider uppercase">
+                            <Text
+                              size="xs"
+                              fw={700}
+                              className="tracking-wider uppercase text-white/60"
+                            >
                               Câu hỏi liên quan
                             </Text>
                           </Group>
@@ -555,13 +592,19 @@ export function ChatView() {
                                 withBorder
                                 p="sm"
                                 radius="md"
-                                className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all"
+                                className="cursor-pointer border-white/5 hover:border-blue-500/40 hover:bg-blue-50/5 group transition-all !bg-[#0d0d0d]"
                               >
                                 <Group justify="space-between" align="center">
-                                  <Text size="sm" className="text-gray-700 group-hover:text-blue-600 transition-colors">
+                                  <Text
+                                    size="sm"
+                                    className="text-white/90 group-hover:text-blue-400 transition-colors"
+                                  >
                                     {q}
                                   </Text>
-                                  <IconArrowLeft size={16} className="text-gray-400 group-hover:text-blue-600 transition-colors rotate-180" />
+                                  <IconArrowLeft
+                                    size={16}
+                                    className="text-white/70 group-hover:text-blue-600 transition-colors rotate-180"
+                                  />
                                 </Group>
                               </Paper>
                             ))}
@@ -576,11 +619,11 @@ export function ChatView() {
 
             {isTyping && (
               <Stack gap="xs" className="animate-pulse">
-                <div className="h-4 w-24 bg-gray-200 rounded-full" />
+                <div className="h-4 w-24 bg-white/5 rounded-full" />
                 <Stack gap="xs">
-                  <div className="h-4 w-full bg-gray-200 rounded-full" />
-                  <div className="h-4 w-[90%] bg-gray-200 rounded-full" />
-                  <div className="h-4 w-[70%] bg-gray-200 rounded-full" />
+                  <div className="h-4 w-full bg-white/5 rounded-full" />
+                  <div className="h-4 w-[90%] bg-white/5 rounded-full" />
+                  <div className="h-4 w-[70%] bg-white/5 rounded-full" />
                 </Stack>
               </Stack>
             )}
@@ -592,11 +635,16 @@ export function ChatView() {
 
       {/* Input Area (Pinned to bottom in thread) */}
       {!isHome && (
-        <div className="fixed bottom-0 left-0 right-0 md:left-[240px] bg-gradient-to-t from-zinc-50 via-zinc-50/95 to-transparent px-4 pb-6 pt-10 z-10">
+        <div className="fixed bottom-0 left-0 right-0 md:left-[240px] bg-gradient-to-t from-[#171717] via-[#171717]/95 to-transparent px-4 pb-6 pt-10 z-10">
           <div className="mx-auto max-w-[800px]">
             {/* Thread Scope selector context */}
             {scopeOpen && (
-              <Paper withBorder p="md" radius="lg" className="mb-4 shadow-xl bg-white">
+              <Paper
+                withBorder
+                p="md"
+                radius="lg"
+                className="mb-4 shadow-xl bg-[#111111] border-white/10"
+              >
                 <DocumentSelector
                   scopedDocs={scopedDocs}
                   toggleDoc={toggleDoc}
