@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useParams, useRouter } from "next/navigation";
 import {
   IconSparkles,
@@ -281,22 +281,56 @@ export function ChatView() {
       created_at: new Date().toISOString(),
     };
     
-    setMessages((prev) => [...prev, userMsg]);
+    // Create an empty bot message
+    const botMsgId = (Date.now() + 1).toString();
+    const initialBotMsg: ChatMessage = {
+      id: botMsgId,
+      role: "bot",
+      content: "",
+      out_of_scope: false,
+      created_at: new Date().toISOString(),
+    };
+    
+    setMessages((prev) => [...prev, userMsg, initialBotMsg]);
     setInput("");
     setIsTyping(true);
     setScopeOpen(false); // Close document selector when sending
 
     try {
-      const response = await chatApi.sendMessage(sessionId, input);
-      setMessages((prev) => {
-        const withoutOptimistic = prev.filter((m) => m.id !== userMsg.id);
-        return [...withoutOptimistic, response.user_message, response.bot_message];
-      });
+      await chatApi.streamMessage(
+        sessionId,
+        userMsg.content,
+        (token) => {
+          setIsTyping(false); // Stop typing pulse once we receive first token
+          setMessages((prev) => {
+            const updated = [...prev];
+            const botIdx = updated.findIndex((m) => m.id === botMsgId);
+            if (botIdx !== -1) {
+              updated[botIdx] = {
+                ...updated[botIdx],
+                content: updated[botIdx].content + token,
+              };
+            }
+            return updated;
+          });
+        },
+        (err) => {
+          console.error("Stream error:", err);
+          setIsTyping(false);
+          alert("Đã xảy ra lỗi khi nhận dữ liệu từ server.");
+        },
+        () => {
+          setIsTyping(false);
+          // Stream completed, fetch history to get citations
+          chatApi.getHistory(sessionId).then((historyData) => {
+            setMessages(historyData);
+          }).catch((err) => console.error("Error refreshing history:", err));
+        }
+      );
     } catch (err) {
-      console.error("Error sending message:", err);
-      alert("Đã xảy ra lỗi khi gửi tin nhắn. Vui lòng thử lại.");
-    } finally {
+      console.error("Error initiating stream:", err);
       setIsTyping(false);
+      alert("Đã xảy ra lỗi kết nối. Vui lòng thử lại.");
     }
   };
 

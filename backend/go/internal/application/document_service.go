@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	crand "crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -28,6 +29,7 @@ import (
 	"swd392-chatbot-rag/internal/domain/uploadjob"
 	"swd392-chatbot-rag/internal/domain/user"
 	"swd392-chatbot-rag/internal/infrastructure/filestorage"
+	"swd392-chatbot-rag/internal/infrastructure/llm"
 
 	"github.com/google/uuid"
 )
@@ -120,6 +122,7 @@ type DocumentChunkDto struct {
 type DocumentDetailsDto struct {
 	ID                 uuid.UUID            `json:"id"`
 	OwnerUserID        uuid.UUID            `json:"owner_user_id"`
+	OwnerFullName      *string              `json:"owner_full_name,omitempty"`
 	Title              string               `json:"title"`
 	SubjectID          *uuid.UUID           `json:"subject_id"`
 	SubjectName        *string              `json:"subject_name,omitempty"`
@@ -281,6 +284,17 @@ type DeleteDocumentViewData struct {
 	ChunkCount int       `json:"chunk_count"`
 }
 
+type ComparisonResultDto struct {
+	Differences []struct {
+		Topic       string `json:"topic"`
+		Document1   string `json:"document1"`
+		Document2   string `json:"document2"`
+		Explanation string `json:"explanation"`
+	} `json:"differences"`
+	CommonThemes []string `json:"commonThemes"`
+	Summary      string   `json:"summary"`
+}
+
 // Service Implementation
 
 type DocumentService struct {
@@ -299,6 +313,7 @@ type DocumentService struct {
 	auditRepo   auditlog.AuditLogRepository
 	assignRepo  lecturersubject.AssignmentRepository
 	s3Storage   *filestorage.S3FileStorage
+	llmClient   llm.LLMClient
 }
 
 func NewDocumentService(
@@ -317,6 +332,7 @@ func NewDocumentService(
 	auditRepo auditlog.AuditLogRepository,
 	assignRepo lecturersubject.AssignmentRepository,
 	s3Storage *filestorage.S3FileStorage,
+	llmClient llm.LLMClient,
 ) *DocumentService {
 	return &DocumentService{
 		docRepo:     docRepo,
@@ -334,6 +350,7 @@ func NewDocumentService(
 		auditRepo:   auditRepo,
 		assignRepo:  assignRepo,
 		s3Storage:   s3Storage,
+		llmClient:   llmClient,
 	}
 }
 
@@ -598,6 +615,7 @@ func (s *DocumentService) GetDocumentDetails(ctx context.Context, docID uuid.UUI
 	return &DocumentDetailsDto{
 		ID:                 doc.ID,
 		OwnerUserID:        doc.OwnerUserID,
+		OwnerFullName:      doc.OwnerFullName,
 		Title:              doc.Title,
 		SubjectID:          doc.SubjectID,
 		SubjectName:        doc.SubjectName,
@@ -1820,4 +1838,81 @@ func (s *DocumentService) BlockOrUnblockUser(ctx context.Context, userID uuid.UU
 
 func (s *DocumentService) GetUsers(ctx context.Context) ([]*user.User, error) {
 	return s.userRepo.FindAll(ctx)
+}
+
+// CompareDocuments compares multiple documents and returns the differences and common themes.
+func (s *DocumentService) CompareDocuments(ctx context.Context, documentIDs []uuid.UUID, question string) (*ComparisonResultDto, error) {
+	if len(documentIDs) < 2 {
+		return nil, errors.New("at least 2 documents are required for comparison")
+	}
+
+	var allChunks []*chunk.Chunk
+	for _, docID := range documentIDs {
+		chunks, err := s.chunkRepo.FindByDocumentID(ctx, docID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get chunks for document %s: %w", docID, err)
+		}
+		allChunks = append(allChunks, chunks...)
+	}
+
+	if len(allChunks) == 0 {
+		return nil, errors.New("no content found in the provided documents")
+	}
+
+	// Limit to a reasonable number of chunks to avoid exceeding token limits
+	maxChunks := 40
+	if len(allChunks) > maxChunks {
+		allChunks = allChunks[:maxChunks]
+	}
+
+	var contextBuilder strings.Builder
+	for i, ch := range allChunks {
+		contextBuilder.WriteString(fmt.Sprintf("--- Chunk %d ---\n", i+1))
+		contextBuilder.WriteString(fmt.Sprintf("Document ID: %s\n", ch.DocumentID))
+		contextBuilder.WriteString(fmt.Sprintf("Content:\n%s\n\n", ch.Content))
+	}
+
+	systemPrompt := `You are an expert academic document analyzer. Your task is to compare the provided documents and answer the user's question.
+You MUST output your response in strict JSON format matching the following structure:
+{
+  "differences": [
+    {
+      "topic": "Topic Name",
+      "document1": "How document 1 addresses this",
+      "document2": "How document 2 addresses this",
+      "explanation": "Brief analysis of the difference"
+    }
+  ],
+  "commonThemes": ["Theme 1", "Theme 2"],
+  "summary": "Overall summary of the comparison."
+}
+DO NOT wrap the JSON in Markdown formatting like ` + "`" + `` + "`" + `` + "`json" + `. Just return the raw JSON object.`
+
+	userPrompt := fmt.Sprintf("Question: %s\n\nDocuments Context:\n%s", question, contextBuilder.String())
+
+	history := []llm.ChatMessage{
+		{Role: "user", Content: userPrompt},
+	}
+
+	responseStr, err := s.llmClient.Generate(ctx, systemPrompt, history)
+	if err != nil {
+		return nil, fmt.Errorf("LLM comparison failed: %w", err)
+	}
+
+	// Clean up potential markdown formatting from LLM response
+	responseStr = strings.TrimSpace(responseStr)
+	if strings.HasPrefix(responseStr, "```json") {
+		responseStr = strings.TrimPrefix(responseStr, "```json")
+		responseStr = strings.TrimSuffix(responseStr, "```")
+	} else if strings.HasPrefix(responseStr, "```") {
+		responseStr = strings.TrimPrefix(responseStr, "```")
+		responseStr = strings.TrimSuffix(responseStr, "```")
+	}
+
+	var result ComparisonResultDto
+	if err := json.Unmarshal([]byte(responseStr), &result); err != nil {
+		return nil, fmt.Errorf("failed to parse comparison result: %w\nResponse was: %s", err, responseStr)
+	}
+
+	return &result, nil
 }

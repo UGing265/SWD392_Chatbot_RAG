@@ -618,3 +618,46 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 		"academicTerms":   terms,
 	})
 }
+
+type CompareDocumentsRequest struct {
+	DocumentIDs []string `json:"document_ids" binding:"required,min=2"`
+	Question    string   `json:"question" binding:"required"`
+}
+
+// CompareDocuments godoc
+// @Summary Compare documents
+// @Description Compare multiple documents by extracting chunks and using LLM
+// @Tags documents
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body handler.CompareDocumentsRequest true "Comparison Request"
+// @Success 200 {object} application.ComparisonResultDto
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/documents/compare [post]
+func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
+	var req CompareDocumentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	docIDs := make([]uuid.UUID, 0, len(req.DocumentIDs))
+	for _, idStr := range req.DocumentIDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID in document_ids"})
+			return
+		}
+		docIDs = append(docIDs, id)
+	}
+
+	result, err := h.service.CompareDocuments(c.Request.Context(), docIDs, req.Question)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

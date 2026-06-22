@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   IconUpload,
   IconFileText,
@@ -10,35 +9,20 @@ import {
   IconCalendar,
   IconLock,
   IconGlobe,
+  IconLanguage,
+  IconFileCertificate,
+  IconDatabaseImport
 } from "@tabler/icons-react";
 import {
   Button,
   TextInput,
   Textarea,
   Select,
-  Paper,
   Text,
   Loader,
   Group,
-  Stack,
   ActionIcon,
 } from "@mantine/core";
-
-interface Subject {
-  id: string;
-  name: string;
-  academicTermId?: string;
-}
-
-interface AcademicTerm {
-  id: string;
-  name: string;
-}
-
-interface Chapter {
-  id: string;
-  name: string;
-}
 
 import { useUpload } from "@/hooks/lecturer/use-upload";
 
@@ -53,55 +37,68 @@ export function UploadView() {
     setSubjectId,
     termId,
     setTermId,
-    chapterId,
-    setChapterId,
+    documentTypeId,
+    setDocumentTypeId,
+    languageId,
+    setLanguageId,
+    documentSourceId,
+    setDocumentSourceId,
     visibility,
     setVisibility,
     uploading,
     uploaded,
     subjects,
     terms,
-    chapters,
+    documentTypes,
+    languages,
+    documentSources,
     handleFileChange,
     removeFile,
     handleUpload,
   } = useUpload();
 
-
   if (uploaded) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-zinc-50">
-        <div className="text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-600 shadow-lg shadow-green-100 text-white">
-            <IconCircleCheck size={48} />
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-[#FAFAFA] font-sans">
+        <div className="text-center bg-[#FFFFFF] p-12 rounded-[6px] border border-[#EAEAEA] shadow-sm animate-in fade-in slide-in-from-bottom-12 duration-1000">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-black text-white">
+            <IconCircleCheck size={32} />
           </div>
-          <h2 className="mb-3 text-3xl font-bold tracking-tight text-gray-900">
-            Tải lên thành công!
+          <h2 className="mb-2 text-[24px] font-serif tracking-[-0.02em] text-[#111111]">
+            Tải Lên Thành Công
           </h2>
-          <Text c="dimmed" size="lg">Tài liệu của bạn đang được xử lý</Text>
+          <Text c="dimmed" size="sm" mb="xl">Tài liệu của bạn đã được đưa vào hàng đợi xử lý AI.</Text>
+          <Button
+            component="a"
+            href="/lecturer/documents/my"
+            color="dark"
+            radius="sm"
+            className="bg-[#111111] font-medium"
+          >
+            Về thư viện của tôi
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
-      <div className="container mx-auto max-w-3xl p-6 py-12">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAFA] font-sans relative">
+      <div className="container mx-auto max-w-4xl p-6 py-12">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center justify-center mb-4 rounded-full bg-zinc-100 px-4 py-2">
-            <IconUpload size={16} className="mr-2 text-zinc-700" />
-            <span className="text-sm font-semibold text-zinc-700">Tài liệu giáo dục</span>
-          </div>
-          <h1 className="mb-3 text-4xl font-bold tracking-tight text-[#111111] dark:text-[#f8fafc] font-sans">
-            Tải lên tài liệu mới
+        <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
+          <Text size="xs" fw={600} className="text-[#A0A0A0] tracking-[0.1em] uppercase mb-3 font-mono">
+            Tài liệu giáo dục
+          </Text>
+          <h1 className="font-serif text-[40px] tracking-[-0.03em] text-[#111111] mb-3 select-none">
+            Tải Lên.
           </h1>
-          <Text c="dimmed" size="lg" className="max-w-2xl mx-auto">
-            Chia sẻ tài liệu giảng dạy với sinh viên của bạn. Hỗ trợ PDF, DOC, DOCX, PPT, PPTX
+          <Text c="dimmed" size="sm" className="max-w-2xl">
+            Chia sẻ tài liệu giảng dạy với sinh viên của bạn. Hệ thống hỗ trợ PDF, DOC, DOCX, PPT, PPTX.
           </Text>
         </div>
 
-        <form onSubmit={handleUpload} className="space-y-8">
+        <form onSubmit={handleUpload} className="space-y-8 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100">
           {/* File Upload Area */}
           <div>
             <input
@@ -121,54 +118,54 @@ export function UploadView() {
                 justifyContent: "center",
                 cursor: uploading ? "not-allowed" : "pointer",
                 padding: "48px 24px",
-                borderRadius: "12px",
-                border: "2px dashed var(--mantine-color-gray-3)",
-                backgroundColor: file ? "var(--mantine-color-gray-0)" : "#ffffff",
-                transition: "all 150ms ease",
+                borderRadius: "6px",
+                border: "1px dashed #EAEAEA",
+                backgroundColor: file ? "#FAFAFA" : "#FFFFFF",
+                transition: "all 300ms ease",
               }}
-              className="hover:border-zinc-800 hover:bg-zinc-50"
+              className="hover:border-[#111111] hover:shadow-[0_8px_24px_-6px_rgba(17,17,17,0.08)] group"
             >
               {file ? (
                 <div className="flex w-full items-center gap-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111111] shadow-lg">
-                    <IconFileText size={40} className="text-white" />
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[4px] bg-[#111111] text-white">
+                    <IconFileText size={28} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Text fw={700} size="lg" className="truncate text-gray-900">
+                    <Text fw={500} size="md" className="truncate text-[#111111]">
                       {file.name}
                     </Text>
-                    <Text size="sm" c="dimmed" className="mt-1">
+                    <Text size="xs" className="text-[#A0A0A0] mt-1 font-mono">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </Text>
                   </div>
                   <ActionIcon
                     variant="subtle"
-                    color="red"
+                    color="gray"
                     size="xl"
-                    radius="lg"
                     onClick={(e) => {
                       e.preventDefault();
                       removeFile();
                     }}
                     disabled={uploading}
+                    className="text-[#787774] hover:text-[#111111] hover:bg-[#EAEAEA]"
                   >
-                    <IconX size={24} />
+                    <IconX size={20} />
                   </ActionIcon>
                 </div>
               ) : (
                 <>
-                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111111] shadow-lg text-white">
-                    <IconUpload size={40} />
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[4px] bg-[#FAFAFA] border border-[#EAEAEA] text-[#111111] group-hover:bg-[#111111] group-hover:text-white transition-colors">
+                    <IconUpload size={24} />
                   </div>
-                  <Text fw={700} size="xl" className="mb-2 text-gray-900">
+                  <Text fw={500} size="md" className="mb-1 text-[#111111]">
                     Kéo và thả file vào đây
                   </Text>
-                  <Text c="dimmed" size="sm">hoặc nhấp để chọn file từ máy tính</Text>
-                  <Group gap="xs" mt="md">
+                  <Text c="dimmed" size="xs">hoặc nhấp để chọn file từ máy tính</Text>
+                  <Group gap="xs" mt="lg">
                     {["PDF", "DOC", "DOCX", "PPT", "PPTX"].map((ext) => (
                       <span
                         key={ext}
-                        className="px-3 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-500"
+                        className="px-2 py-0.5 border border-[#EAEAEA] rounded-[4px] bg-[#FAFAFA] text-[10px] font-mono text-[#787774] uppercase"
                       >
                         {ext}
                       </span>
@@ -180,7 +177,7 @@ export function UploadView() {
           </div>
 
           {/* Document Details */}
-          <Paper withBorder radius="lg" p="xl" bg="#ffffff" className="space-y-6">
+          <div className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-[6px] p-8 space-y-6 shadow-sm">
             <TextInput
               id="title"
               label="Tiêu đề tài liệu"
@@ -190,9 +187,10 @@ export function UploadView() {
               required
               disabled={uploading}
               size="md"
-              radius="lg"
+              radius="sm"
               styles={{
-                label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
+                label: { fontWeight: 500, fontSize: "14px", color: "#111111", marginBottom: "8px" },
+                input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
               }}
             />
 
@@ -205,17 +203,18 @@ export function UploadView() {
               rows={3}
               disabled={uploading}
               size="md"
-              radius="lg"
+              radius="sm"
               styles={{
-                label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
+                label: { fontWeight: 500, fontSize: "14px", color: "#111111", marginBottom: "8px" },
+                input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
               }}
             />
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pt-4 border-t border-[#EAEAEA]">
               <Select
                 id="subject"
                 label="Môn học"
-                leftSection={<IconBook size={16} className="text-zinc-500" />}
+                leftSection={<IconBook size={16} className="text-[#A0A0A0]" />}
                 placeholder="Chọn môn học"
                 data={subjects
                   .filter((s) => !termId || s.academicTermId === termId)
@@ -224,95 +223,138 @@ export function UploadView() {
                 onChange={(val) => setSubjectId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="lg"
+                radius="sm"
                 styles={{
-                  label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
                 }}
               />
 
               <Select
                 id="term"
                 label="Kỳ học"
-                leftSection={<IconCalendar size={16} className="text-zinc-500" />}
+                leftSection={<IconCalendar size={16} className="text-[#A0A0A0]" />}
                 placeholder="Chọn kỳ học"
                 data={terms.map((t) => ({ value: t.id, label: t.name }))}
                 value={termId}
                 onChange={(val) => setTermId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="lg"
+                radius="sm"
                 styles={{
-                  label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
                 }}
               />
 
               <Select
-                id="chapter"
-                label="Chương"
-                leftSection={<IconBook size={16} className="text-zinc-500" />}
-                placeholder="Chọn chương"
-                data={chapters.map((c) => ({ value: c.id, label: c.name }))}
-                value={chapterId}
-                onChange={(val) => setChapterId(val || "")}
+                id="documentType"
+                label="Loại tài liệu"
+                leftSection={<IconFileCertificate size={16} className="text-[#A0A0A0]" />}
+                placeholder="Chọn loại tài liệu"
+                data={documentTypes.map((dt) => ({ value: dt.id, label: dt.name }))}
+                value={documentTypeId}
+                onChange={(val) => setDocumentTypeId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="lg"
+                radius="sm"
                 styles={{
-                  label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
+                }}
+              />
+
+              <Select
+                id="language"
+                label="Ngôn ngữ"
+                leftSection={<IconLanguage size={16} className="text-[#A0A0A0]" />}
+                placeholder="Chọn ngôn ngữ"
+                data={languages.map((l) => ({ value: l.id, label: l.name }))}
+                value={languageId}
+                onChange={(val) => setLanguageId(val || "")}
+                disabled={uploading}
+                size="md"
+                radius="sm"
+                styles={{
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
+                }}
+              />
+
+              <Select
+                id="documentSource"
+                label="Nguồn tài liệu"
+                leftSection={<IconDatabaseImport size={16} className="text-[#A0A0A0]" />}
+                placeholder="Chọn nguồn tài liệu"
+                data={documentSources.map((ds) => ({ value: ds.id, label: ds.name }))}
+                value={documentSourceId}
+                onChange={(val) => setDocumentSourceId(val || "")}
+                disabled={uploading}
+                size="md"
+                radius="sm"
+                styles={{
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
+                }}
+              />
+
+              <Select
+                id="visibility"
+                label="Quyền riêng tư"
+                placeholder="Chọn quyền"
+                data={[
+                  { value: "private", label: "Riêng tư" },
+                  { value: "school_wide", label: "Nội bộ trường" },
+                  { value: "public", label: "Công khai" },
+                ]}
+                leftSection={
+                  visibility === "private" ? (
+                    <IconLock size={16} className="text-[#A0A0A0]" />
+                  ) : (
+                    <IconGlobe size={16} className="text-[#A0A0A0]" />
+                  )
+                }
+                value={visibility}
+                onChange={(val) => setVisibility(val || "private")}
+                disabled={uploading}
+                size="md"
+                radius="sm"
+                styles={{
+                  label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "6px" },
+                  input: { borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111" } }
                 }}
               />
             </div>
-
-            <Select
-              id="visibility"
-              label="Quyền riêng tư"
-              placeholder="Chọn quyền riêng tư"
-              data={[
-                { value: "private", label: "Riêng tư (chỉ mình tôi)" },
-                { value: "public", label: "Công khai (tài liệu chung)" },
-              ]}
-              leftSection={
-                visibility === "private" ? (
-                  <IconLock size={16} className="text-zinc-500" />
-                ) : (
-                  <IconGlobe size={16} className="text-zinc-500" />
-                )
-              }
-              value={visibility}
-              onChange={(val) => setVisibility(val || "private")}
-              disabled={uploading}
-              size="md"
-              radius="lg"
-              styles={{
-                label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
-              }}
-            />
-          </Paper>
+          </div>
 
           <Button
             type="submit"
             size="lg"
-            radius="lg"
+            radius="sm"
             fullWidth
             color="dark"
             disabled={!file || uploading}
             styles={{
               root: {
                 height: "56px",
-                fontSize: "16px",
-                fontWeight: 600,
+                backgroundColor: "#111111",
+                "&:hover": { backgroundColor: "#222222" },
               },
+              label: {
+                fontWeight: 500,
+                fontSize: "15px",
+              }
             }}
           >
             {uploading ? (
               <Group gap="xs" justify="center">
                 <Loader size="sm" color="white" />
-                <Text fw={600}>Đang tải lên...</Text>
+                <span>Đang xử lý...</span>
               </Group>
             ) : (
-              <Group gap="xs" justify="center">
-                <IconUpload size={20} />
-                <Text fw={600}>Tải lên tài liệu</Text>
+              <Group gap="sm" justify="center">
+                <IconUpload size={18} />
+                <span>Tải lên tài liệu</span>
               </Group>
             )}
           </Button>

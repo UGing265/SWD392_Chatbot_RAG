@@ -1,3 +1,4 @@
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { ragApi } from "./client";
 
 export interface ChatSession {
@@ -65,5 +66,39 @@ export const chatApi = {
 
   deleteSession: async (id: string): Promise<void> => {
     await ragApi.delete(`/chat/sessions/${id}`);
+  },
+
+  streamMessage: async (
+    id: string,
+    content: string,
+    onMessage: (token: string) => void,
+    onError: (err: any) => void,
+    onClose: () => void
+  ): Promise<void> => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const baseURL = process.env.NEXT_PUBLIC_RAG_API_URL || "http://localhost:8080/api";
+    
+    await fetchEventSource(`${baseURL}/chat/sessions/${id}/messages/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ content }),
+      onmessage(ev) {
+        if (ev.event === "error") {
+          onError(new Error(ev.data));
+          return;
+        }
+        onMessage(ev.data);
+      },
+      onerror(err) {
+        onError(err);
+        throw err; // Stop retrying on error
+      },
+      onclose() {
+        onClose();
+      },
+    });
   },
 };

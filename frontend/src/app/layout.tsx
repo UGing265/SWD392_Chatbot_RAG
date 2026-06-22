@@ -32,10 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="vi"
       className={`${serifFont.variable} ${jetbrainsMono.variable}`}
-      data-mantine-color-scheme="dark"
+      data-mantine-color-scheme="light"
     >
       <head>
-        <ColorSchemeScript defaultColorScheme="dark" />
+        <ColorSchemeScript defaultColorScheme="light" />
       </head>
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
