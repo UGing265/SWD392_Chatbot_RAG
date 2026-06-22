@@ -135,7 +135,7 @@ func (r *MessageRepository) SearchSimilarChunks(
 		JOIN documents d ON c.document_id = d.id
 		LEFT JOIN document_files df ON df.document_id = d.id
 		WHERE d.subject_id = $2
-		  AND d.status = 'completed'
+		  AND d.status IN ('completed', 'approved')
 		  AND c.embedding IS NOT NULL
 		ORDER BY c.embedding <=> $1
 		LIMIT $3

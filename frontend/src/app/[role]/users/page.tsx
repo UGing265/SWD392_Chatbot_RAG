@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AdminUsersView } from "@/components/features/admin-users-view";
+import { AdminUsersView } from "@/components/admin/users/admin-users-view";
 
 export default function Page() {
   const params = useParams();

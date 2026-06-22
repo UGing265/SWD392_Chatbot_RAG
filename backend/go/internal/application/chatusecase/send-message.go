@@ -3,6 +3,7 @@ package chatusecase
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 const (
 	topKChunks         = 5
 	maxHistoryMessages = 20
-	similarityThreshold = 0.6
+	similarityThreshold = 0.5
 	outOfScopeReply    = "Xin lỗi, thông tin này không có trong giáo trình. Vui lòng tham khảo thêm tài liệu khác hoặc hỏi giảng viên trên lớp."
 )
 
@@ -58,8 +59,9 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, userID, sessionID uuid.U
 		_ = uc.sessionRepo.Update(ctx, session)
 	}
 
-	// 4. Embed the user query
-	queryEmbedding, err := uc.embedClient.Embed(ctx, content)
+	// 4. Enhance query and embed
+	enhancedQuery := uc.enhanceQueryAsync(ctx, content)
+	queryEmbedding, err := uc.embedClient.Embed(ctx, enhancedQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to embed query: %w", err)
 	}
@@ -174,4 +176,49 @@ func buildGeminiHistory(messages []*message.Message) []llm.ChatMessage {
 		}
 	}
 	return result
+}
+
+var (
+	vietnameseUnmarkedRegex = regexp.MustCompile(`(?i)\b(la|gi|cua|trong|tren|duoi|va|hoac|de|cho|tai|lieu|co|khong|nao|dau|the|lam|sao|mot|hai|ba|bon|nam|tim|kiem|thuat|toan|cau|truc|du|mang|danh|sach|lien|ket|cay|nhi|phan|do|thi|nhe|nha|oi|dung|sai)\b`)
+	vietnameseDiacritics    = regexp.MustCompile(`[áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸÝĐ]`)
+)
+
+func isProbablyVietnamese(text string) bool {
+	if strings.TrimSpace(text) == "" {
+		return false
+	}
+	if vietnameseDiacritics.MatchString(text) {
+		return true
+	}
+	if vietnameseUnmarkedRegex.MatchString(text) {
+		return true
+	}
+	return false
+}
+
+func (uc *ChatUseCase) enhanceQueryAsync(ctx context.Context, originalQuery string) string {
+	if !isProbablyVietnamese(originalQuery) {
+		return originalQuery
+	}
+
+	systemPrompt := "You are a professional technical translator. Translate the user's computer science query from Vietnamese to English. Optimize the translation to be used for semantic vector search in English textbooks. Return ONLY the final translated English query, without any explanation, markdown, quotes or extra text."
+	
+	history := []llm.ChatMessage{
+		{Role: "user", Content: originalQuery},
+	}
+
+	englishQuery, err := uc.llmClient.Generate(ctx, systemPrompt, history)
+	if err != nil {
+		return originalQuery
+	}
+
+	cleaned := strings.TrimFunc(englishQuery, func(r rune) bool {
+		return r == '"' || r == '\'' || r == '`' || r == ' ' || r == '\n'
+	})
+	
+	if cleaned != "" && !strings.EqualFold(cleaned, originalQuery) {
+		return fmt.Sprintf("%s | %s", originalQuery, cleaned)
+	}
+
+	return originalQuery
 }

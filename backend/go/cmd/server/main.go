@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/joho/godotenv"
 	"swd392-chatbot-rag/internal/infrastructure/embedding"
 	"swd392-chatbot-rag/internal/infrastructure/fileparser"
 	"swd392-chatbot-rag/internal/infrastructure/filestorage"
@@ -14,6 +13,8 @@ import (
 	"swd392-chatbot-rag/internal/interface/router"
 	"swd392-chatbot-rag/pkg/config"
 	"swd392-chatbot-rag/pkg/database"
+
+	"github.com/joho/godotenv"
 )
 
 // @title           SWD392 Chatbot RAG API
@@ -66,7 +67,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go bgWorker.Start(ctx)
 	log.Println("Background upload worker started successfully")
 

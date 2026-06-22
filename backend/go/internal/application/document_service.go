@@ -5,10 +5,12 @@ import (
 	"crypto/md5"
 	crand "crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -22,10 +24,12 @@ import (
 	"swd392-chatbot-rag/internal/domain/documentsource"
 	"swd392-chatbot-rag/internal/domain/documenttype"
 	"swd392-chatbot-rag/internal/domain/language"
+	"swd392-chatbot-rag/internal/domain/lecturersubject"
 	"swd392-chatbot-rag/internal/domain/subject"
 	"swd392-chatbot-rag/internal/domain/uploadjob"
 	"swd392-chatbot-rag/internal/domain/user"
 	"swd392-chatbot-rag/internal/infrastructure/filestorage"
+	"swd392-chatbot-rag/internal/infrastructure/llm"
 
 	"github.com/google/uuid"
 )
@@ -33,8 +37,8 @@ import (
 var (
 	AllowedExtensions = []string{".pdf", ".doc", ".docx", ".ppt", ".pptx"}
 	AllowedMimeTypes  = map[string]bool{
-		"application/pdf":                                                           true,
-		"application/msword":                                                        true,
+		"application/pdf":    true,
+		"application/msword": true,
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document":   true,
 		"application/vnd.ms-powerpoint":                                             true,
 		"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
@@ -72,17 +76,17 @@ type DocumentCreateResultDto struct {
 }
 
 type DocumentFileDto struct {
-	ID               uuid.UUID  `json:"id"`
-	DocumentID       uuid.UUID  `json:"document_id"`
-	OriginalFilename string     `json:"original_filename"`
-	StoragePath      string     `json:"storage_path"`
-	S3Key            *string    `json:"s3_key"`
-	FileUrl          *string    `json:"file_url"`
-	MimeType         *string    `json:"mime_type"`
-	FileSizeBytes    int64      `json:"file_size_bytes"`
-	PageCount        *int       `json:"page_count"`
-	ExtractionStatus string     `json:"extraction_status"`
-	CreatedAt        time.Time  `json:"created_at"`
+	ID               uuid.UUID `json:"id"`
+	DocumentID       uuid.UUID `json:"document_id"`
+	OriginalFilename string    `json:"original_filename"`
+	StoragePath      string    `json:"storage_path"`
+	S3Key            *string   `json:"s3_key"`
+	FileUrl          *string   `json:"file_url"`
+	MimeType         *string   `json:"mime_type"`
+	FileSizeBytes    int64     `json:"file_size_bytes"`
+	PageCount        *int      `json:"page_count"`
+	ExtractionStatus string    `json:"extraction_status"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 type DocumentChapterDto struct {
@@ -102,22 +106,23 @@ type DocumentChapterDto struct {
 }
 
 type DocumentChunkDto struct {
-	ID           uuid.UUID  `json:"id"`
-	DocumentID   uuid.UUID  `json:"document_id"`
-	ChapterID    *uuid.UUID `json:"chapter_id,omitempty"`
-	ChunkOrder   int        `json:"chunk_order"`
-	PageNumber   *int       `json:"page_number,omitempty"`
-	Content      string     `json:"content"`
+	ID            uuid.UUID  `json:"id"`
+	DocumentID    uuid.UUID  `json:"document_id"`
+	ChapterID     *uuid.UUID `json:"chapter_id,omitempty"`
+	ChunkOrder    int        `json:"chunk_order"`
+	PageNumber    *int       `json:"page_number,omitempty"`
+	Content       string     `json:"content"`
 	ContentTokens *int       `json:"content_tokens,omitempty"`
-	Metadata     string     `json:"metadata"`
-	ChunkHash    string     `json:"chunk_hash"`
-	HasEmbedding bool       `json:"has_embedding"`
-	CreatedAt    time.Time  `json:"created_at"`
+	Metadata      string     `json:"metadata"`
+	ChunkHash     string     `json:"chunk_hash"`
+	HasEmbedding  bool       `json:"has_embedding"`
+	CreatedAt     time.Time  `json:"created_at"`
 }
 
 type DocumentDetailsDto struct {
 	ID                 uuid.UUID            `json:"id"`
 	OwnerUserID        uuid.UUID            `json:"owner_user_id"`
+	OwnerFullName      *string              `json:"owner_full_name,omitempty"`
 	Title              string               `json:"title"`
 	SubjectID          *uuid.UUID           `json:"subject_id"`
 	SubjectName        *string              `json:"subject_name,omitempty"`
@@ -146,15 +151,15 @@ type DocumentDetailsDto struct {
 }
 
 type UploadJobSummaryDto struct {
-	ID              uuid.UUID `json:"id"`
+	ID              uuid.UUID  `json:"id"`
 	DocumentID      *uuid.UUID `json:"document_id,omitempty"`
-	FileName        string    `json:"file_name"`
-	FileSizeBytes   int64     `json:"file_size_bytes"`
-	Status          string    `json:"status"`
-	ProgressPercent int       `json:"progress_percent"`
-	Message         *string   `json:"message,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	FileName        string     `json:"file_name"`
+	FileSizeBytes   int64      `json:"file_size_bytes"`
+	Status          string     `json:"status"`
+	ProgressPercent int        `json:"progress_percent"`
+	Message         *string    `json:"message,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }
 
 type DocumentListItemDto struct {
@@ -204,15 +209,15 @@ type DashboardRecentDocumentDto struct {
 }
 
 type DashboardSummaryDto struct {
-	TotalDocuments         int                           `json:"total_documents"`
-	TotalChunks            int                           `json:"total_chunks"`
-	TotalFiles             int                           `json:"total_files"`
-	ApprovedDocuments      int                           `json:"approved_documents"`
-	PendingDocuments       int                           `json:"pending_documents"`
-	RejectedDocuments      int                           `json:"rejected_documents"`
+	TotalDocuments         int                          `json:"total_documents"`
+	TotalChunks            int                          `json:"total_chunks"`
+	TotalFiles             int                          `json:"total_files"`
+	ApprovedDocuments      int                          `json:"approved_documents"`
+	PendingDocuments       int                          `json:"pending_documents"`
+	RejectedDocuments      int                          `json:"rejected_documents"`
 	RecentDocuments        []DashboardRecentDocumentDto `json:"recent_documents"`
-	ActiveUploadJobs       []UploadJobSummaryDto         `json:"active_upload_jobs"`
-	CompletedUploadMessage *string                       `json:"completed_upload_message,omitempty"`
+	ActiveUploadJobs       []UploadJobSummaryDto        `json:"active_upload_jobs"`
+	CompletedUploadMessage *string                      `json:"completed_upload_message,omitempty"`
 }
 
 type SubjectDto struct {
@@ -221,6 +226,16 @@ type SubjectDto struct {
 	Name           string     `json:"name"`
 	AcademicTermID *uuid.UUID `json:"academic_term_id,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
+}
+
+type LecturerSubjectAssignmentDto struct {
+	UserID        uuid.UUID `json:"user_id"`
+	SubjectID     uuid.UUID `json:"subject_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	LecturerEmail *string   `json:"lecturer_email,omitempty"`
+	LecturerName  *string   `json:"lecturer_name,omitempty"`
+	SubjectCode   *string   `json:"subject_code,omitempty"`
+	SubjectName   *string   `json:"subject_name,omitempty"`
 }
 
 type DocumentTypeDto struct {
@@ -269,6 +284,17 @@ type DeleteDocumentViewData struct {
 	ChunkCount int       `json:"chunk_count"`
 }
 
+type ComparisonResultDto struct {
+	Differences []struct {
+		Topic       string `json:"topic"`
+		Document1   string `json:"document1"`
+		Document2   string `json:"document2"`
+		Explanation string `json:"explanation"`
+	} `json:"differences"`
+	CommonThemes []string `json:"commonThemes"`
+	Summary      string   `json:"summary"`
+}
+
 // Service Implementation
 
 type DocumentService struct {
@@ -285,7 +311,9 @@ type DocumentService struct {
 	jobRepo     uploadjob.UploadJobRepository
 	userRepo    user.UserRepository
 	auditRepo   auditlog.AuditLogRepository
+	assignRepo  lecturersubject.AssignmentRepository
 	s3Storage   *filestorage.S3FileStorage
+	llmClient   llm.LLMClient
 }
 
 func NewDocumentService(
@@ -302,7 +330,9 @@ func NewDocumentService(
 	jobRepo uploadjob.UploadJobRepository,
 	userRepo user.UserRepository,
 	auditRepo auditlog.AuditLogRepository,
+	assignRepo lecturersubject.AssignmentRepository,
 	s3Storage *filestorage.S3FileStorage,
+	llmClient llm.LLMClient,
 ) *DocumentService {
 	return &DocumentService{
 		docRepo:     docRepo,
@@ -318,7 +348,9 @@ func NewDocumentService(
 		jobRepo:     jobRepo,
 		userRepo:    userRepo,
 		auditRepo:   auditRepo,
+		assignRepo:  assignRepo,
 		s3Storage:   s3Storage,
+		llmClient:   llmClient,
 	}
 }
 
@@ -364,6 +396,13 @@ func (s *DocumentService) EnsureUniqueSlug(ctx context.Context, baseSlug string)
 // Core Document API
 
 func (s *DocumentService) CreateDocument(ctx context.Context, input DocumentCreateInput, fileHeaderSize int64, fileReader io.Reader) (*DocumentCreateResultDto, error) {
+	if input.SubjectID == nil {
+		return nil, errors.New("vui long chon mon hoc duoc phan cong")
+	}
+	if err := s.EnsureLecturerCanUseSubject(ctx, input.OwnerUserID, *input.SubjectID); err != nil {
+		return nil, err
+	}
+
 	// MD5 Hash computation
 	hasher := md5.New()
 	if _, err := io.Copy(hasher, fileReader); err != nil {
@@ -425,6 +464,12 @@ func (s *DocumentService) CreateDocument(ctx context.Context, input DocumentCrea
 
 func (s *DocumentService) UploadOriginalFileToS3(ctx context.Context, docID uuid.UUID, reader io.Reader, filename string, contentType string) (string, string, error) {
 	key := fmt.Sprintf("%s/%s", docID.String(), filename)
+
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		// Mock successful S3 upload for local dev without AWS setup
+		return key, "http://localhost:8080/mock-s3/" + key, nil
+	}
+
 	urlStr, err := s.s3Storage.Save(ctx, key, reader, contentType)
 	if err != nil {
 		return "", "", err
@@ -570,6 +615,7 @@ func (s *DocumentService) GetDocumentDetails(ctx context.Context, docID uuid.UUI
 	return &DocumentDetailsDto{
 		ID:                 doc.ID,
 		OwnerUserID:        doc.OwnerUserID,
+		OwnerFullName:      doc.OwnerFullName,
 		Title:              doc.Title,
 		SubjectID:          doc.SubjectID,
 		SubjectName:        doc.SubjectName,
@@ -888,6 +934,13 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, docID uuid.UUID, o
 		return errors.New("truy cập bị từ chối")
 	}
 
+	if subjectID == nil {
+		return errors.New("vui long chon mon hoc duoc phan cong")
+	}
+	if err := s.EnsureLecturerCanUseSubject(ctx, ownerUserID, *subjectID); err != nil {
+		return err
+	}
+
 	doc.Title = title
 	doc.Description = description
 	doc.SubjectID = subjectID
@@ -1011,6 +1064,135 @@ func (s *DocumentService) GetSubjectsByOwner(ctx context.Context, ownerUserID uu
 		})
 	}
 	return dtos, nil
+}
+
+func (s *DocumentService) GetAssignedSubjectsByLecturer(ctx context.Context, lecturerID uuid.UUID) ([]*SubjectDto, error) {
+	assignments, err := s.assignRepo.FindByLecturer(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+
+	var dtos []*SubjectDto
+	for _, assignment := range assignments {
+		sub, err := s.subjectRepo.FindByID(ctx, assignment.SubjectID)
+		if err != nil {
+			return nil, err
+		}
+		if sub == nil {
+			continue
+		}
+		dtos = append(dtos, &SubjectDto{
+			ID:             sub.ID,
+			Code:           sub.Code,
+			Name:           sub.Name,
+			AcademicTermID: sub.AcademicTermID,
+			CreatedAt:      sub.CreatedAt,
+		})
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) EnsureLecturerCanUseSubject(ctx context.Context, lecturerID uuid.UUID, subjectID uuid.UUID) error {
+	assignment, err := s.assignRepo.FindBySubject(ctx, subjectID)
+	if err != nil {
+		return err
+	}
+	if assignment == nil {
+		return errors.New("mon hoc nay chua duoc phan cong cho giang vien")
+	}
+	if assignment.UserID != lecturerID {
+		return errors.New("giang vien khong duoc phan cong mon hoc nay")
+	}
+	return nil
+}
+
+func toAssignmentDto(a *lecturersubject.Assignment) *LecturerSubjectAssignmentDto {
+	return &LecturerSubjectAssignmentDto{
+		UserID:        a.UserID,
+		SubjectID:     a.SubjectID,
+		CreatedAt:     a.CreatedAt,
+		LecturerEmail: a.LecturerEmail,
+		LecturerName:  a.LecturerName,
+		SubjectCode:   a.SubjectCode,
+		SubjectName:   a.SubjectName,
+	}
+}
+
+func (s *DocumentService) GetLecturerSubjectAssignments(ctx context.Context) ([]*LecturerSubjectAssignmentDto, error) {
+	assignments, err := s.assignRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]*LecturerSubjectAssignmentDto, 0, len(assignments))
+	for _, assignment := range assignments {
+		dtos = append(dtos, toAssignmentDto(assignment))
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) GetLecturerSubjectAssignmentsByLecturer(ctx context.Context, lecturerID uuid.UUID) ([]*LecturerSubjectAssignmentDto, error) {
+	assignments, err := s.assignRepo.FindByLecturer(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+	dtos := make([]*LecturerSubjectAssignmentDto, 0, len(assignments))
+	for _, assignment := range assignments {
+		dtos = append(dtos, toAssignmentDto(assignment))
+	}
+	return dtos, nil
+}
+
+func (s *DocumentService) ReplaceLecturerSubjectAssignments(ctx context.Context, lecturerID uuid.UUID, subjectIDs []uuid.UUID) ([]*LecturerSubjectAssignmentDto, error) {
+	lecturer, err := s.userRepo.FindByID(ctx, lecturerID)
+	if err != nil {
+		return nil, err
+	}
+	if lecturer == nil {
+		return nil, errors.New("khong tim thay giang vien")
+	}
+	if lecturer.RoleID != 2 {
+		return nil, errors.New("nguoi dung duoc phan cong phai la lecturer")
+	}
+
+	seen := map[uuid.UUID]bool{}
+	uniqueSubjectIDs := make([]uuid.UUID, 0, len(subjectIDs))
+	for _, subjectID := range subjectIDs {
+		if seen[subjectID] {
+			continue
+		}
+		seen[subjectID] = true
+
+		sub, err := s.subjectRepo.FindByID(ctx, subjectID)
+		if err != nil {
+			return nil, err
+		}
+		if sub == nil {
+			return nil, fmt.Errorf("khong tim thay mon hoc: %s", subjectID)
+		}
+
+		existing, err := s.assignRepo.FindBySubject(ctx, subjectID)
+		if err != nil {
+			return nil, err
+		}
+		if existing != nil && existing.UserID != lecturerID {
+			subjectLabel := subjectID.String()
+			if existing.SubjectCode != nil {
+				subjectLabel = *existing.SubjectCode
+			}
+			lecturerLabel := existing.UserID.String()
+			if existing.LecturerEmail != nil {
+				lecturerLabel = *existing.LecturerEmail
+			}
+			return nil, fmt.Errorf("mon %s da duoc phan cong cho %s", subjectLabel, lecturerLabel)
+		}
+
+		uniqueSubjectIDs = append(uniqueSubjectIDs, subjectID)
+	}
+
+	if err := s.assignRepo.ReplaceForLecturer(ctx, lecturerID, uniqueSubjectIDs); err != nil {
+		return nil, err
+	}
+	return s.GetLecturerSubjectAssignmentsByLecturer(ctx, lecturerID)
 }
 
 func (s *DocumentService) CreateSubject(ctx context.Context, code, name string, termID *uuid.UUID) (*SubjectDto, error) {
@@ -1656,4 +1838,81 @@ func (s *DocumentService) BlockOrUnblockUser(ctx context.Context, userID uuid.UU
 
 func (s *DocumentService) GetUsers(ctx context.Context) ([]*user.User, error) {
 	return s.userRepo.FindAll(ctx)
+}
+
+// CompareDocuments compares multiple documents and returns the differences and common themes.
+func (s *DocumentService) CompareDocuments(ctx context.Context, documentIDs []uuid.UUID, question string) (*ComparisonResultDto, error) {
+	if len(documentIDs) < 2 {
+		return nil, errors.New("at least 2 documents are required for comparison")
+	}
+
+	var allChunks []*chunk.Chunk
+	for _, docID := range documentIDs {
+		chunks, err := s.chunkRepo.FindByDocumentID(ctx, docID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get chunks for document %s: %w", docID, err)
+		}
+		allChunks = append(allChunks, chunks...)
+	}
+
+	if len(allChunks) == 0 {
+		return nil, errors.New("no content found in the provided documents")
+	}
+
+	// Limit to a reasonable number of chunks to avoid exceeding token limits
+	maxChunks := 40
+	if len(allChunks) > maxChunks {
+		allChunks = allChunks[:maxChunks]
+	}
+
+	var contextBuilder strings.Builder
+	for i, ch := range allChunks {
+		contextBuilder.WriteString(fmt.Sprintf("--- Chunk %d ---\n", i+1))
+		contextBuilder.WriteString(fmt.Sprintf("Document ID: %s\n", ch.DocumentID))
+		contextBuilder.WriteString(fmt.Sprintf("Content:\n%s\n\n", ch.Content))
+	}
+
+	systemPrompt := `You are an expert academic document analyzer. Your task is to compare the provided documents and answer the user's question.
+You MUST output your response in strict JSON format matching the following structure:
+{
+  "differences": [
+    {
+      "topic": "Topic Name",
+      "document1": "How document 1 addresses this",
+      "document2": "How document 2 addresses this",
+      "explanation": "Brief analysis of the difference"
+    }
+  ],
+  "commonThemes": ["Theme 1", "Theme 2"],
+  "summary": "Overall summary of the comparison."
+}
+DO NOT wrap the JSON in Markdown formatting like ` + "`" + `` + "`" + `` + "`json" + `. Just return the raw JSON object.`
+
+	userPrompt := fmt.Sprintf("Question: %s\n\nDocuments Context:\n%s", question, contextBuilder.String())
+
+	history := []llm.ChatMessage{
+		{Role: "user", Content: userPrompt},
+	}
+
+	responseStr, err := s.llmClient.Generate(ctx, systemPrompt, history)
+	if err != nil {
+		return nil, fmt.Errorf("LLM comparison failed: %w", err)
+	}
+
+	// Clean up potential markdown formatting from LLM response
+	responseStr = strings.TrimSpace(responseStr)
+	if strings.HasPrefix(responseStr, "```json") {
+		responseStr = strings.TrimPrefix(responseStr, "```json")
+		responseStr = strings.TrimSuffix(responseStr, "```")
+	} else if strings.HasPrefix(responseStr, "```") {
+		responseStr = strings.TrimPrefix(responseStr, "```")
+		responseStr = strings.TrimSuffix(responseStr, "```")
+	}
+
+	var result ComparisonResultDto
+	if err := json.Unmarshal([]byte(responseStr), &result); err != nil {
+		return nil, fmt.Errorf("failed to parse comparison result: %w\nResponse was: %s", err, responseStr)
+	}
+
+	return &result, nil
 }

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       fileUrl: `/uploads/${filename}`,
       name: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
     });
   } catch (error) {
     console.error("Upload error:", error);

@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Newsreader } from "next/font/google";
+import { Toaster } from "sonner";
+import { ColorSchemeScript } from "@mantine/core";
 
 import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({
+const serifFont = Newsreader({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -27,9 +29,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="vi"
+      className={`${serifFont.variable} ${jetbrainsMono.variable}`}
+      data-mantine-color-scheme="light"
+    >
+      <head>
+        <ColorSchemeScript defaultColorScheme="light" />
+      </head>
       <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

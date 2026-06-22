@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"swd392-chatbot-rag/internal/application/chatusecase"
@@ -225,10 +226,54 @@ func (h *ChatHandler) DeleteSession(c *gin.Context) {
 		return
 	}
 
-	if err := h.useCase.DeleteSession(c.Request.Context(), userID, sessionID); err != nil {
+	if err := h.useCase.DeleteSession(c.Request.Context(), sessionID, userID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Session deleted"})
+}
+
+// StreamMessage godoc
+// @Summary Stream message (RAG pipeline)
+// @Tags chat
+// @Security BearerAuth
+// @Accept json
+// @Produce text/event-stream
+// @Param id path string true "Session ID"
+// @Param body body request.SendMessageRequest true "Message"
+// @Success 200 {string} string "SSE tokens"
+// @Router /api/chat/sessions/{id}/messages/stream [post]
+func (h *ChatHandler) StreamMessage(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+	sessionID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+		return
+	}
+
+	var req request.SendMessageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	tokenCh, _, err := h.useCase.StreamMessage(c.Request.Context(), userID, sessionID, req.Content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+
+	c.Stream(func(w io.Writer) bool {
+		token, ok := <-tokenCh
+		if !ok {
+			return false
+		}
+		c.SSEvent("message", token)
+		return true
+	})
 }

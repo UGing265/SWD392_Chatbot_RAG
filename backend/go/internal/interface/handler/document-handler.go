@@ -592,17 +592,72 @@ func (h *DocumentHandler) Dashboard(c *gin.Context) {
 // @Success 200 {object} map[string]interface{}
 // @Router /api/documents/lookups [get]
 func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
-	subjects, _ := h.service.GetSubjects(c.Request.Context())
+	var subjects interface{}
+	if roleIDVal, exists := c.Get("role_id"); exists && roleIDVal.(int16) == 2 {
+		userID := c.MustGet("user_id").(uuid.UUID)
+		assignedSubjects, err := h.service.GetAssignedSubjectsByLecturer(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		subjects = assignedSubjects
+	} else {
+		allSubjects, _ := h.service.GetSubjects(c.Request.Context())
+		subjects = allSubjects
+	}
 	types, _ := h.service.GetDocumentTypes(c.Request.Context())
 	langs, _ := h.service.GetLanguages(c.Request.Context())
 	sources, _ := h.service.GetDocumentSources(c.Request.Context())
 	terms, _ := h.service.GetAcademicTerms(c.Request.Context())
 
 	c.JSON(http.StatusOK, gin.H{
-		"subjects":         subjects,
+		"subjects":        subjects,
 		"documentTypes":   types,
 		"languages":       langs,
 		"documentSources": sources,
 		"academicTerms":   terms,
 	})
+}
+
+type CompareDocumentsRequest struct {
+	DocumentIDs []string `json:"document_ids" binding:"required,min=2"`
+	Question    string   `json:"question" binding:"required"`
+}
+
+// CompareDocuments godoc
+// @Summary Compare documents
+// @Description Compare multiple documents by extracting chunks and using LLM
+// @Tags documents
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body handler.CompareDocumentsRequest true "Comparison Request"
+// @Success 200 {object} application.ComparisonResultDto
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/documents/compare [post]
+func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
+	var req CompareDocumentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	docIDs := make([]uuid.UUID, 0, len(req.DocumentIDs))
+	for _, idStr := range req.DocumentIDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID in document_ids"})
+			return
+		}
+		docIDs = append(docIDs, id)
+	}
+
+	result, err := h.service.CompareDocuments(c.Request.Context(), docIDs, req.Question)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }

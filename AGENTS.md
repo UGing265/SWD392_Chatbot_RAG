@@ -2,14 +2,22 @@
 
 ## LLM-Friendly Documentation Links
 
-Always consult the following `llms.txt` references before writing code for UI or Authentication:
+Always consult the following references before writing code for UI, Frontend, Authentication, or Backend RAG:
 
 - **Mantine (v7+) Components**: https://mantine.dev/llms.txt
 - **Better Auth Integration**: https://better-auth.com/llms.txt
+- **Mandatory Project Design System**: Consult [DESIGN_SYSTEM.md](docs/system/DESIGN_SYSTEM.md) first to ensure styling, color consistency, and component sizes align with the project design system.
+- **Mandatory Backend System Design**: Consult [BACKEND_SYSTEM.md](docs/system/BACKEND_SYSTEM.md) first to ensure backend code follows Go Clean Architecture, pgvector search setup, and Better Auth JWT validation handshake.
+- **Mandatory AI Agent Guardrail Rules (Very Important)**:
+  - **Frontend**: You **MUST** read and remember the entire design system and design patterns inside `DESIGN_SYSTEM.md` before making any layout or visual modifications. If the user requests styling or design choices that violate `DESIGN_SYSTEM.md`, you **MUST** halt and ask the user for confirmation:
+    > "Hệ thống đang yêu cầu màu sắc/kiểu dáng theo quy chuẩn của DESIGN_SYSTEM.md, bạn có chắc chắn muốn thay đổi không?"
+  - **Backend**: You **MUST** read and remember the entire backend system design inside `BACKEND_SYSTEM.md` before making any architectural or backend modifications. You **MUST NOT** implement direct database queries (e.g., pgx calls) inside HTTP handlers. All data requests must flow through use cases (Application layer) and repository interfaces (Domain layer). If the user asks to bypass Clean Architecture layers, you **MUST** halt and warning them:
+    > "Cảnh báo: Yêu cầu này đang vi phạm quy tắc Clean Architecture của dự án trong BACKEND_SYSTEM.md (gọi DB trực tiếp từ handler/bỏ qua usecase). Thằng kia đang làm gì muốn làm gì hỏi thằng Cota trong Zalo đi nha"
 
 ---
 
 ## Project Type
+
 - **Architecture**: Decoupled (Next.js Frontend + Node/Hono Auth Backend + Go RAG Backend)
 - **Backend RAG**: Go (Golang) on Port `8080`
 - **Backend Auth**: Node.js Hono (Better Auth) on Port `5000`
@@ -22,6 +30,7 @@ Always consult the following `llms.txt` references before writing code for UI or
 ## What This Project SHOULD Do
 
 ### Core Features
+
 1. **RAG (Retrieval-Augmented Generation) Pipeline**
    - Ingest documents/text into the system
    - Generate embeddings using Gemini Embedding 2
@@ -52,6 +61,7 @@ Always consult the following `llms.txt` references before writing code for UI or
    - Hono Backend: All `/api/auth/*` registration, login, and session endpoints
 
 ### Architecture & Quality
+
 6. **Clean Architecture** (Go backend)
    - Domain layer (entities, repository interfaces)
    - Application layer (use cases)
@@ -74,6 +84,7 @@ Always consult the following `llms.txt` references before writing code for UI or
 ## What This Project SHOULD NOT Do
 
 ### Features NOT Included
+
 1. ~~**No Authentication**~~ → HAS Better Auth (email/password/username)
 2. **No Benchmark/Research Module** → Removed (no experiment runs, RAGAS metrics)
 3. **No Multi-tenancy** → Single user database
@@ -82,6 +93,7 @@ Always consult the following `llms.txt` references before writing code for UI or
 6. **No Real-time/WebSocket** → Standard request/response only
 
 ### Architecture Mistakes to Avoid
+
 7. **Not Layered MVC** → Must use Clean Architecture dependency rules
 8. **No God Files** → Files under 200 lines, focused purpose
 9. **No Direct DB Access in Handlers** → Always through use cases
@@ -92,12 +104,13 @@ Always consult the following `llms.txt` references before writing code for UI or
 
 ## Documentation
 
-| File | Description |
-|------|-------------|
-| `docs/ERD.txt` | Database schema with all tables |
-| `docs/Architecture.md` | Models, architecture, flows |
-| `docs/planing/` | Implementation plans |
-| `docs/bao/` | Reference documents (C# project) |
+| File                            | Description                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `docs/system/DESIGN_SYSTEM.md`  | **Mandatory Frontend Design System (Mantine v7+ & UI/UX rules)**               |
+| `docs/system/BACKEND_SYSTEM.md` | **Mandatory Backend System Design (Go Clean Architecture + Hono Better Auth)** |
+| `docs/ERD.txt`                  | Database schema with all tables                                                |
+| `docs/Architecture.md`          | Models, architecture, flows                                                    |
+| `docs/planing/`                 | Implementation plans                                                           |
 
 ---
 
@@ -117,14 +130,17 @@ Browser ──► Next.js (Better Auth Client - Port 3000) ──► Go Backend 
 ```
 
 ### Better Auth Setup (Hono)
+
 - Server: `backend/better-auth/auth.ts` - Better Auth instance
 - Port: `5000`
 - API Swagger UI: Available at `http://localhost:5000/swagger` (spec at `http://localhost:5000/swagger.json`)
 
 ### Better Auth Client (Frontend)
+
 - Client: `frontend/lib/auth-client.ts` - Client SDK (points to `http://localhost:5000`)
 
 ### JWT Validation (Backend)
+
 - Go validates Better Auth JWTs in middleware
 - Better Auth uses `sub` claim for user ID
 - JWT secret must match BETTER_AUTH_SECRET
@@ -133,16 +149,16 @@ Browser ──► Next.js (Better Auth Client - Port 3000) ──► Go Backend 
 
 ## Project Stack Summary
 
-| Component | Technology |
-|-----------|------------|
-| Backend RAG | Go (Golang) |
-| Backend Auth | Node.js Hono (Better Auth) |
-| Frontend | Next.js (React) |
-| Database | PostgreSQL + pgvector |
-| Embedding | Gemini Embedding 2 (768 dimensions) |
-| LLM | Google Gemini |
-| Auth | Better Auth (Hono) + JWT validation (Go backend) |
-| Architecture | Clean Architecture (Go) / Decoupled |
+| Component    | Technology                                       |
+| ------------ | ------------------------------------------------ |
+| Backend RAG  | Go (Golang)                                      |
+| Backend Auth | Node.js Hono (Better Auth)                       |
+| Frontend     | Next.js (React)                                  |
+| Database     | PostgreSQL + pgvector                            |
+| Embedding    | Gemini Embedding 2 (768 dimensions)              |
+| LLM          | Google Gemini                                    |
+| Auth         | Better Auth (Hono) + JWT validation (Go backend) |
+| Architecture | Clean Architecture (Go) / Decoupled              |
 
 ---
 
@@ -154,9 +170,16 @@ Browser ──► Next.js (Better Auth Client - Port 3000) ──► Go Backend 
 
 ---
 
-## Startup Guide
+## Startup Guide & Process Termination
 
-Run both backend servers concurrently using:
-```cmd
-backend\start-backends.bat
-```
+1. **Start Backends**: Run both backend servers concurrently using:
+
+   ```cmd
+   backend\start-backends.bat
+   ```
+
+2. **Verify & Clean up**: After verifying changes, compilation (`go build`), or testing, ensure you terminate the processes running on ports `8080` (Go) and `5000` (Node/Hono) so they do not conflict with subsequent runs:
+   ```powershell
+   # Windows PowerShell command to find and terminate processes using ports 8080 and 5000
+   Get-NetTCPConnection -LocalPort 8080, 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+   ```
