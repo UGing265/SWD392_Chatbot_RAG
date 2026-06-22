@@ -54,7 +54,7 @@ Nghiệp vụ của Chatbot tuân thủ nghiêm ngặt quy trình RAG (Retrieval
     Sử dụng toán tử khoảng cách Cosine (`<=>`) của extension `pgvector` trong PostgreSQL để truy vấn 5 đoạn văn bản (`document_chunks`) có nội dung gần nhất với câu hỏi. 
     *   *Điều kiện lọc:* Tài liệu phải thuộc môn học hiện tại (`d.subject_id = course_id`) và có trạng thái xử lý ngầm đã thành công (`d.status = 'completed'`).
 4.  **Kiểm soát phạm vi kiến thức (Similarity Threshold Filter):**
-    *   Hệ thống thiết lập một ngưỡng tương đồng tối thiểu là **`0.5`** (tương đương 50% độ tương đồng ngữ nghĩa).
+    *   Hệ thống thiết lập một ngưỡng tương đồng tối thiểu là **`0.5`** theo thang điểm cosine similarity.
     *   Nếu điểm số cao nhất của các đoạn văn tìm thấy nhỏ hơn `0.5` hoặc không tìm thấy tài liệu nào, câu hỏi sẽ được đánh dấu là **ngoài phạm vi giáo trình** (`out_of_scope = true`).
     *   Khi đó, Chatbot sẽ lập tức từ chối trả lời một cách lịch sự bằng thông điệp định sẵn: *"Xin lỗi, thông tin này không có trong giáo trình. Vui lòng tham khảo thêm tài liệu khác hoặc hỏi giảng viên trên lớp."* nhằm tránh hiện tượng mô hình AI "ảo tưởng" (hallucination) ra các kiến thức ngoài bài học.
 5.  **Tạo ngữ cảnh & Hỏi đáp với LLM:**
