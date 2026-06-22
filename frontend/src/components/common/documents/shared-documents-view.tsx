@@ -64,22 +64,36 @@ export function SharedDocumentsView() {
   const [selectedTerm, setSelectedTerm] = useState<{
     id: string;
     name: string;
+    year: string;
   } | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null);
 
   // Mock data for UI structure
   const terms = [
-    { id: "t1", name: "Kỳ học 1 (Spring)" },
-    { id: "t2", name: "Kỳ học 2 (Summer)" },
-    { id: "t3", name: "Kỳ học 3 (Fall)" },
+    { id: "t1", name: "Kỳ học 1 (Spring)", year: "2026" },
+    { id: "t2", name: "Kỳ học 2 (Summer)", year: "2026" },
+    { id: "t3", name: "Kỳ học 3 (Fall)", year: "2026" },
+    { id: "t4", name: "Kỳ học 1 (Spring)", year: "2025" },
+    { id: "t5", name: "Kỳ học 2 (Summer)", year: "2025" },
+    { id: "t6", name: "Kỳ học 3 (Fall)", year: "2025" },
   ];
 
   const subjects = [
     { id: "s1", name: "SWD392 - Software Architecture", termId: "t1" },
     { id: "s2", name: "PRJ301 - Java Web", termId: "t1" },
     { id: "s3", name: "PRU211 - C# .NET", termId: "t2" },
-    { id: "s4", name: "DBI202 - Database Systems", termId: "t3" },
+    { id: "s4", name: "DBI202 - Database Systems", termId: "t4" },
   ];
+
+  // Group terms by year
+  const groupedTerms = terms.reduce(
+    (acc, term) => {
+      if (!acc[term.year]) acc[term.year] = [];
+      acc[term.year].push(term);
+      return acc;
+    },
+    {} as Record<string, typeof terms>,
+  );
 
   const fetchDocuments = useCallback(
     async (signal?: AbortSignal) => {
@@ -186,36 +200,36 @@ export function SharedDocumentsView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#000000] overflow-y-auto">
-      <div className="max-w-7xl mx-auto w-full px-6 py-10">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
+      <div className="container mx-auto max-w-5xl p-6 py-12">
         {/* Header */}
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
           <Group justify="space-between" align="center" className="mb-4">
             <Group gap="md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600/20 text-teal-400 shadow-lg border border-teal-500/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111111] text-white shadow-lg">
                 <IconFolderOpen size={24} />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold text-teal-400">Tài liệu chung</h1>
-                <Group gap="xs" className="text-sm font-semibold text-white/70 mt-1">
+                <h1 className="text-3xl font-extrabold text-[#111111]">Tài liệu chung</h1>
+                <Group gap="xs" className="text-sm font-semibold text-gray-500 mt-1">
                   <span
-                    className={`cursor-pointer hover:text-white transition-colors ${!selectedTerm ? "text-white/80" : ""}`}
+                    className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedTerm ? "text-gray-900" : ""}`}
                     onClick={() => {
                       setSelectedTerm(null);
                       setSelectedSubject(null);
                     }}
                   >
-                    Tất cả kỳ học
+                    Tất cả năm học
                   </span>
 
                   {selectedTerm && (
                     <>
                       <IconChevronRight size={14} />
                       <span
-                        className={`cursor-pointer hover:text-white transition-colors ${!selectedSubject ? "text-white/80" : ""}`}
+                        className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedSubject ? "text-gray-900" : ""}`}
                         onClick={() => setSelectedSubject(null)}
                       >
-                        {selectedTerm.name}
+                        Năm {selectedTerm.year} - {selectedTerm.name}
                       </span>
                     </>
                   )}
@@ -223,7 +237,7 @@ export function SharedDocumentsView() {
                   {selectedSubject && (
                     <>
                       <IconChevronRight size={14} />
-                      <span className="text-white/80">{selectedSubject.name}</span>
+                      <span className="text-gray-900">{selectedSubject.name}</span>
                     </>
                   )}
                 </Group>
@@ -235,10 +249,7 @@ export function SharedDocumentsView() {
                 variant="outline"
                 color="gray"
                 onClick={handleBack}
-                radius="md"
-                styles={{
-                  root: { borderColor: "rgba(255, 255, 255, 0.1)", color: "rgba(255, 255, 255, 0.6)" }
-                }}
+                radius="lg"
               >
                 Quay lại
               </Button>
@@ -246,43 +257,52 @@ export function SharedDocumentsView() {
           </Group>
         </div>
 
-        {/* Level 1: Select Term (flat, no year grouping) */}
+        {/* Level 1: Select Term grouped by Year */}
         {!selectedTerm ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-            <div className="grid gap-4 md:grid-cols-3">
-              {terms.map((term) => (
-                <Paper
-                  key={term.id}
-                  withBorder
-                  p="xl"
-                  radius="lg"
-                  onClick={() => {
-                    setSelectedTerm(term);
-                  }}
-                  className="cursor-pointer border-white/5 hover:border-teal-400/50 hover:shadow-md transition-all group !bg-[#0d0d0d]"
-                >
-                  <Group gap="md">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5 text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors border border-white/5">
-                      <IconFolderOpen size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-white group-hover:text-teal-400 transition-colors">
-                        {term.name}
-                      </h3>
-                      <Text size="xs" className="mt-0.5 text-white/90">Bấm để chọn kỳ học</Text>
-                    </div>
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {Object.entries(groupedTerms)
+              .sort((a, b) => Number(b[0]) - Number(a[0]))
+              .map(([year, yearTerms]) => (
+                <div key={year}>
+                  <Group gap="xs" mb="md">
+                    <IconCalendar size={20} className="text-[#111111]" />
+                    <h2 className="text-lg font-bold text-gray-800">
+                      Năm học {year}
+                    </h2>
                   </Group>
-                </Paper>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {yearTerms.map((term) => (
+                      <Paper
+                        key={term.id}
+                        onClick={() => setSelectedTerm(term)}
+                        withBorder
+                        p="md"
+                        radius="lg"
+                        className="cursor-pointer hover:border-zinc-800 hover:shadow-md transition-all group bg-white"
+                      >
+                        <Group gap="md">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
+                            <IconFolderOpen size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors">
+                              {term.name}
+                            </h3>
+                            <Text size="xs" c="dimmed" className="mt-0.5">Bấm để chọn kỳ học</Text>
+                          </div>
+                        </Group>
+                      </Paper>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </div>
           </div>
         ) : !selectedSubject ? (
           /* Level 2: Select Subject */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Group gap="xs" mb="md">
-              <IconBook size={20} className="text-teal-400" />
-              <h2 className="text-lg font-bold text-white/90">
+              <IconBook size={20} className="text-[#111111]" />
+              <h2 className="text-lg font-bold text-gray-800">
                 Chọn Môn Học
               </h2>
             </Group>
@@ -292,28 +312,28 @@ export function SharedDocumentsView() {
                 .map((subject) => (
                   <Paper
                     key={subject.id}
-                    withBorder
-                    p="xl"
-                    radius="lg"
                     onClick={() => setSelectedSubject(subject)}
-                    className="cursor-pointer border-white/5 hover:border-teal-400/50 hover:shadow-md transition-all group !bg-[#0d0d0d]"
+                    withBorder
+                    p="md"
+                    radius="lg"
+                    className="cursor-pointer hover:border-zinc-800 hover:shadow-md transition-all group bg-white"
                   >
                     <Group gap="md">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5 text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors border border-white/5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
                         <IconBook size={24} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-white group-hover:text-teal-400 transition-colors line-clamp-2">
+                        <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors line-clamp-2">
                           {subject.name}
                         </h3>
-                        <Text size="xs" className="mt-1 text-white/90">Bấm để xem tài liệu</Text>
+                        <Text size="xs" c="dimmed" className="mt-1">Bấm để xem tài liệu</Text>
                       </div>
                     </Group>
                   </Paper>
                 ))}
               {subjects.filter((s) => s.termId === selectedTerm.id).length === 0 && (
-                <div className="col-span-full py-12 text-center bg-[#111111] rounded-2xl border border-dashed border-white/10">
-                  <Text className="text-white/70">Chưa có môn học nào trong kỳ này.</Text>
+                <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+                  <Text c="dimmed">Chưa có môn học nào trong kỳ này.</Text>
                 </div>
               )}
             </div>
@@ -326,33 +346,26 @@ export function SharedDocumentsView() {
                 placeholder="Tìm kiếm tài liệu..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.currentTarget.value)}
-                radius="md"
+                radius="lg"
                 size="md"
-                leftSection={<IconSearch size={18} className="text-white/70" />}
-                styles={{
-                  input: {
-                    backgroundColor: "#111111",
-                    borderColor: "rgba(255, 255, 255, 0.1)",
-                    color: "white",
-                  },
-                }}
+                leftSection={<IconSearch size={18} className="text-gray-400" />}
               />
             </div>
             {error && <Text color="red" size="sm" mb="md" fw={500}>{error}</Text>}
 
             {loading ? (
               <div className="flex items-center justify-center py-20 animate-in fade-in duration-500">
-                <Loader size="lg" color="teal" />
+                <Loader size="lg" color="dark" />
               </div>
             ) : filteredDocuments.length === 0 ? (
-              <div className="py-20 text-center bg-[#111111] rounded-[2rem] border border-white/5 shadow-sm animate-in fade-in duration-500">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/2 border border-white/5">
-                  <IconFileText size={40} className="text-white/20" />
+              <div className="py-20 text-center bg-white rounded-[2rem] border border-gray-200 shadow-sm animate-in fade-in duration-500">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-50 border border-gray-100">
+                  <IconFileText size={40} className="text-gray-300" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-white/90">
+                <h3 className="mb-2 text-xl font-bold text-gray-700">
                   {searchQuery ? "Không tìm thấy tài liệu nào" : "Chưa có tài liệu nào"}
                 </h3>
-                <Text className="text-white/70 font-medium">
+                <Text c="dimmed" fw={500}>
                   {searchQuery
                     ? "Hãy thử một từ khóa khác."
                     : "Giảng viên chưa tải lên tài liệu cho môn học này."}
@@ -367,16 +380,16 @@ export function SharedDocumentsView() {
                     withBorder
                     p="lg"
                     radius="lg"
-                    className="group cursor-pointer border-white/5 hover:shadow-xl hover:border-teal-500/40 hover:-translate-y-1 transition-all duration-300 bg-[#111111]"
+                    className="group cursor-pointer hover:shadow-xl hover:border-zinc-800 hover:-translate-y-1 transition-all duration-300 bg-white"
                   >
                     <Group justify="space-between" align="start" mb="md">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 text-teal-400 transition-colors group-hover:bg-teal-600 group-hover:text-white border border-white/5">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700 transition-colors group-hover:bg-[#111111] group-hover:text-white">
                         <IconFileText size={28} />
                       </div>
                       <Badge
-                        color="teal"
-                        variant="filled"
-                        radius="md"
+                        color="gray"
+                        variant="light"
+                        radius="lg"
                         py="sm"
                         leftSection={<IconWorld size={12} />}
                       >
@@ -384,12 +397,12 @@ export function SharedDocumentsView() {
                       </Badge>
                     </Group>
 
-                    <Text fw={700} size="md" className="mb-3 line-clamp-2 text-white/90 group-hover:text-teal-400 transition-colors">
+                    <Text fw={700} size="md" className="mb-3 line-clamp-2 text-gray-900 group-hover:text-[#111111] transition-colors">
                       {doc.title}
                     </Text>
 
                     {getPreview(doc) && (
-                      <Text size="sm" className="mb-5 line-clamp-2 leading-relaxed text-white/80">
+                      <Text size="sm" c="dimmed" className="mb-5 line-clamp-2 leading-relaxed">
                         {getPreview(doc)}
                       </Text>
                     )}
@@ -398,12 +411,12 @@ export function SharedDocumentsView() {
                       justify="space-between"
                       align="center"
                       className="mt-auto pt-4"
-                      style={{ borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}
+                      style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}
                     >
-                      <Text size="xs" className="truncate max-w-[150px] text-white/70">
+                      <Text size="xs" c="dimmed" className="truncate max-w-[150px]">
                         {doc.owner_email ? `Bởi: ${doc.owner_email}` : "Bởi: Giảng viên"}
                       </Text>
-                      <Text size="xs" className="text-white/70">
+                      <Text size="xs" c="dimmed">
                         {new Date(doc.created_at).toLocaleDateString("vi-VN")}
                       </Text>
                     </Group>

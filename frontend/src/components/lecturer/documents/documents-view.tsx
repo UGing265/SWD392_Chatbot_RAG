@@ -102,11 +102,11 @@ export function DocumentsView() {
         <div className="mb-8">
           <Group justify="space-between" align="center" gap="md" className="mb-4">
             <Group gap="md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111111] text-white shadow-lg">
                 <IconFolderOpen size={24} />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold text-blue-600">Tài liệu riêng</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-[#111111] dark:text-[#f8fafc] font-sans">Tài liệu riêng</h1>
                 <Group gap="xs" className="text-sm font-semibold text-gray-500 mt-1">
                   <span
                     className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedTerm ? "text-gray-900" : ""}`}
@@ -169,7 +169,7 @@ export function DocumentsView() {
                   variant="outline"
                   color="gray"
                   onClick={handleBack}
-                  radius="md"
+                  radius="lg"
                 >
                   Quay lại
                 </Button>
@@ -180,8 +180,8 @@ export function DocumentsView() {
                     setCurrentMaterial({ subjectId: selectedSubject?.id || "" });
                     setIsUploadModalOpen(true);
                   }}
-                  radius="md"
-                  color="blue"
+                  radius="lg"
+                  color="dark"
                   leftSection={<IconPlus size={16} />}
                 >
                   Tải lên tài liệu
@@ -212,8 +212,8 @@ export function DocumentsView() {
                 .map(([year, yearTerms]) => (
                   <div key={year}>
                     <Group gap="xs" mb="md">
-                      <IconCalendar size={20} className="text-blue-500" />
-                      <h2 className="text-lg font-bold text-gray-800">
+                      <IconCalendar size={20} className="text-zinc-500" />
+                      <h2 className="text-lg font-bold tracking-tight text-[#111111]">
                         Năm học {year}
                       </h2>
                     </Group>
@@ -227,15 +227,15 @@ export function DocumentsView() {
                           }}
                           withBorder
                           p="md"
-                          radius="md"
-                          className="cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group bg-white"
+                          radius="lg"
+                          className="cursor-pointer hover:border-[#111111] hover:shadow-md transition-all group bg-white"
                         >
                           <Group gap="md">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
                               <IconFolderOpen size={24} />
                             </div>
                             <div>
-                              <h3 className="text-base font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                              <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors">
                                 {term.name}
                               </h3>
                               <Text size="xs" c="dimmed" className="mt-0.5">Bấm để chọn kỳ học</Text>
@@ -252,8 +252,8 @@ export function DocumentsView() {
           /* Level 2: Select Subject */
           <div>
             <Group gap="xs" mb="md">
-              <IconBook size={20} className="text-blue-500" />
-              <h2 className="text-lg font-bold text-gray-800">
+              <IconBook size={20} className="text-zinc-500" />
+              <h2 className="text-lg font-bold tracking-tight text-[#111111]">
                 Chọn Môn Học
               </h2>
             </Group>
@@ -277,15 +277,15 @@ export function DocumentsView() {
                       }}
                       withBorder
                       p="md"
-                      radius="md"
-                      className="cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group bg-white"
+                      radius="lg"
+                      className="cursor-pointer hover:border-[#111111] hover:shadow-md transition-all group bg-white"
                     >
                       <Group gap="md">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
                           <IconBook size={24} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-bold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors line-clamp-2">
                             {subject.name}
                           </h3>
                           <Text size="xs" c="dimmed" className="mt-1">
@@ -301,16 +301,16 @@ export function DocumentsView() {
                 onClick={() => setIsAddSubjectModalOpen(true)}
                 withBorder
                 p="md"
-                radius="md"
+                radius="lg"
                 style={{ borderStyle: "dashed" }}
-                className="cursor-pointer hover:border-blue-500 hover:bg-blue-50/20 transition-all group bg-zinc-50/30"
+                className="cursor-pointer hover:border-[#111111] hover:bg-zinc-50 transition-all group bg-zinc-50/30"
               >
                 <Group gap="md">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-150 text-gray-500 group-hover:bg-zinc-100 group-hover:text-gray-900 transition-colors">
                     <IconPlus size={24} />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-gray-600 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-base font-bold text-gray-600 group-hover:text-[#111111] transition-colors">
                       Thêm môn học
                     </h3>
                     <Text size="xs" c="dimmed" className="mt-1">Tạo môn học mới</Text>
@@ -336,8 +336,8 @@ export function DocumentsView() {
                     setCurrentMaterial({ subjectId: selectedSubject?.id || "" });
                     setIsUploadModalOpen(true);
                   }}
-                  radius="md"
-                  color="blue"
+                  radius="lg"
+                  color="dark"
                   leftSection={<IconPlus size={16} />}
                 >
                   Tải lên tài liệu đầu tiên
@@ -351,10 +351,10 @@ export function DocumentsView() {
                     withBorder
                     p="lg"
                     radius="lg"
-                    className="group flex flex-col hover:shadow-lg transition-all duration-300 hover:border-blue-500/50 bg-white"
+                    className="group flex flex-col hover:shadow-lg transition-all duration-300 hover:border-zinc-800 bg-white"
                   >
                     <Group justify="space-between" align="start" mb="md">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700 transition-colors group-hover:bg-[#111111] group-hover:text-white">
                         <IconFileText size={28} />
                       </div>
                       <Badge
@@ -428,8 +428,8 @@ export function DocumentsView() {
                           setStep("chapters");
                         }}
                         variant="light"
-                        color="blue"
-                        radius="md"
+                        color="dark"
+                        radius="lg"
                         size="xs"
                       >
                         Cấu trúc
@@ -452,6 +452,8 @@ export function DocumentsView() {
                 >
                   <label className="flex items-center gap-4 p-4 border-b border-gray-100 bg-zinc-50/50 hover:bg-zinc-50 cursor-pointer transition-colors">
                     <Checkbox
+                      radius="lg"
+                      color="dark"
                       size="sm"
                       checked={selectedChapterIds.has(c.id)}
                       onChange={() => {
@@ -480,6 +482,8 @@ export function DocumentsView() {
                         className="flex items-center gap-4 p-3 pl-12 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
                       >
                         <Checkbox
+                          radius="lg"
+                          color="dark"
                           size="sm"
                           checked={selectedItemIds.has(item.id)}
                           onChange={() => {
@@ -502,14 +506,14 @@ export function DocumentsView() {
               <Button
                 variant="outline"
                 color="gray"
-                radius="md"
+                radius="lg"
                 onClick={() => setStep("documents")}
               >
                 Hủy
               </Button>
               <Button
-                color="blue"
-                radius="md"
+                color="dark"
+                radius="lg"
                 onClick={() => setStep("viewing")}
                 disabled={selectedChapterIds.size === 0 && selectedItemIds.size === 0}
               >
@@ -519,12 +523,12 @@ export function DocumentsView() {
           </div>
         ) : step === "viewing" && activeMaterial ? (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Paper withBorder radius="24px" p={{ base: "xl", md: "12" }} bg="#ffffff" className="relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 inset-x-0 h-1 bg-blue-600" />
+            <Paper withBorder radius="lg" p={{ base: "xl", md: "12" }} bg="#ffffff" className="relative overflow-hidden shadow-sm">
+              <div className="absolute top-0 inset-x-0 h-1 bg-[#111111]" />
               <div className="max-w-3xl mx-auto space-y-10">
                 <div className="text-center space-y-3">
-                  <Badge color="blue" size="sm" radius="md">STUDY MATERIAL</Badge>
-                  <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
+                  <Badge color="dark" size="sm" radius="lg">STUDY MATERIAL</Badge>
+                  <h2 className="text-3xl font-bold tracking-tight text-gray-900">
                     {activeMaterial?.resource}
                   </h2>
                   <Group justify="center" gap="md" className="text-gray-400 text-sm">
@@ -551,7 +555,7 @@ export function DocumentsView() {
                       <section key={c.id} className="space-y-6">
                         <div className="border-b border-gray-100 pb-3">
                           <h3 className="text-xl font-bold text-gray-800">{c.name}</h3>
-                          <div className="h-1 w-12 bg-blue-500 rounded-full mt-2" />
+                          <div className="h-1 w-12 bg-[#111111] rounded-full mt-2" />
                         </div>
 
                         <div className="space-y-8">
@@ -559,7 +563,7 @@ export function DocumentsView() {
                             .filter((i) => selectedItemIds.has(i.id))
                             .map((item) => (
                               <div key={item.id} className="space-y-4">
-                                <h4 className="text-lg font-bold text-blue-600 flex items-center gap-2">
+                                <h4 className="text-lg font-bold text-[#111111] flex items-center gap-2">
                                   <IconPlus size={16} /> {item.name}
                                 </h4>
                                 <div className="text-gray-600 leading-[1.8] text-sm space-y-3">
@@ -575,8 +579,8 @@ export function DocumentsView() {
                                     ý chính, định nghĩa quan trọng và ví dụ minh họa giúp sinh viên
                                     dễ dàng nắm bắt kiến thức một cách khoa học nhất.
                                   </p>
-                                  <Paper withBorder radius="md" p="md" bg="blue.0/30" className="border-blue-200">
-                                    <Text size="sm" fs="italic" fw={500} c="blue.8">
+                                  <Paper withBorder radius="lg" p="md" bg="zinc-50" className="border-zinc-200">
+                                    <Text size="sm" fs="italic" fw={500} c="zinc.8">
                                       "Kiến thức là nền tảng của sự phát triển. Việc nắm bắt các khái
                                       niệm cơ bản trong {item.name} sẽ là chìa khóa để giải quyết các
                                       bài tập phức tạp hơn sau này."
@@ -602,7 +606,9 @@ export function DocumentsView() {
             setIsEditModalOpen(false);
           }}
           title={isEditModalOpen ? "Chỉnh sửa tài liệu" : "Tải lên tài liệu mới"}
-          radius="md"
+          radius="2xl"
+          centered
+          overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
           size="md"
         >
           <Stack gap="md" py="md">
@@ -620,11 +626,11 @@ export function DocumentsView() {
                     borderRadius: "16px",
                     padding: "24px",
                     cursor: isUploading ? "not-allowed" : "pointer",
-                    backgroundColor: selectedFile ? "var(--mantine-color-blue-0)" : "#ffffff",
+                    backgroundColor: selectedFile ? "var(--mantine-color-gray-0)" : "#ffffff",
                     transition: "all 150ms ease",
                     opacity: isUploading ? 0.5 : 1,
                   }}
-                  className="hover:border-blue-400"
+                  className="hover:border-zinc-800"
                 >
                   <input
                     type="file"
@@ -636,7 +642,7 @@ export function DocumentsView() {
                   />
                   {selectedFile ? (
                     <Group gap="sm">
-                      <div className="p-2 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                      <div className="p-2 rounded-lg bg-[#111111] text-white flex items-center justify-center">
                         <IconFile size={24} />
                       </div>
                       <div className="text-left">
@@ -670,7 +676,7 @@ export function DocumentsView() {
               }
               placeholder="Ví dụ: Advanced Calculus Chapter 4"
               disabled={isUploading}
-              radius="md"
+              radius="lg"
               styles={{ label: { fontWeight: 600, marginBottom: "4px" } }}
             />
 
@@ -748,7 +754,7 @@ export function DocumentsView() {
                         <Button
                           variant="outline"
                           size="xs"
-                          radius="md"
+                          radius="lg"
                           onClick={() => {
                             const newChapters = [...(currentMaterial?.chapters || [])];
                             newChapters[chIdx].items.push({
@@ -767,7 +773,7 @@ export function DocumentsView() {
                   ))}
                   <Button
                     variant="outline"
-                    radius="md"
+                    radius="lg"
                     style={{ borderStyle: "dashed" }}
                     onClick={() => {
                       const newChapters = [
@@ -794,15 +800,15 @@ export function DocumentsView() {
                 setIsEditModalOpen(false);
               }}
               disabled={isUploading}
-              radius="md"
+              radius="lg"
             >
               Hủy
             </Button>
             <Button
               onClick={handleSave}
               disabled={isUploading}
-              radius="md"
-              color="blue"
+              radius="lg"
+              color="dark"
             >
               {isUploading ? (
                 <Group gap="xs">
@@ -820,7 +826,9 @@ export function DocumentsView() {
           opened={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           title="Xác nhận xóa tài liệu"
-          radius="md"
+          radius="2xl"
+          centered
+          overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
         >
           <Stack gap="md" py="md">
             <Text size="sm">
@@ -834,14 +842,14 @@ export function DocumentsView() {
               variant="outline"
               color="gray"
               onClick={() => setIsDeleteModalOpen(false)}
-              radius="md"
+              radius="lg"
             >
               Hủy
             </Button>
             <Button
               color="red"
               onClick={handleDelete}
-              radius="md"
+              radius="lg"
               fw={700}
             >
               Xác nhận xóa
@@ -853,7 +861,9 @@ export function DocumentsView() {
           opened={isAddSubjectModalOpen}
           onClose={() => setIsAddSubjectModalOpen(false)}
           title="Thêm môn học mới"
-          radius="md"
+          radius="2xl"
+          centered
+          overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
         >
           <Stack gap="md" py="md">
             <Text size="xs" c="dimmed">
@@ -864,7 +874,7 @@ export function DocumentsView() {
               placeholder="Ví dụ: Biology, Chemistry, v.v."
               value={newSubjectName}
               onChange={(e) => setNewSubjectName(e.target.value)}
-              radius="md"
+              radius="lg"
               styles={{ label: { fontWeight: 600, marginBottom: "4px" } }}
               onKeyDown={(e) => e.key === "Enter" && handleSaveSubject()}
             />
@@ -874,14 +884,14 @@ export function DocumentsView() {
               variant="outline"
               color="gray"
               onClick={() => setIsAddSubjectModalOpen(false)}
-              radius="md"
+              radius="lg"
             >
               Hủy
             </Button>
             <Button
               onClick={handleSaveSubject}
-              radius="md"
-              color="blue"
+              radius="lg"
+              color="dark"
               fw={700}
             >
               Xác nhận

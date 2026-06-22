@@ -40,7 +40,7 @@ export const curriculumApi = {
   },
 
   createSubject: async (code: string, name: string, academicTermId: string): Promise<any> => {
-    const response = await ragApi.post("/admin/subjects", { code, name, academicTermId });
+    const response = await ragApi.post("/admin/subjects", { code, name, academic_term_id: academicTermId });
     return response.data;
   },
 
@@ -53,7 +53,7 @@ export const curriculumApi = {
     const response = await ragApi.put(`/admin/subjects/${subjectId}`, {
       code,
       name,
-      academicTermId,
+      academic_term_id: academicTermId,
     });
     return response.data;
   },

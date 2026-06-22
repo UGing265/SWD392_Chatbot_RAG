@@ -105,12 +105,13 @@ export function useMyDocuments() {
       (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleDelete = async (e: React.MouseEvent, docId: string) => {
+  const handleDelete = async (e: React.MouseEvent, docSlug: string | undefined) => {
     e.stopPropagation();
+    if (!docSlug) return;
     if (!confirm("Are you sure you want to delete this document?")) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/documents/${docId}/delete`, {
+      const response = await fetch(`http://localhost:8080/api/documents/${docSlug}/delete`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
