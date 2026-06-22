@@ -6,28 +6,18 @@ import {
   IconSparkles,
   IconSend,
   IconFileText,
-  IconUser,
-  IconPaperclip,
   IconCircleCheck,
-  IconHistory,
   IconPlus,
   IconRotate2,
   IconCopy,
   IconThumbUp,
   IconThumbDown,
-  IconX,
-  IconArrowLeft,
-  IconClipboardList,
   IconChevronDown,
-  IconMicrophone,
-  IconMessage2,
-  IconSearch,
+  IconArrowLeft,
   IconBook,
 } from "@tabler/icons-react";
 import {
   Button,
-  TextInput,
-  Textarea,
   Paper,
   Text,
   Badge,
@@ -35,33 +25,11 @@ import {
   Stack,
   ActionIcon,
   Loader,
+  Textarea,
 } from "@mantine/core";
-import {
-  type Message,
-  getMessages,
-  addMessage,
-  createSession,
-  sessionList,
-} from "@/lib/sessions-store";
-
-const mockSubjects = [
-  { id: "s1", name: "SWD392 - Software Architecture" },
-  { id: "s2", name: "PRJ301 - Java Web" },
-  { id: "s3", name: "PRU211 - C# .NET" },
-];
-
-const availableDocs: Record<string, { id: string; title: string; type: string }[]> = {
-  s1: [
-    { id: "1", title: "Cơ bản về Kiến trúc phần mềm", type: "PDF" },
-    { id: "2", title: "Thiết kế REST API", type: "DOCX" },
-    { id: "3", title: "Microservices Pattern", type: "PDF" },
-  ],
-  s2: [
-    { id: "4", title: "Servlet và JSP", type: "PDF" },
-    { id: "5", title: "Spring Boot cơ bản", type: "PDF" },
-  ],
-  s3: [{ id: "6", title: "C# Căn bản", type: "PDF" }],
-};
+import { chatApi, type ChatMessage, type ChatSession } from "@/api/chat";
+import { curriculumApi } from "@/api/curriculum";
+import { ragApi } from "@/api/client";
 
 function RichInputBox({
   input,
@@ -72,6 +40,7 @@ function RichInputBox({
   placeholder,
   scopeOpen,
   setScopeOpen,
+  hasDocuments,
 }: {
   input: string;
   setInput: (val: string) => void;
@@ -81,6 +50,7 @@ function RichInputBox({
   placeholder: string;
   scopeOpen: boolean;
   setScopeOpen: (val: boolean) => void;
+  hasDocuments: boolean;
 }) {
   return (
     <Paper
@@ -110,41 +80,19 @@ function RichInputBox({
       />
       <Group justify="space-between" align="center" mt="md" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}>
         <Group gap="xs">
-          <Button
-            onClick={() => setScopeOpen(!scopeOpen)}
-            variant={scopeOpen ? "light" : "subtle"}
-            color={scopeOpen ? "blue" : "gray"}
-            radius="xl"
-            size="xs"
-            leftSection={<IconBook size={14} />}
-            rightSection={<IconChevronDown size={12} style={{ transform: scopeOpen ? "rotate(180deg)" : "none", transition: "transform 150ms ease" }} />}
-          >
-            {scopeOpen ? "Đóng chọn tài liệu" : "Chọn tài liệu môn học"}
-          </Button>
-          <Button
-            variant="subtle"
-            color="gray"
-            radius="xl"
-            size="xs"
-            leftSection={
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-            }
-          >
-            Máy tính
-          </Button>
+          {hasDocuments && (
+            <Button
+              onClick={() => setScopeOpen(!scopeOpen)}
+              variant={scopeOpen ? "light" : "subtle"}
+              color={scopeOpen ? "blue" : "gray"}
+              radius="xl"
+              size="xs"
+              leftSection={<IconBook size={14} />}
+              rightSection={<IconChevronDown size={12} style={{ transform: scopeOpen ? "rotate(180deg)" : "none", transition: "transform 150ms ease" }} />}
+            >
+              {scopeOpen ? "Đóng chọn tài liệu" : "Chọn tài liệu môn học"}
+            </Button>
+          )}
         </Group>
         <Group gap="sm">
           <ActionIcon
@@ -163,82 +111,32 @@ function RichInputBox({
 }
 
 function DocumentSelector({
+  documents,
   scopedDocs,
   toggleDoc,
-  selectedSubjectId,
-  setSelectedSubjectId,
 }: {
+  documents: any[];
   scopedDocs: string[];
   toggleDoc: (id: string) => void;
-  selectedSubjectId: string | null;
-  setSelectedSubjectId: (id: string | null) => void;
 }) {
-  if (!selectedSubjectId) {
-    return (
-      <div className="w-full">
-        <Text size="xs" fw={700} c="dimmed" mb="xs" className="tracking-wider uppercase">
-          Chọn môn học để thu hẹp phạm vi tìm kiếm
-        </Text>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {mockSubjects.map((sub) => (
-            <Paper
-              key={sub.id}
-              onClick={() => setSelectedSubjectId(sub.id)}
-              withBorder
-              p="sm"
-              radius="md"
-              className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all"
-            >
-              <Group gap="sm" wrap="nowrap">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                  <IconBook size={16} />
-                </div>
-                <Text size="sm" fw={600} className="truncate text-gray-800 group-hover:text-blue-600 transition-colors">
-                  {sub.name}
-                </Text>
-              </Group>
-            </Paper>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const subjectDocs = availableDocs[selectedSubjectId] || [];
-
   return (
     <div className="w-full">
       <Group justify="space-between" align="center" mb="sm">
-        <Group gap="xs">
-          <Button
-            onClick={() => setSelectedSubjectId(null)}
-            variant="subtle"
-            color="gray"
-            size="xs"
-            leftSection={<IconArrowLeft size={14} />}
-            p={0}
-          >
-            Quay lại
-          </Button>
-          <Text size="xs" fw={700} c="dimmed">
-            •
-          </Text>
-          <Text size="xs" fw={700} color="blue">
-            {mockSubjects.find((s) => s.id === selectedSubjectId)?.name}
-          </Text>
-        </Group>
+        <Text size="xs" fw={700} c="dimmed" className="tracking-wider uppercase">
+          Tài liệu môn học (RAG Scope)
+        </Text>
         <Badge variant="light" color="gray">
-          Đã chọn {subjectDocs.filter((d) => scopedDocs.includes(d.id)).length}/{subjectDocs.length}
+          Đã chọn {documents.filter((d) => scopedDocs.includes(d.id)).length}/{documents.length}
         </Badge>
       </Group>
 
-      {subjectDocs.length === 0 ? (
-        <Paper withBorder p="md" radius="md" style={{ borderStyle: "dashed" }} bg="zinc-50/50" className="text-center">
-          <Text size="sm" c="dimmed">Không có tài liệu nào trong môn học này.</Text>
+      {documents.length === 0 ? (
+        <Paper withBorder p="md" radius="lg" style={{ borderStyle: "dashed" }} bg="zinc-50/50" className="text-center">
+          <Text size="sm" c="dimmed">Không có tài liệu nào thuộc môn học này.</Text>
         </Paper>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {subjectDocs.map((doc) => {
+          {documents.map((doc) => {
             const selected = scopedDocs.includes(doc.id);
             return (
               <Paper
@@ -246,7 +144,7 @@ function DocumentSelector({
                 onClick={() => toggleDoc(doc.id)}
                 withBorder
                 p="sm"
-                radius="md"
+                radius="lg"
                 className={`cursor-pointer transition-all ${
                   selected
                     ? "border-blue-500 bg-blue-50/10 text-blue-600"
@@ -256,7 +154,7 @@ function DocumentSelector({
                 <Group gap="sm" wrap="nowrap">
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      selected ? "bg-blue-600 text-white" : "bg-gray-150 text-gray-500"
+                      selected ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
                     }`}
                   >
                     {selected ? (
@@ -270,7 +168,7 @@ function DocumentSelector({
                       {doc.title}
                     </Text>
                     <Text size="10px" className="tracking-wider uppercase opacity-70 mt-0.5">
-                      {doc.type}
+                      {doc.document_type_name || "TÀI LIỆU"}
                     </Text>
                   </div>
                 </Group>
@@ -290,36 +188,78 @@ export function ChatView() {
   const role = (params?.role as string) || "student";
   const sessionId = searchParams?.get("session") ?? null;
 
-  const [messages, setMessages] = useState<Message[]>(() =>
-    sessionId ? getMessages(sessionId) : getMessages("default"),
-  );
+  const [session, setSession] = useState<ChatSession | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
   // Scoped documents state
+  const [documents, setDocuments] = useState<any[]>([]);
   const [scopedDocs, setScopedDocs] = useState<string[]>([]);
   const [scopeOpen, setScopeOpen] = useState(false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+
+  // Landing page subjects state
+  const [subjects, setSubjects] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // If no session is specified, redirect to the most recent one
   useEffect(() => {
-    if (!sessionId && sessionList.length > 0) {
-      router.replace(`/${role}/chat?session=${sessionList[0].id}`);
+    if (!sessionId) {
+      chatApi.listSessions()
+        .then((list) => {
+          if (list.length > 0) {
+            router.replace(`/${role}/chat?session=${list[0].id}`);
+          } else {
+            // Load subjects for landing page
+            setLoadingSubjects(true);
+            curriculumApi.getLookups()
+              .then((data) => {
+                setSubjects(data.subjects || []);
+              })
+              .catch((err) => console.error("Error loading subjects:", err))
+              .finally(() => setLoadingSubjects(false));
+          }
+        })
+        .catch((err) => console.error("Error checking sessions:", err));
     }
   }, [sessionId, role, router]);
 
-  const isHome = messages.length === 0;
-
-  // Reload messages when session changes
+  // Load session, history, and documents when sessionId changes
   useEffect(() => {
-    setMessages(sessionId ? getMessages(sessionId) : getMessages("default"));
+    if (sessionId) {
+      setLoading(true);
+      Promise.all([
+        chatApi.getSession(sessionId),
+        chatApi.getHistory(sessionId),
+      ])
+        .then(([sessionData, historyData]) => {
+          setSession(sessionData);
+          setMessages(historyData);
+
+          // Fetch documents for the subject
+          ragApi.get(`/documents?subjectId=${sessionData.course_id}&pageSize=100`)
+            .then((res) => {
+              setDocuments(res.data.documents || []);
+            })
+            .catch((err) => console.error("Error loading course documents:", err));
+        })
+        .catch((err) => {
+          console.error("Error loading session:", err);
+          router.replace(`/${role}/chat`);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setSession(null);
+      setMessages([]);
+      setDocuments([]);
+    }
     setScopedDocs([]);
     setScopeOpen(false);
-    setSelectedSubjectId(null);
-  }, [sessionId]);
+  }, [sessionId, role, router]);
 
   const toggleDoc = (id: string) => {
     setScopedDocs((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
@@ -329,36 +269,35 @@ export function ChatView() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: input };
+  const handleSend = async () => {
+    if (!input.trim() || !sessionId) return;
+    
+    // Add user message optimistically
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+      out_of_scope: false,
+      created_at: new Date().toISOString(),
+    };
+    
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
     setScopeOpen(false); // Close document selector when sending
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await chatApi.sendMessage(sessionId, input);
+      setMessages((prev) => {
+        const withoutOptimistic = prev.filter((m) => m.id !== userMsg.id);
+        return [...withoutOptimistic, response.user_message, response.bot_message];
+      });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      alert("Đã xảy ra lỗi khi gửi tin nhắn. Vui lòng thử lại.");
+    } finally {
       setIsTyping(false);
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "bot",
-        content:
-          "Dựa trên tài liệu bạn đã chọn, đây là thông tin chi tiết về câu hỏi của bạn. Quy trình này bao gồm các bước quan trọng để đạt được kết quả tối ưu trong bối cảnh học thuật.",
-        citations: [
-          { id: 1, title: "Kiến trúc RAG cơ bản", pages: "Trang 12-15", type: "PDF" },
-          { id: 2, title: "Tối ưu hóa Vector Search", pages: "Trang 45", type: "DOCX" },
-          { id: 3, title: "Gemini Embedding Model", pages: "Phụ lục A", type: "PDF" },
-        ],
-        bullets: [
-          "Sử dụng **pgvector** để lưu trữ và truy vấn embedding.",
-          "Tích hợp **Gemini LLM** để tổng hợp câu trả lời từ ngữ cảnh.",
-          "Trích dẫn nguồn chính xác giúp tăng độ tin cậy của câu trả lời.",
-        ],
-      };
-      if (sessionId) addMessage(sessionId, botMsg);
-      setMessages((prev) => [...prev, botMsg]);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -368,15 +307,94 @@ export function ChatView() {
     }
   };
 
-  return (
-    <div className="flex h-full flex-col bg-zinc-50">
-      {/* Home View Header (Hidden in thread) */}
-      {isHome && (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
-          <div className="mb-8">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 text-center">
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-zinc-50">
+        <Loader size="md" color="blue" />
+      </div>
+    );
+  }
+
+  // Case 1: No active session (Landing Page)
+  if (!sessionId) {
+    return (
+      <div className="flex h-full flex-col bg-zinc-50 overflow-y-auto">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
               StudyMate AI
             </h1>
+            <Text size="sm" c="dimmed" className="mt-2 max-w-md mx-auto">
+              Chào mừng bạn đến với StudyMate AI! Hãy chọn một môn học dưới đây để bắt đầu hỏi đáp và ôn luyện tài liệu học tập.
+            </Text>
+          </div>
+
+          <div className="w-full max-w-[800px]">
+            {loadingSubjects ? (
+              <div className="flex justify-center py-12">
+                <Loader size="md" color="blue" />
+              </div>
+            ) : subjects.length === 0 ? (
+              <Paper withBorder p="xl" radius="lg" className="text-center bg-white shadow-sm">
+                <Text size="sm" c="dimmed">
+                  Chưa có môn học nào được tạo trên hệ thống.
+                </Text>
+              </Paper>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {subjects.map((sub) => (
+                  <Paper
+                    key={sub.id}
+                    onClick={async () => {
+                      try {
+                        const newSession = await chatApi.createSession(sub.id, `Trò chuyện môn ${sub.code}`);
+                        router.push(`/${role}/chat?session=${newSession.id}`);
+                      } catch (err) {
+                        console.error("Error creating session:", err);
+                      }
+                    }}
+                    withBorder
+                    p="md"
+                    radius="lg"
+                    className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all shadow-sm"
+                  >
+                    <Group gap="sm" wrap="nowrap">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                        <IconBook size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Text size="sm" fw={700} className="truncate text-gray-800 group-hover:text-blue-600 transition-colors">
+                          {sub.code}
+                        </Text>
+                        <Text size="xs" c="dimmed" className="truncate">
+                          {sub.name}
+                        </Text>
+                      </div>
+                    </Group>
+                  </Paper>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isHome = messages.length === 0;
+
+  return (
+    <div className="flex h-full flex-col bg-zinc-50">
+      {/* Case 2: Active Session but Empty (Initial Chat State) */}
+      {isHome && (
+        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 text-center">
+              {session?.title || "StudyMate AI"}
+            </h1>
+            <Text size="sm" c="dimmed" className="mt-1">
+              Đặt câu hỏi để tìm kiếm thông tin trong giáo trình môn học.
+            </Text>
           </div>
 
           <div className="w-full max-w-[800px]">
@@ -386,19 +404,18 @@ export function ChatView() {
               handleSend={handleSend}
               handleKeyDown={handleKeyDown}
               textareaRef={textareaRef}
-              placeholder="Hỏi bất cứ điều gì..."
+              placeholder="Hỏi bất cứ điều gì về tài liệu môn học..."
               scopeOpen={scopeOpen}
               setScopeOpen={setScopeOpen}
+              hasDocuments={documents.length > 0}
             />
 
-            {/* Home Scope List (if open) */}
             {scopeOpen && (
               <div className="mt-4">
                 <DocumentSelector
+                  documents={documents}
                   scopedDocs={scopedDocs}
                   toggleDoc={toggleDoc}
-                  selectedSubjectId={selectedSubjectId}
-                  setSelectedSubjectId={setSelectedSubjectId}
                 />
               </div>
             )}
@@ -406,7 +423,7 @@ export function ChatView() {
         </div>
       )}
 
-      {/* Thread View (Messages) */}
+      {/* Case 3: Thread has messages */}
       {!isHome && (
         <div className="flex-1 overflow-y-auto px-4 pt-10 pb-48">
           <div className="mx-auto max-w-[800px] space-y-10">
@@ -433,7 +450,7 @@ export function ChatView() {
                       className="flex-1 space-y-6 rounded-tl-sm bg-white shadow-sm"
                     >
                       {/* Sources Section - Card grid */}
-                      {msg.citations && (
+                      {msg.citations && msg.citations.length > 0 && (
                         <div className="space-y-3">
                           <Group gap="xs" align="center" className="text-gray-400">
                             <IconBook size={16} />
@@ -449,6 +466,7 @@ export function ChatView() {
                                 p="xs"
                                 radius="md"
                                 className="flex flex-col gap-2 hover:border-blue-500/30 transition-all cursor-pointer shadow-sm bg-white"
+                                title={cite.excerpt}
                               >
                                 <Group gap="xs" wrap="nowrap">
                                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-50 text-gray-500">
@@ -459,10 +477,10 @@ export function ChatView() {
                                   </Text>
                                 </Group>
                                 <Text size="xs" fw={600} className="line-clamp-2 leading-tight text-gray-900">
-                                  {cite.title}
+                                  {cite.file_name}
                                 </Text>
                                 <Text size="10px" c="dimmed" mt="auto">
-                                  {cite.pages}
+                                  {cite.page_label ? `Trang ${cite.page_label}` : "Tài liệu"}
                                 </Text>
                               </Paper>
                             ))}
@@ -476,26 +494,6 @@ export function ChatView() {
                           <div className="text-[15px] leading-[1.6] text-gray-900 font-normal whitespace-pre-wrap">
                             {msg.content}
                           </div>
-                          {msg.bullets && (
-                            <ul className="mt-4 space-y-3">
-                              {msg.bullets.map((bullet, i) => (
-                                <li key={i} className="flex gap-3 text-[14px] leading-relaxed">
-                                  <span className="text-gray-500 shrink-0 mt-0.5 font-bold inline-flex items-center justify-center h-5 w-5 rounded-full bg-zinc-50 border border-gray-150 text-[10px]">
-                                    {i + 1}
-                                  </span>
-                                  <span
-                                    className="text-gray-700"
-                                    dangerouslySetInnerHTML={{
-                                      __html: bullet.replace(
-                                        /\*\*(.*?)\*\*/g,
-                                        "<strong class='font-semibold text-gray-900'>$1</strong>",
-                                      ),
-                                    }}
-                                  />
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </div>
                       </div>
 
@@ -512,16 +510,11 @@ export function ChatView() {
                             color="gray"
                             size="xs"
                             leftSection={<IconCopy size={14} />}
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                            }}
                           >
                             Sao chép
-                          </Button>
-                          <Button
-                            variant="subtle"
-                            color="gray"
-                            size="xs"
-                            leftSection={<IconRotate2 size={14} />}
-                          >
-                            Viết lại
                           </Button>
                         </Group>
                         <Group gap={4}>
@@ -533,41 +526,6 @@ export function ChatView() {
                           </ActionIcon>
                         </Group>
                       </Group>
-
-                      {/* Related Questions - Only for the latest bot message */}
-                      {msg.role === "bot" && idx === messages.length - 1 && (
-                        <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                          <Group gap="xs" align="center" className="text-gray-400">
-                            <IconPlus size={16} />
-                            <Text size="xs" fw={700} className="tracking-wider uppercase">
-                              Câu hỏi liên quan
-                            </Text>
-                          </Group>
-                          <Stack gap="xs">
-                            {[
-                              "Làm thế nào để triển khai Vector Search với pgvector?",
-                              "Gemini Embedding Model 2 có ưu điểm gì so với bản cũ?",
-                              "Cách tối ưu hóa prompt để RAG hiệu quả hơn?",
-                            ].map((q, i) => (
-                              <Paper
-                                key={i}
-                                onClick={() => setInput(q)}
-                                withBorder
-                                p="sm"
-                                radius="md"
-                                className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all"
-                              >
-                                <Group justify="space-between" align="center">
-                                  <Text size="sm" className="text-gray-700 group-hover:text-blue-600 transition-colors">
-                                    {q}
-                                  </Text>
-                                  <IconArrowLeft size={16} className="text-gray-400 group-hover:text-blue-600 transition-colors rotate-180" />
-                                </Group>
-                              </Paper>
-                            ))}
-                          </Stack>
-                        </div>
-                      )}
                     </Paper>
                   </div>
                 )}
@@ -594,14 +552,12 @@ export function ChatView() {
       {!isHome && (
         <div className="fixed bottom-0 left-0 right-0 md:left-[240px] bg-gradient-to-t from-zinc-50 via-zinc-50/95 to-transparent px-4 pb-6 pt-10 z-10">
           <div className="mx-auto max-w-[800px]">
-            {/* Thread Scope selector context */}
             {scopeOpen && (
-              <Paper withBorder p="md" radius="lg" className="mb-4 shadow-xl bg-white">
+              <Paper withBorder p="md" radius="lg" className="mb-4 shadow-xl bg-white animate-in fade-in slide-in-from-bottom-2">
                 <DocumentSelector
+                  documents={documents}
                   scopedDocs={scopedDocs}
                   toggleDoc={toggleDoc}
-                  selectedSubjectId={selectedSubjectId}
-                  setSelectedSubjectId={setSelectedSubjectId}
                 />
               </Paper>
             )}
@@ -615,6 +571,7 @@ export function ChatView() {
               placeholder="Đặt câu hỏi tiếp theo..."
               scopeOpen={scopeOpen}
               setScopeOpen={setScopeOpen}
+              hasDocuments={documents.length > 0}
             />
           </div>
         </div>

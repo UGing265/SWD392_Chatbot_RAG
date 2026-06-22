@@ -27,6 +27,7 @@ import {
 interface Subject {
   id: string;
   name: string;
+  academicTermId?: string;
 }
 
 interface AcademicTerm {
@@ -71,10 +72,10 @@ export function UploadView() {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6 bg-zinc-50">
         <div className="text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-200">
-            <IconCircleCheck size={48} className="text-white" />
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-600 shadow-lg shadow-green-100 text-white">
+            <IconCircleCheck size={48} />
           </div>
-          <h2 className="mb-3 text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <h2 className="mb-3 text-3xl font-bold tracking-tight text-gray-900">
             Tải lên thành công!
           </h2>
           <Text c="dimmed" size="lg">Tài liệu của bạn đang được xử lý</Text>
@@ -88,11 +89,11 @@ export function UploadView() {
       <div className="container mx-auto max-w-3xl p-6 py-12">
         {/* Header */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center justify-center mb-4 rounded-full bg-[#E0F2FE] px-4 py-2">
-            <IconUpload size={16} className="mr-2 text-[#0EA5E9]" />
-            <span className="text-sm font-semibold text-[#0EA5E9]">Tài liệu giáo dục</span>
+          <div className="inline-flex items-center justify-center mb-4 rounded-full bg-zinc-100 px-4 py-2">
+            <IconUpload size={16} className="mr-2 text-zinc-700" />
+            <span className="text-sm font-semibold text-zinc-700">Tài liệu giáo dục</span>
           </div>
-          <h1 className="mb-3 text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-[#0EA5E9] bg-clip-text text-transparent">
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-[#111111] dark:text-[#f8fafc] font-sans">
             Tải lên tài liệu mới
           </h1>
           <Text c="dimmed" size="lg" className="max-w-2xl mx-auto">
@@ -120,16 +121,16 @@ export function UploadView() {
                 justifyContent: "center",
                 cursor: uploading ? "not-allowed" : "pointer",
                 padding: "48px 24px",
-                borderRadius: "24px",
+                borderRadius: "12px",
                 border: "2px dashed var(--mantine-color-gray-3)",
-                backgroundColor: file ? "var(--mantine-color-blue-0)" : "#ffffff",
+                backgroundColor: file ? "var(--mantine-color-gray-0)" : "#ffffff",
                 transition: "all 150ms ease",
               }}
-              className="hover:border-blue-400 hover:bg-blue-50/30"
+              className="hover:border-zinc-800 hover:bg-zinc-50"
             >
               {file ? (
                 <div className="flex w-full items-center gap-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#0EA5E9] shadow-lg">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111111] shadow-lg">
                     <IconFileText size={40} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -144,7 +145,7 @@ export function UploadView() {
                     variant="subtle"
                     color="red"
                     size="xl"
-                    radius="xl"
+                    radius="lg"
                     onClick={(e) => {
                       e.preventDefault();
                       removeFile();
@@ -156,7 +157,7 @@ export function UploadView() {
                 </div>
               ) : (
                 <>
-                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#0EA5E9] shadow-lg text-white">
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111111] shadow-lg text-white">
                     <IconUpload size={40} />
                   </div>
                   <Text fw={700} size="xl" className="mb-2 text-gray-900">
@@ -189,7 +190,7 @@ export function UploadView() {
               required
               disabled={uploading}
               size="md"
-              radius="md"
+              radius="lg"
               styles={{
                 label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
               }}
@@ -204,24 +205,26 @@ export function UploadView() {
               rows={3}
               disabled={uploading}
               size="md"
-              radius="md"
+              radius="lg"
               styles={{
                 label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
               }}
             />
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
               <Select
                 id="subject"
                 label="Môn học"
-                leftSection={<IconBook size={16} className="text-blue-500" />}
+                leftSection={<IconBook size={16} className="text-zinc-500" />}
                 placeholder="Chọn môn học"
-                data={subjects.map((s) => ({ value: s.id, label: s.name }))}
+                data={subjects
+                  .filter((s) => !termId || s.academicTermId === termId)
+                  .map((s) => ({ value: s.id, label: s.name }))}
                 value={subjectId}
                 onChange={(val) => setSubjectId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="md"
+                radius="lg"
                 styles={{
                   label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
                 }}
@@ -230,14 +233,14 @@ export function UploadView() {
               <Select
                 id="term"
                 label="Kỳ học"
-                leftSection={<IconCalendar size={16} className="text-purple-500" />}
+                leftSection={<IconCalendar size={16} className="text-zinc-500" />}
                 placeholder="Chọn kỳ học"
                 data={terms.map((t) => ({ value: t.id, label: t.name }))}
                 value={termId}
                 onChange={(val) => setTermId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="md"
+                radius="lg"
                 styles={{
                   label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
                 }}
@@ -246,14 +249,14 @@ export function UploadView() {
               <Select
                 id="chapter"
                 label="Chương"
-                leftSection={<IconBook size={16} className="text-orange-500" />}
+                leftSection={<IconBook size={16} className="text-zinc-500" />}
                 placeholder="Chọn chương"
                 data={chapters.map((c) => ({ value: c.id, label: c.name }))}
                 value={chapterId}
                 onChange={(val) => setChapterId(val || "")}
                 disabled={uploading}
                 size="md"
-                radius="md"
+                radius="lg"
                 styles={{
                   label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
                 }}
@@ -270,16 +273,16 @@ export function UploadView() {
               ]}
               leftSection={
                 visibility === "private" ? (
-                  <IconLock size={16} className="text-gray-500" />
+                  <IconLock size={16} className="text-zinc-500" />
                 ) : (
-                  <IconGlobe size={16} className="text-green-500" />
+                  <IconGlobe size={16} className="text-zinc-500" />
                 )
               }
               value={visibility}
               onChange={(val) => setVisibility(val || "private")}
               disabled={uploading}
               size="md"
-              radius="md"
+              radius="lg"
               styles={{
                 label: { fontWeight: 600, fontSize: "15px", marginBottom: "6px" },
               }}
@@ -289,10 +292,9 @@ export function UploadView() {
           <Button
             type="submit"
             size="lg"
-            radius="md"
+            radius="lg"
             fullWidth
-            color="blue"
-            bg="linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)"
+            color="dark"
             disabled={!file || uploading}
             styles={{
               root: {

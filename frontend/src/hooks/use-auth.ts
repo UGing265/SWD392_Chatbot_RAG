@@ -180,15 +180,9 @@ export function useAuth() {
           }
         }
 
-        // Fallback for role resolution from data.user or email if not resolved via JWT
+        // Fallback for role resolution from data.user if not resolved via JWT
         if (role === "student") {
-          let loginRId = (data.user as any).roleId || (data.user as any).role_id;
-          if (!loginRId) {
-            if (email.toLowerCase().includes("admin")) loginRId = 1;
-            else if (email.toLowerCase().includes("lecturer") || email.toLowerCase().includes("gv"))
-              loginRId = 2;
-            else loginRId = 3;
-          }
+          const loginRId = (data.user as any).roleId || (data.user as any).role_id;
           role = Number(loginRId) === 1 ? "admin" : Number(loginRId) === 2 ? "lecturer" : "student";
         }
 

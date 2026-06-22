@@ -24,15 +24,18 @@ func (s *Splitter) applyOverlap(chunks []Chunk) []Chunk {
 			}
 			overlapText := chunk.Content[overlapStart:]
 
-			// Create overlap chunk
-			overlapChunk := Chunk{
-				Content:   strings.TrimSpace(overlapText),
-				PageLabel: chunk.PageLabel,
-				StartIdx:  chunk.StartIdx + overlapStart,
-				EndIdx:    chunk.EndIdx,
-				Hash:      contentHash(overlapText),
+			// Create overlap chunk if non-empty
+			trimmedOverlap := strings.TrimSpace(overlapText)
+			if trimmedOverlap != "" {
+				overlapChunk := Chunk{
+					Content:   trimmedOverlap,
+					PageLabel: chunk.PageLabel,
+					StartIdx:  chunk.StartIdx + overlapStart,
+					EndIdx:    chunk.EndIdx,
+					Hash:      contentHash(overlapText),
+				}
+				result = append(result, overlapChunk)
 			}
-			result = append(result, overlapChunk)
 		}
 	}
 
