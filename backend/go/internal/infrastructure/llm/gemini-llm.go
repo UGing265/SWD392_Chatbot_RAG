@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -21,6 +22,7 @@ type ChatMessage struct {
 // LLMClient defines the interface for LLM text generation.
 type LLMClient interface {
 	Generate(ctx context.Context, systemPrompt string, history []ChatMessage) (string, error)
+	StreamGenerate(ctx context.Context, systemPrompt string, history []ChatMessage) (<-chan string, error)
 }
 
 // GeminiLLMClient calls the Gemini generateContent REST API.
@@ -102,6 +104,76 @@ func (c *GeminiLLMClient) Generate(ctx context.Context, systemPrompt string, his
 	}
 
 	return "", fmt.Errorf("gemini generate failed after %d attempts: %w", c.maxRetries, lastErr)
+}
+
+// StreamGenerate sends a streaming request to Gemini and returns a channel of generated tokens.
+func (c *GeminiLLMClient) StreamGenerate(ctx context.Context, systemPrompt string, history []ChatMessage) (<-chan string, error) {
+	body := c.buildRequestBody(systemPrompt, history)
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	apiKey := c.getNextKey()
+	url := fmt.Sprintf(
+		"https://generativelanguage.googleapis.com/v1beta/models/%s:streamGenerateContent?alt=sse&key=%s",
+		c.model, apiKey,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call gemini api: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("gemini API returned %d: %s", resp.StatusCode, truncate(string(respBody), 500))
+	}
+
+	ch := make(chan string)
+
+	go func() {
+		defer resp.Body.Close()
+		defer close(ch)
+
+		reader := bufio.NewReader(resp.Body)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				line, err := reader.ReadBytes('\n')
+				if err != nil {
+					if err != io.EOF {
+						// Optionally log error
+					}
+					return
+				}
+
+				lineStr := strings.TrimSpace(string(line))
+				if strings.HasPrefix(lineStr, "data: ") {
+					dataStr := strings.TrimPrefix(lineStr, "data: ")
+					if dataStr == "[DONE]" {
+						return
+					}
+
+					text, extractErr := extractText([]byte(dataStr))
+					if extractErr == nil && text != "" {
+						ch <- text
+					}
+				}
+			}
+		}
+	}()
+
+	return ch, nil
 }
 
 // buildRequestBody constructs the Gemini API request payload.

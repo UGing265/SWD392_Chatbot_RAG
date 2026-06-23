@@ -39,7 +39,7 @@ export const curriculumApi = {
     return response.data;
   },
 
-  createSubject: async (code: string, name: string, academicTermId: string): Promise<any> => {
+  createSubject: async (code: string, name: string, academicTermId: string | null): Promise<any> => {
     const response = await ragApi.post("/admin/subjects", { code, name, academic_term_id: academicTermId });
     return response.data;
   },

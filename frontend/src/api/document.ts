@@ -18,6 +18,19 @@ export interface DocumentsResponse {
   total: number;
 }
 
+export interface ComparisonDifference {
+  topic: string;
+  document1: string;
+  document2: string;
+  explanation: string;
+}
+
+export interface ComparisonResult {
+  differences: ComparisonDifference[];
+  commonThemes: string[];
+  summary: string;
+}
+
 export const documentApi = {
   getDocuments: async (params: {
     page: number;
@@ -40,6 +53,14 @@ export const documentApi = {
 
   deleteDocument: async (docId: string): Promise<any> => {
     const response = await ragApi.post(`/admin/documents/${docId}/delete`);
+    return response.data;
+  },
+
+  compareDocuments: async (documentIds: string[], question: string): Promise<ComparisonResult> => {
+    const response = await ragApi.post<ComparisonResult>("/documents/compare", {
+      document_ids: documentIds,
+      question: question,
+    });
     return response.data;
   },
 };

@@ -8,7 +8,9 @@ export type SavingAction =
   | `delete-term-${string}`
   | `create-subject-${string}`
   | `update-subject-${string}`
-  | `delete-subject-${string}`;
+  | `delete-subject-${string}`
+  | `attach-subject-${string}`
+  | `detach-subject-${string}`;
 
 export function useCurriculum() {
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
@@ -33,6 +35,9 @@ export function useCurriculum() {
   const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
   const [editingSubjectCode, setEditingSubjectCode] = useState("");
   const [editingSubjectName, setEditingSubjectName] = useState("");
+
+  const [addingStandaloneSubject, setAddingStandaloneSubject] = useState(false);
+  const [selectedExistingSubject, setSelectedExistingSubject] = useState<string | null>(null);
 
   const sortedTerms = useMemo(() => {
     return [...terms].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
@@ -188,21 +193,62 @@ export function useCurriculum() {
     setEditingSubjectName(subject.name);
   };
 
-  const handleCreateSubject = async (termId: string) => {
+  const handleCreateSubject = async (termId: string | null) => {
     const code = newSubjectCode.trim();
     const name = newSubjectName.trim();
     if (!code || !name || savingAction) return;
 
-    setSavingAction(`create-subject-${termId}`);
+    setSavingAction(`create-subject-${termId || "standalone"}`);
     try {
       await curriculumApi.createSubject(code, name, termId);
       notify.success("Tạo môn học thành công");
       setNewSubjectCode("");
       setNewSubjectName("");
-      setAddingSubjectForTerm(null);
+      if (termId) {
+        setAddingSubjectForTerm(null);
+      } else {
+        setAddingStandaloneSubject(false);
+      }
       await fetchData();
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || "Tạo môn học thất bại.";
+      notify.error(msg);
+    } finally {
+      setSavingAction(null);
+    }
+  };
+
+  const handleAttachSubject = async (termId: string) => {
+    if (!selectedExistingSubject || savingAction) return;
+    
+    const subject = subjects.find(s => s.id === selectedExistingSubject);
+    if (!subject) return;
+
+    setSavingAction(`attach-subject-${termId}`);
+    try {
+      await curriculumApi.updateSubject(subject.id, subject.code, subject.name, termId);
+      notify.success(`Đã gắn môn ${subject.code} vào học kỳ`);
+      setSelectedExistingSubject(null);
+      setAddingSubjectForTerm(null);
+      await fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || "Gắn môn học thất bại.";
+      notify.error(msg);
+    } finally {
+      setSavingAction(null);
+    }
+  };
+
+  const handleDetachSubject = async (subject: Subject) => {
+    if (!confirm(`Gỡ môn ${subject.code} khỏi học kỳ này?`) || savingAction) return;
+
+    setSavingAction(`detach-subject-${subject.id}`);
+    try {
+      await curriculumApi.updateSubject(subject.id, subject.code, subject.name, null);
+      notify.success("Đã gỡ môn học khỏi học kỳ");
+      await fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || "Gỡ môn học thất bại.";
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -265,6 +311,10 @@ export function useCurriculum() {
     editingSubjectId,
     editingSubjectCode,
     editingSubjectName,
+    addingStandaloneSubject,
+    setAddingStandaloneSubject,
+    selectedExistingSubject,
+    setSelectedExistingSubject,
     setNewTermName,
     setNewTermOrder,
     setEditingTermName,
@@ -287,6 +337,8 @@ export function useCurriculum() {
     handleCreateSubject,
     handleUpdateSubject,
     handleDeleteSubject,
+    handleAttachSubject,
+    handleDetachSubject,
     refresh: fetchData,
   };
 }

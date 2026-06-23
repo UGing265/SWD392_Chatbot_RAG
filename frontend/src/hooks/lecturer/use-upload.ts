@@ -11,7 +11,17 @@ export interface AcademicTerm {
   name: string;
 }
 
-export interface Chapter {
+export interface DocumentType {
+  id: string;
+  name: string;
+}
+
+export interface Language {
+  id: string;
+  name: string;
+}
+
+export interface DocumentSource {
   id: string;
   name: string;
 }
@@ -20,15 +30,22 @@ export function useUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  
   const [subjectId, setSubjectIdRaw] = useState("");
   const [termId, setTermIdRaw] = useState("");
-  const [chapterId, setChapterId] = useState("");
+  const [documentTypeId, setDocumentTypeId] = useState("");
+  const [languageId, setLanguageId] = useState("");
+  const [documentSourceId, setDocumentSourceId] = useState("");
+  
   const [visibility, setVisibility] = useState("private");
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
   useEffect(() => {
     const fetchLookups = async () => {
@@ -60,13 +77,18 @@ export function useUpload() {
           }));
         setTerms(mappedTerms);
 
-        // Keep mock chapters since chapters are dynamically generated after upload
-        const mockChapters: Chapter[] = [
-          { id: "1", name: "Chương 1: Tổng quan" },
-          { id: "2", name: "Chương 2: Cơ sở lý thuyết" },
-          { id: "3", name: "Chương 3: Phương pháp nghiên cứu" },
-        ];
-        setChapters(mockChapters);
+        // 3. Document Types
+        const apiDocTypes = data.documentTypes || [];
+        setDocumentTypes(apiDocTypes.map((dt: any) => ({ id: dt.id, name: dt.name })));
+
+        // 4. Languages
+        const apiLanguages = data.languages || [];
+        setLanguages(apiLanguages.map((l: any) => ({ id: l.id, name: l.name })));
+
+        // 5. Document Sources
+        const apiSources = data.documentSources || [];
+        setDocumentSources(apiSources.map((ds: any) => ({ id: ds.id, name: ds.name })));
+
       } catch (err) {
         console.error("Failed to fetch lookups in useUpload:", err);
       }
@@ -110,7 +132,9 @@ export function useUpload() {
     setDescription("");
     setSubjectIdRaw("");
     setTermIdRaw("");
-    setChapterId("");
+    setDocumentTypeId("");
+    setLanguageId("");
+    setDocumentSourceId("");
     setVisibility("private");
   };
 
@@ -130,9 +154,12 @@ export function useUpload() {
     formData.append("file", file);
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("subject_id", subjectId);
-    formData.append("academic_term_id", termId);
-    formData.append("chapter_id", chapterId);
+    
+    if (subjectId) formData.append("subject_id", subjectId);
+    if (termId) formData.append("academic_term_id", termId);
+    if (documentTypeId) formData.append("document_type_id", documentTypeId);
+    if (languageId) formData.append("language_id", languageId);
+    if (documentSourceId) formData.append("document_source_id", documentSourceId);
     formData.append("visibility", visibility);
 
     try {
@@ -175,15 +202,21 @@ export function useUpload() {
     setSubjectId,
     termId,
     setTermId,
-    chapterId,
-    setChapterId,
+    documentTypeId,
+    setDocumentTypeId,
+    languageId,
+    setLanguageId,
+    documentSourceId,
+    setDocumentSourceId,
     visibility,
     setVisibility,
     uploading,
     uploaded,
     subjects,
     terms,
-    chapters,
+    documentTypes,
+    languages,
+    documentSources,
     handleFileChange,
     removeFile,
     handleUpload,

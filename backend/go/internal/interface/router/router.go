@@ -64,18 +64,19 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	auditRepo := postgres.NewAuditLogRepository(db)
 	assignRepo := postgres.NewLecturerSubjectRepository(db)
 
+	embedClient := embedding.NewEmbeddingClient(cfg.GEMINI_API_KEY)
+	llmClient := llm.NewGeminiLLMClient(cfg.GEMINI_API_KEY, cfg.GEMINI_CHAT_MODEL)
+
 	// Initialize Service
 	docService := application.NewDocumentService(
 		docRepo, fileRepo, chunkRepo, chapterRepo, subjectRepo,
 		termRepo, typeRepo, langRepo, sourceRepo, reportRepo,
-		jobRepo, userRepo, auditRepo, assignRepo, s3Storage,
+		jobRepo, userRepo, auditRepo, assignRepo, s3Storage, llmClient,
 	)
 
 	// Initialize Chat module
 	chatSessionRepo := postgres.NewChatSessionRepository(db)
 	msgRepo := postgres.NewMessageRepository(db)
-	embedClient := embedding.NewEmbeddingClient(cfg.GEMINI_API_KEY)
-	llmClient := llm.NewGeminiLLMClient(cfg.GEMINI_API_KEY, cfg.GEMINI_CHAT_MODEL)
 	chatUseCase := chatusecase.NewChatUseCase(chatSessionRepo, msgRepo, embedClient, llmClient)
 
 	// Initialize Handlers
@@ -101,6 +102,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 
 		// Student & Lecturer documents list
 		protected.GET("/documents", middleware.RequireRoles(2, 3), documentHandler.List)
+		protected.POST("/documents/compare", middleware.RequireRoles(2, 3), documentHandler.CompareDocuments)
 		protected.GET("/documents/:slug", middleware.RequireRoles(1, 2, 3), documentHandler.Details)
 
 		// Slug-based actions
@@ -117,6 +119,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		protected.GET("/chat/sessions/:id", middleware.RequireRoles(2, 3), chatHandler.GetSession)
 		protected.GET("/chat/sessions/:id/messages", middleware.RequireRoles(2, 3), chatHandler.GetHistory)
 		protected.POST("/chat/sessions/:id/messages", middleware.RequireRoles(2, 3), chatHandler.SendMessage)
+		protected.POST("/chat/sessions/:id/messages/stream", middleware.RequireRoles(2, 3), chatHandler.StreamMessage)
 		protected.DELETE("/chat/sessions/:id", middleware.RequireRoles(2, 3), chatHandler.DeleteSession)
 
 		// Admin routes (requires Admin role: 1)

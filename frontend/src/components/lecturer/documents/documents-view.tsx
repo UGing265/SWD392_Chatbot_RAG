@@ -96,17 +96,19 @@ export function DocumentsView() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-zinc-50">
+    <div className="flex-1 bg-zinc-50 relative font-sans w-full">
       <div className="container mx-auto max-w-5xl p-6 py-12">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
           <Group justify="space-between" align="center" gap="md" className="mb-4">
             <Group gap="md">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111111] text-white shadow-lg">
-                <IconFolderOpen size={24} />
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-zinc-200 text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                <IconFolderOpen size={24} stroke={1.5} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-[#111111] dark:text-[#f8fafc] font-sans">Tài liệu riêng</h1>
+                <h1 className="font-serif text-[40px] tracking-[-0.03em] text-zinc-900 leading-none mb-1 select-none">
+                  Tài liệu riêng.
+                </h1>
                 <Group gap="xs" className="text-sm font-semibold text-gray-500 mt-1">
                   <span
                     className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedTerm ? "text-gray-900" : ""}`}
@@ -193,14 +195,14 @@ export function DocumentsView() {
 
         {/* Level 1: Select Term */}
         {!selectedTerm ? (
-          <div className="space-y-10">
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {terms.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-3xl border border-gray-150 shadow-sm">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 border border-gray-100 text-gray-300">
-                  <IconCalendar size={40} />
+              <div className="py-20 text-center bg-white rounded-[24px] border border-zinc-200 shadow-sm">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-50 border border-zinc-100 text-zinc-300">
+                  <IconCalendar size={40} stroke={1.5} />
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-700">Chưa có kỳ học nào</h3>
-                <p className="text-gray-400 font-medium">Liên hệ quản trị viên để thêm kỳ học.</p>
+                <h3 className="mb-2 text-xl font-bold text-zinc-900">Chưa có kỳ học nào</h3>
+                <p className="text-zinc-500 font-medium">Liên hệ quản trị viên để thêm kỳ học.</p>
               </div>
             ) : (
               Object.entries(groupedTerms)
@@ -211,37 +213,32 @@ export function DocumentsView() {
                 })
                 .map(([year, yearTerms]) => (
                   <div key={year}>
-                    <Group gap="xs" mb="md">
-                      <IconCalendar size={20} className="text-zinc-500" />
-                      <h2 className="text-lg font-bold tracking-tight text-[#111111]">
-                        Năm học {year}
+                    <div className="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
+                      <IconCalendar size={20} className="text-zinc-900" />
+                      <h2 className="text-[16px] font-bold text-zinc-900 font-sans tracking-tight uppercase">
+                        NĂM HỌC {year}
                       </h2>
-                    </Group>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    </div>
+                    <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                       {yearTerms.map((term) => (
-                        <Paper
+                        <div
                           key={term.id}
                           onClick={() => {
                             setSelectedTerm(term);
                             setStep("subject");
                           }}
-                          withBorder
-                          p="md"
-                          radius="lg"
-                          className="cursor-pointer hover:border-[#111111] hover:shadow-md transition-all group bg-white"
+                          className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-[24px] p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
                         >
-                          <Group gap="md">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
-                              <IconFolderOpen size={24} />
-                            </div>
-                            <div>
-                              <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors">
-                                {term.name}
-                              </h3>
-                              <Text size="xs" c="dimmed" className="mt-0.5">Bấm để chọn kỳ học</Text>
-                            </div>
-                          </Group>
-                        </Paper>
+                          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                            <IconFolderOpen size={24} stroke={1.5} />
+                          </div>
+                          <h4 className="text-[16px] font-bold text-zinc-900 mb-2 font-serif group-hover:underline decoration-zinc-300 underline-offset-2">
+                            {term.name}
+                          </h4>
+                          <Text size="xs" className="font-mono mt-1 text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
+                            Bấm để chọn kỳ học
+                          </Text>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -250,18 +247,18 @@ export function DocumentsView() {
           </div>
         ) : !selectedSubject ? (
           /* Level 2: Select Subject */
-          <div>
-            <Group gap="xs" mb="md">
-              <IconBook size={20} className="text-zinc-500" />
-              <h2 className="text-lg font-bold tracking-tight text-[#111111]">
-                Chọn Môn Học
+          <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
+            <div className="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
+              <IconBook size={20} className="text-zinc-900" />
+              <h2 className="text-[16px] font-bold text-zinc-900 font-sans tracking-tight uppercase">
+                CHỌN MÔN HỌC
               </h2>
-            </Group>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {subjects.filter((s) => s.termId === selectedTerm?.id).length === 0 && (
                 <div className="col-span-full py-12 text-center">
-                  <IconBook size={40} className="text-gray-300 mx-auto mb-3" />
-                  <Text c="dimmed" fw={500}>Chưa có môn học nào trong kỳ này.</Text>
+                  <IconBook size={40} className="text-zinc-300 mx-auto mb-3" stroke={1.5} />
+                  <Text size="sm" className="text-zinc-500 font-medium">Chưa có môn học nào trong kỳ này.</Text>
                 </div>
               )}
               {subjects
@@ -269,66 +266,52 @@ export function DocumentsView() {
                 .map((subject) => {
                   const docCount = materials.filter((m) => m.subjectId === subject.id).length;
                   return (
-                    <Paper
+                    <div
                       key={subject.id}
                       onClick={() => {
                         setSelectedSubject(subject);
                         setStep("documents");
                       }}
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      className="cursor-pointer hover:border-[#111111] hover:shadow-md transition-all group bg-white"
+                      className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-[24px] p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
                     >
-                      <Group gap="md">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 group-hover:bg-[#111111] group-hover:text-white transition-colors">
-                          <IconBook size={24} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-bold text-gray-800 group-hover:text-[#111111] transition-colors line-clamp-2">
-                            {subject.name}
-                          </h3>
-                          <Text size="xs" c="dimmed" className="mt-1">
-                            {docCount > 0 ? `${docCount} tài liệu` : "Chưa có tài liệu"}
-                          </Text>
-                        </div>
-                      </Group>
-                    </Paper>
+                      <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                        <IconBook size={24} stroke={1.5} />
+                      </div>
+                      <div className="flex-1 w-full">
+                        <h3 className="text-[16px] font-bold text-zinc-900 mb-1 leading-tight font-sans line-clamp-2">
+                          {subject.name}
+                        </h3>
+                        <Text size="xs" className="font-mono mt-1 text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
+                          {docCount > 0 ? `${docCount} TÀI LIỆU` : "CHƯA CÓ TÀI LIỆU"}
+                        </Text>
+                      </div>
+                    </div>
                   );
                 })}
 
-              <Paper
+              <div
                 onClick={() => setIsAddSubjectModalOpen(true)}
-                withBorder
-                p="md"
-                radius="lg"
-                style={{ borderStyle: "dashed" }}
-                className="cursor-pointer hover:border-[#111111] hover:bg-zinc-50 transition-all group bg-zinc-50/30"
+                className="flex flex-col items-center justify-center cursor-pointer bg-zinc-50/50 border border-zinc-200 border-dashed rounded-[24px] p-6 hover:border-zinc-800 hover:bg-zinc-50 transition-all duration-300 group min-h-[180px]"
               >
-                <Group gap="md">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-150 text-gray-500 group-hover:bg-zinc-100 group-hover:text-gray-900 transition-colors">
-                    <IconPlus size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-600 group-hover:text-[#111111] transition-colors">
-                      Thêm môn học
-                    </h3>
-                    <Text size="xs" c="dimmed" className="mt-1">Tạo môn học mới</Text>
-                  </div>
-                </Group>
-              </Paper>
+                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 mb-4 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                  <IconPlus size={24} stroke={1.5} />
+                </div>
+                <h3 className="text-[16px] font-bold text-zinc-600 group-hover:text-zinc-900 transition-colors font-sans text-center">
+                  Thêm môn học
+                </h3>
+              </div>
             </div>
           </div>
         ) : step === "documents" ? (
           /* Level 3: Documents List (Cards) */
-          <div>
+          <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {filteredMaterials.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-3xl border border-gray-150 shadow-sm animate-in fade-in duration-500">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 border border-gray-100 text-gray-300">
-                  <IconFileText size={40} />
+              <div className="py-20 text-center bg-white rounded-[24px] border border-zinc-200 shadow-sm">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-50 border border-zinc-100 text-zinc-300">
+                  <IconFileText size={40} stroke={1.5} />
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-700">Chưa có tài liệu nào</h3>
-                <p className="text-gray-400 font-medium mb-6">
+                <h3 className="mb-2 text-xl font-bold text-zinc-900">Chưa có tài liệu nào</h3>
+                <p className="text-zinc-500 font-medium mb-6">
                   Bạn chưa tải lên tài liệu nào cho môn học này.
                 </p>
                 <Button
@@ -336,106 +319,99 @@ export function DocumentsView() {
                     setCurrentMaterial({ subjectId: selectedSubject?.id || "" });
                     setIsUploadModalOpen(true);
                   }}
-                  radius="lg"
+                  radius="xl"
                   color="dark"
+                  className="bg-zinc-900 h-11 px-6"
                   leftSection={<IconPlus size={16} />}
                 >
                   Tải lên tài liệu đầu tiên
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredMaterials.map((m) => (
-                  <Paper
+                  <div
                     key={m.id}
-                    withBorder
-                    p="lg"
-                    radius="lg"
-                    className="group flex flex-col hover:shadow-lg transition-all duration-300 hover:border-zinc-800 bg-white"
+                    className="flex flex-col bg-white border border-zinc-200 rounded-[24px] overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
                   >
-                    <Group justify="space-between" align="start" mb="md">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700 transition-colors group-hover:bg-[#111111] group-hover:text-white">
-                        <IconFileText size={28} />
+                    <div className="flex-grow">
+                      <div className="mb-6 flex justify-between items-start">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
+                          <IconFileText size={20} stroke={1.5} />
+                        </div>
+                        <Badge
+                          color={
+                            m.status === "Ready"
+                              ? "green"
+                              : m.status === "Failed"
+                                ? "red"
+                                : "yellow"
+                          }
+                          variant="light"
+                          className="font-mono tracking-widest text-[10px] uppercase rounded-full border"
+                        >
+                          {m.status}
+                        </Badge>
                       </div>
-                      <Badge
-                        color={
-                          m.status === "Ready"
-                            ? "green"
-                            : m.status === "Failed"
-                              ? "red"
-                              : "yellow"
-                        }
-                        variant="light"
-                        radius="md"
-                        py="sm"
-                      >
-                        {m.status}
-                      </Badge>
-                    </Group>
 
-                    <Text fw={700} size="lg" className="mb-3 line-clamp-2 text-gray-900">
-                      {m.resource}
-                    </Text>
+                      <h3 className="text-[18px] font-bold text-zinc-900 mb-6 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300 font-serif">
+                        {m.resource}
+                      </h3>
+                    </div>
 
-                    <Group gap="md" className="mb-5 text-sm text-gray-500">
-                      <Group gap="xs">
-                        <IconCalendar size={16} />
-                        <Text size="sm">{m.date}</Text>
-                      </Group>
-                      <Group gap="xs">
-                        <IconFile size={16} />
-                        <Text size="sm">{m.format}</Text>
-                      </Group>
-                    </Group>
+                    <div>
+                      {/* Metadata */}
+                      <div className="flex items-center justify-between pt-5 border-t border-zinc-100/80 mb-5">
+                        <div>
+                          <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Đăng tải</div>
+                          <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
+                            {m.date}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Định dạng</div>
+                          <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
+                            {m.format}
+                          </div>
+                        </div>
+                      </div>
 
-                    <Group
-                      justify="space-between"
-                      align="center"
-                      className="mt-auto pt-4"
-                      style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}
-                    >
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          radius="md"
-                          size="lg"
+                      {/* Footer Actions */}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedMaterialId(m.id);
+                            setStep("chapters");
+                          }}
+                          className="px-4 py-2 text-[12px] font-bold text-white bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors uppercase tracking-widest"
+                        >
+                          Cấu Trúc
+                        </button>
+                        
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setCurrentMaterial(m);
                             setIsEditModalOpen(true);
                           }}
+                          className="w-9 h-9 flex items-center justify-center text-zinc-700 bg-zinc-100 rounded-full hover:bg-zinc-200 transition-colors shrink-0"
                         >
-                          <IconEdit size={16} />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          radius="md"
-                          size="lg"
+                          <IconEdit size={16} stroke={1.5} />
+                        </button>
+                        
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setCurrentMaterial(m);
                             setIsDeleteModalOpen(true);
                           }}
+                          className="w-9 h-9 flex items-center justify-center text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors shrink-0"
                         >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                      <Button
-                        onClick={() => {
-                          setSelectedMaterialId(m.id);
-                          setStep("chapters");
-                        }}
-                        variant="light"
-                        color="dark"
-                        radius="lg"
-                        size="xs"
-                      >
-                        Cấu trúc
-                      </Button>
-                    </Group>
-                  </Paper>
+                          <IconTrash size={16} stroke={1.5} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
