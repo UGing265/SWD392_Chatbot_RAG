@@ -20,12 +20,34 @@ import {
 } from "@mantine/core";
 import { useMyDocuments } from "@/hooks/lecturer/use-my-documents";
 
+const getVisibilityBadge = (visibility: string) => {
+  switch (visibility) {
+    case "private":
+      return {
+        label: "Riêng tư",
+        className: "bg-rose-50 border-rose-200 text-rose-600",
+      };
+    case "school_wide":
+      return {
+        label: "Nội bộ",
+        className: "bg-sky-50 border-sky-200 text-sky-600",
+      };
+    case "public":
+    default:
+      return {
+        label: "Công khai",
+        className: "bg-emerald-50 border-emerald-200 text-emerald-600",
+      };
+  }
+};
+
 export function MyDocumentsView() {
   const {
     role,
     router,
     loading,
     documents,
+    activeUploadJobs,
     totalDocuments,
     totalPages,
     page,
@@ -45,6 +67,15 @@ export function MyDocumentsView() {
     documentSources,
     handleDelete,
   } = useMyDocuments();
+
+  const displayDocuments = documents.filter(
+    (item) => item.status !== "processing" && item.status !== "pending"
+  );
+
+  const displayedCount = Math.max(
+    0,
+    totalDocuments - documents.filter((d) => d.status === "processing" || d.status === "pending").length
+  );
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,7 +98,7 @@ export function MyDocumentsView() {
           </div>
           
           <div className="flex items-center">
-            <div className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-white border border-zinc-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center gap-4 px-5 py-3 rounded-xl bg-white border border-zinc-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-600">
                 <IconDatabaseImport size={16} stroke={1.5} />
               </div>
@@ -81,8 +112,54 @@ export function MyDocumentsView() {
           </div>
         </div>
 
+        {/* Active Upload Jobs Integration Panel */}
+        {activeUploadJobs.length > 0 && (
+          <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+              </span>
+              <Text size="xs" fw={700} className="text-zinc-500 tracking-[0.15em] uppercase font-mono text-[11px]">
+                Tài liệu đang tích hợp ({activeUploadJobs.length})
+              </Text>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {activeUploadJobs.map((job) => (
+                <div key={job.id} className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 text-zinc-600 shrink-0">
+                        <IconDatabaseImport size={16} stroke={1.5} className="animate-pulse" />
+                      </div>
+                      <div className="min-w-0">
+                        <Text className="text-[14px] font-bold text-zinc-900 truncate" fw={600}>
+                          {job.file_name}
+                        </Text>
+                        <Text className="text-[12px] text-zinc-500 truncate">
+                          {job.message || "Đang xử lý..."}
+                        </Text>
+                      </div>
+                    </div>
+                    <Text className="text-[12px] font-bold font-mono text-zinc-700 shrink-0">
+                      {job.progress_percent}%
+                    </Text>
+                  </div>
+                  
+                  <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#0EA5E9] rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${job.progress_percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Search & Filter Form */}
-        <div className="bg-white p-6 rounded-[24px] border border-zinc-200 shadow-sm mb-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100">
+        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100">
           <Stack gap="lg">
             {/* Row 1: Search */}
             <form onSubmit={handleSearchSubmit} className="flex gap-4 items-center flex-wrap">
@@ -92,17 +169,15 @@ export function MyDocumentsView() {
                   name="q"
                   defaultValue={q}
                   placeholder="Tìm kiếm tài liệu..."
-                  className="w-full h-12 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-[14px] text-zinc-900 focus:outline-none focus:border-zinc-800 transition-colors"
+                  className="w-full h-12 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-xl text-[14px] text-zinc-900 focus:outline-none focus:border-zinc-800 transition-colors"
                 />
               </div>
-              <button type="submit" className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 text-white text-[14px] font-medium rounded-2xl transition-colors">
+              <button type="submit" className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 text-white text-[14px] font-medium rounded-xl transition-colors">
                 Tìm Kiếm
               </button>
-              {(q || subjectId || documentTypeId || languageId || documentSourceId) && (
-                <button type="button" onClick={() => clearFilters()} className="h-12 px-6 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-[14px] font-medium rounded-2xl transition-colors">
-                  Xóa lọc
-                </button>
-              )}
+              <button type="button" onClick={() => clearFilters()} className="h-12 px-6 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-[14px] font-medium rounded-xl transition-colors">
+                Xóa lọc
+              </button>
             </form>
 
             {/* Row 2: Selects */}
@@ -113,7 +188,7 @@ export function MyDocumentsView() {
                 placeholder="Tất cả môn học"
                 data={subjects.map(s => ({ value: s.id, label: s.code }))}
                 searchable
-                radius="sm"
+                radius="lg"
                 clearable
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -122,7 +197,7 @@ export function MyDocumentsView() {
                 onChange={(val) => updateFilters({ documentTypeId: val })}
                 placeholder="Tất cả học liệu"
                 data={documentTypes.map(t => ({ value: t.id, label: t.name }))}
-                radius="sm"
+                radius="lg"
                 clearable
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -131,7 +206,7 @@ export function MyDocumentsView() {
                 onChange={(val) => updateFilters({ languageId: val })}
                 placeholder="Tất cả ngôn ngữ"
                 data={languages.map(l => ({ value: l.id, label: l.name }))}
-                radius="sm"
+                radius="lg"
                 clearable
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -140,7 +215,7 @@ export function MyDocumentsView() {
                 onChange={(val) => updateFilters({ documentSourceId: val })}
                 placeholder="Tất cả nguồn"
                 data={documentSources.map(s => ({ value: s.id, label: s.name }))}
-                radius="sm"
+                radius="lg"
                 clearable
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -155,7 +230,7 @@ export function MyDocumentsView() {
                   { value: "views_desc", label: "Nhiều lượt xem" },
                   { value: "views_asc", label: "Ít lượt xem" },
                 ]}
-                radius="sm"
+                radius="lg"
                 allowDeselect={false}
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -167,19 +242,19 @@ export function MyDocumentsView() {
         <div className="flex justify-between items-end mb-6 pb-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-200 border-b border-zinc-200">
           <h4 className="text-[18px] font-serif tracking-[-0.02em] text-zinc-900 m-0">Danh Sách</h4>
           <Text size="xs" className="font-mono text-zinc-500 uppercase tracking-widest">
-            KẾT QUẢ: <span className="text-zinc-900 font-bold ml-1">{totalDocuments}</span>
+            KẾT QUẢ: <span className="text-zinc-900 font-bold ml-1">{displayedCount}</span>
           </Text>
         </div>
 
         {/* Document Grid */}
         <div className={`transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-300`}>
-          {documents.length === 0 && !loading ? (
-            <div className="text-center py-24 rounded-[24px] bg-white border border-zinc-200 shadow-sm">
+          {displayDocuments.length === 0 && !loading ? (
+            <div className="text-center py-24 rounded-2xl bg-white border border-zinc-200 shadow-sm">
               {(q || subjectId) ? (
                 <>
                   <IconListSearch size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
                   <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Không tìm thấy tài liệu phù hợp.</h5>
-                  <Button variant="outline" color="dark" radius="xl" onClick={() => clearFilters()}>
+                  <Button variant="outline" color="dark" radius="lg" onClick={() => clearFilters()}>
                     Xóa Bộ Lọc
                   </Button>
                 </>
@@ -188,7 +263,7 @@ export function MyDocumentsView() {
                   <IconFileCertificate size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
                   <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Chưa có tài liệu nào.</h5>
                   <Text size="sm" className="text-zinc-500 mb-6">Bạn chưa tải lên tài liệu nào trong thư viện cá nhân.</Text>
-                  <Button component={Link} href={`/${role}/upload`} color="dark" radius="xl" className="bg-zinc-900">
+                  <Button component={Link} href={`/${role}/upload`} color="dark" radius="lg" className="bg-zinc-900">
                     Tải Lên Ngay
                   </Button>
                 </>
@@ -196,20 +271,30 @@ export function MyDocumentsView() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {documents.map((item) => (
+              {displayDocuments.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col bg-white border border-zinc-200 rounded-[24px] overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
+                  className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
                 >
                   <div className="flex-grow">
-                    {/* Subject Badge */}
-                    <div className="mb-6 flex justify-between items-start">
-                      <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
-                        <IconFileCertificate size={20} stroke={1.5} />
+                    {/* Top Badges */}
+                    <div className="mb-6 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
+                          <IconFileCertificate size={20} stroke={1.5} />
+                        </div>
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-[10px] font-bold text-zinc-600 font-mono uppercase tracking-widest">
+                          {item.subject_code || item.subject_name || "TÀI LIỆU"}
+                        </span>
                       </div>
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-[10px] font-bold text-zinc-600 font-mono uppercase tracking-widest">
-                        {item.subject_name || "TÀI LIỆU"}
-                      </span>
+                      {(() => {
+                        const badge = getVisibilityBadge(item.visibility);
+                        return (
+                          <span className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-bold font-sans uppercase tracking-wider ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Title */}
@@ -221,7 +306,7 @@ export function MyDocumentsView() {
 
                     {/* Preview Text */}
                     <Text size="sm" className="text-zinc-500 line-clamp-2 leading-relaxed mb-6">
-                      {item.description || "Chưa có mô tả cho tài liệu này."}
+                      {item.preview_text || item.description || "Chưa có mô tả cho tài liệu này."}
                     </Text>
                   </div>
 
@@ -279,7 +364,7 @@ export function MyDocumentsView() {
               value={page}
               onChange={(p) => updateFilters({ page: p.toString() })}
               total={totalPages}
-              radius="sm"
+              radius="lg"
               color="dark"
               withEdges
             />

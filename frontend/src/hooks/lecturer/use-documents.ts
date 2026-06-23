@@ -1,5 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { notify } from "@/lib/notifications";
+import { ragApi } from "@/api/client";
+
 
 export interface Subject {
   id: string;
@@ -108,12 +110,8 @@ export function useLecturerDocuments() {
 
   const fetchLookups = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/documents/lookups", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch lookups");
-      const data = await res.json();
+      const res = await ragApi.get("/documents/lookups");
+      const data = res.data;
 
       const apiTerms: ApiAcademicTerm[] = data.academicTerms || [];
       const mappedTerms = apiTerms.map((t) => ({
@@ -138,12 +136,10 @@ export function useLecturerDocuments() {
 
   const fetchMyDocuments = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/documents/my?pageSize=100", {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await ragApi.get("/documents/my", {
+        params: { pageSize: 100 }
       });
-      if (!res.ok) throw new Error("Failed to fetch documents");
-      const data = await res.json();
+      const data = res.data;
 
       const apiDocs: ApiDocument[] = data.documents || [];
       const mapped: Material[] = apiDocs.map((doc) => {
@@ -233,20 +229,13 @@ export function useLecturerDocuments() {
   const handleDelete = async () => {
     if (currentMaterial?.id) {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:8080/api/documents/${currentMaterial.slug}/delete`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Xóa thất bại");
-        }
+        await ragApi.post(`/documents/${currentMaterial.slug}/delete`);
         await fetchMyDocuments();
         notify.success("Đã xóa tài liệu thành công.");
       } catch (err: any) {
         console.error(err);
-        notify.error("Xóa thất bại", err.message);
+        const errMsg = err.response?.data?.error || err.message || "Xóa thất bại";
+        notify.error("Xóa thất bại", errMsg);
       }
       setIsDeleteModalOpen(false);
       setCurrentMaterial(null);
@@ -284,20 +273,13 @@ export function useLecturerDocuments() {
         formData.append("academic_term_id", term);
       }
 
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8080/api/documents/upload", {
-        method: "POST",
+      const res = await ragApi.post("/documents/upload", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Upload thất bại");
-      }
+      const data = res.data;
 
       await fetchMyDocuments();
       notify.success("Tải lên thành công!", "Tài liệu của bạn đang được hệ thống RAG xử lý ngầm.");

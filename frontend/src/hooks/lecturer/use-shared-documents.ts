@@ -137,8 +137,8 @@ export function useSharedDocuments() {
       if (response.ok) {
         const data = await response.json();
         setDocuments(data.documents || []);
-        setTotalDocuments(data.total || 0);
-        setTotalPages(data.totalPages || 1);
+        setTotalDocuments(data.total_documents || 0);
+        setTotalPages(data.total_pages || 1);
       } else {
         setDocuments([]);
       }
@@ -170,7 +170,7 @@ export function useSharedDocuments() {
       setTotalDocuments(0);
       setTotalPages(1);
     }
-  }, [fetchDocuments, q, subjectId, documentTypeId, languageId, documentSourceId]);
+  }, [fetchDocuments, q, subjectId, termId, documentTypeId, languageId, documentSourceId]);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));

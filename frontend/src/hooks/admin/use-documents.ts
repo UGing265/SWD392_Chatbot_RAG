@@ -70,7 +70,7 @@ export function useDocuments() {
       }));
 
       setDocuments(items);
-      setTotalPages(Math.max(1, Math.ceil((data.total || items.length) / pageSize)));
+      setTotalPages(data.total_pages || 1);
     } catch (error) {
       console.warn("Failed to fetch admin documents, using mock data", error);
       setDocuments(MOCK_DOCUMENTS);

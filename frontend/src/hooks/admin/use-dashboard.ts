@@ -21,11 +21,11 @@ export function useDashboard() {
         adminUserApi.getUsers().catch(() => []),
         documentApi
           .getDocuments({ page: 1, pageSize: 5 })
-          .catch(() => ({ documents: [], total: 0 })),
+          .catch(() => ({ documents: [], total_documents: 0, total_pages: 1 })),
         moderationApi.getReports().catch(() => []),
       ]);
 
-      const documentsCount = docsData.total || docsData.documents?.length || 0;
+      const documentsCount = docsData.total_documents || docsData.documents?.length || 0;
       const calculatedEmbeddings = documentsCount * 45;
 
       const usersList = Array.isArray(users) ? users : [];

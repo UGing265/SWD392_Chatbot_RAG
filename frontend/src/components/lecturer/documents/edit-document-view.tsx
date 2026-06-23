@@ -60,7 +60,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
           leftSection={<IconArrowLeft size={16} />}
           onClick={() => router.push(`/${role}/documents/my`)}
           mb="xl"
-          radius="xl"
+          radius="lg"
         >
           Quay lại Thư viện
         </Button>
@@ -78,7 +78,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
         <Paper
           withBorder
           p="xl"
-          radius="xl"
+          radius="lg"
           className="bg-white/80 backdrop-blur-xl shadow-xl shadow-zinc-200/50 border-zinc-200 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100"
         >
           <form onSubmit={handleSubmit}>
@@ -89,7 +89,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                radius="md"
+                radius="lg"
                 size="md"
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
               />
@@ -99,7 +99,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                 placeholder="Nhập mô tả tài liệu (không bắt buộc)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                radius="md"
+                radius="lg"
                 size="md"
                 minRows={3}
                 styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
@@ -114,7 +114,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   data={subjects.map(s => ({ value: s.id, label: `${s.code} - ${s.name}` }))}
                   searchable
                   clearable
-                  radius="md"
+                  radius="lg"
                   size="md"
                 />
                 <Select
@@ -125,7 +125,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   data={terms.map(t => ({ value: t.id, label: t.name }))}
                   searchable
                   clearable
-                  radius="md"
+                  radius="lg"
                   size="md"
                 />
               </Group>
@@ -139,7 +139,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   data={documentTypes.map(d => ({ value: d.id, label: d.name }))}
                   searchable
                   clearable
-                  radius="md"
+                  radius="lg"
                   size="md"
                 />
                 <Select
@@ -150,7 +150,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   data={languages.map(l => ({ value: l.id, label: l.name }))}
                   searchable
                   clearable
-                  radius="md"
+                  radius="lg"
                   size="md"
                 />
               </Group>
@@ -164,7 +164,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   data={documentSources.map(s => ({ value: s.id, label: s.name }))}
                   searchable
                   clearable
-                  radius="md"
+                  radius="lg"
                   size="md"
                 />
                 <Select
@@ -178,14 +178,14 @@ export function EditDocumentView({ slug }: { slug: string }) {
                     { value: "private", label: "Riêng tư (Private)" },
                   ]}
                   allowDeselect={false}
-                  radius="md"
+                  radius="lg"
                   size="md"
                   required
                 />
               </Group>
 
               <Group justify="flex-end" mt="md">
-                <Button variant="subtle" color="gray" onClick={() => router.push(`/${role}/documents/my`)} radius="xl">
+                <Button variant="subtle" color="gray" onClick={() => router.push(`/${role}/documents/my`)} radius="lg">
                   Hủy
                 </Button>
                 <Button 
@@ -193,7 +193,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   color="dark" 
                   loading={saving} 
                   leftSection={<IconDeviceFloppy size={18} />}
-                  radius="xl"
+                  radius="lg"
                   className="bg-zinc-900 hover:bg-zinc-800"
                 >
                   Lưu Thay Đổi

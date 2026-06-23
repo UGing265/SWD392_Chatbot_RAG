@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ragApi } from "@/api/client";
 
 export interface Document {
   id: string;
   title: string;
   description: string | null;
+  preview_text?: string | null;
   subject_name: string | null;
+  subject_code?: string | null;
   academic_term_name: string | null;
   visibility: string;
   status: string;
@@ -13,6 +16,18 @@ export interface Document {
   updated_at: string;
   slug?: string;
   view_count: number;
+}
+
+export interface ActiveUploadJob {
+  id: string;
+  document_id?: string;
+  file_name: string;
+  file_size_bytes: number;
+  status: string;
+  progress_percent: number;
+  message?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Subject {
@@ -62,6 +77,7 @@ export function useMyDocuments() {
   const pageSize = 12;
 
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [activeUploadJobs, setActiveUploadJobs] = useState<ActiveUploadJob[]>([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -76,12 +92,8 @@ export function useMyDocuments() {
   useEffect(() => {
     const fetchLookups = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:8080/api/documents/lookups", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const res = await ragApi.get("/documents/lookups");
+        const data = res.data;
         
         // MyDocuments usually shows ALL terms/subjects the user has access to or global. 
         // We will just map them as returned.
@@ -107,45 +119,50 @@ export function useMyDocuments() {
     fetchLookups();
   }, []);
 
-  const fetchDocuments = useCallback(async () => {
-    setLoading(true);
+  const fetchDocuments = useCallback(async (isPoll = false) => {
+    if (!isPoll) setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-        sortBy: sortBy,
-      });
-      if (q) params.set("q", q);
-      if (subjectId) params.set("subjectId", subjectId);
-      if (termId) params.set("termId", termId);
-      if (documentTypeId) params.set("documentTypeId", documentTypeId);
-      if (languageId) params.set("languageId", languageId);
-      if (documentSourceId) params.set("documentSourceId", documentSourceId);
-
-      const response = await fetch(`http://localhost:8080/api/documents/my?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      const response = await ragApi.get("/documents/my", {
+        params: {
+          page: page.toString(),
+          pageSize: pageSize.toString(),
+          sortBy: sortBy,
+          ...(q && { q }),
+          ...(subjectId && { subjectId }),
+          ...(termId && { termId }),
+          ...(documentTypeId && { documentTypeId }),
+          ...(languageId && { languageId }),
+          ...(documentSourceId && { documentSourceId }),
+        }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setDocuments(data.documents || []);
-        setTotalDocuments(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-      } else {
-        setDocuments([]);
-      }
+      const data = response.data;
+      setDocuments(data.documents || []);
+      setTotalDocuments(data.total_documents || 0);
+      setTotalPages(data.total_pages || 1);
+      setActiveUploadJobs(data.active_upload_jobs || []);
     } catch (error) {
       console.error("Failed to fetch documents:", error);
+      if (!isPoll) setDocuments([]);
     } finally {
-      setLoading(false);
+      if (!isPoll) setLoading(false);
     }
   }, [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page]);
 
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  // Polling active upload jobs in background
+  useEffect(() => {
+    if (activeUploadJobs.length === 0) return;
+
+    const timer = setInterval(() => {
+      fetchDocuments(true);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [activeUploadJobs.length, fetchDocuments]);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -174,16 +191,8 @@ export function useMyDocuments() {
     if (!confirm("Bạn có chắc chắn muốn xoá tài liệu này không?")) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/documents/${docSlug}/delete`, {
-        method: "POST", // Adjust to actual HTTP method if it's DELETE
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (response.ok) {
-        fetchDocuments();
-      }
+      await ragApi.post(`/documents/${docSlug}/delete`);
+      fetchDocuments();
     } catch (error) {
       console.error("Delete error:", error);
     }
@@ -194,6 +203,7 @@ export function useMyDocuments() {
     router,
     loading,
     documents,
+    activeUploadJobs,
     totalDocuments,
     totalPages,
     page,
