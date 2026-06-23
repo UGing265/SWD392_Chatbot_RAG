@@ -184,6 +184,36 @@ export function useLecturerDocuments() {
     load();
   }, [fetchLookups, fetchMyDocuments]);
 
+  const prevMaterialsRef = useRef<Material[]>([]);
+
+  useEffect(() => {
+    // Check for transitions from Processing to Ready/Failed
+    const prevMaterials = prevMaterialsRef.current;
+    
+    materials.forEach(material => {
+      const prevMaterial = prevMaterials.find(m => m.id === material.id);
+      if (prevMaterial && prevMaterial.status === "Processing") {
+        if (material.status === "Ready") {
+          notify.success("Phân đoạn hoàn tất", `Tài liệu "${material.resource}" đã sẵn sàng!`);
+        } else if (material.status === "Failed") {
+          notify.error("Phân đoạn thất bại", `Tài liệu "${material.resource}" đã gặp lỗi trong quá trình xử lý.`);
+        }
+      }
+    });
+
+    prevMaterialsRef.current = materials;
+  }, [materials]);
+
+  useEffect(() => {
+    const hasProcessing = materials.some(m => m.status === "Processing");
+    if (!hasProcessing) return;
+
+    const intervalId = setInterval(() => {
+      fetchMyDocuments();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [materials, fetchMyDocuments]);
   const filteredMaterials = useMemo(
     () => (selectedSubject ? materials.filter((m) => m.subjectId === selectedSubject.id) : []),
     [materials, selectedSubject]

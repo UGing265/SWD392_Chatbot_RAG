@@ -180,6 +180,7 @@ type DocumentListItemDto struct {
 	ChunkCount       int        `json:"chunk_count"`
 	PreviewText      string     `json:"preview_text"`
 	OwnerEmail       *string    `json:"owner_email,omitempty"`
+	OwnerName        *string    `json:"owner_name,omitempty"`
 	ViewCount        int        `json:"view_count"`
 }
 
@@ -734,6 +735,8 @@ func (s *DocumentService) GetMyDocuments(ctx context.Context, ownerUserID uuid.U
 			FileCount:        0, // Managed by detail query or counted later
 			ChunkCount:       d.TotalChunks,
 			PreviewText:      preview,
+			OwnerEmail:       d.OwnerEmail,
+			OwnerName:        d.OwnerFullName,
 			ViewCount:        d.ViewCount,
 		})
 	}
@@ -826,6 +829,7 @@ func (s *DocumentService) GetAllDocuments(ctx context.Context, query *string, su
 			ChunkCount:       d.TotalChunks,
 			PreviewText:      preview,
 			OwnerEmail:       d.OwnerEmail,
+			OwnerName:        d.OwnerFullName,
 			ViewCount:        d.ViewCount,
 		})
 	}
@@ -1783,6 +1787,7 @@ func (s *DocumentService) GetAdminDocuments(ctx context.Context, query *string, 
 			ChunkCount:       d.TotalChunks,
 			PreviewText:      preview,
 			OwnerEmail:       d.OwnerEmail,
+			OwnerName:        d.OwnerFullName,
 			ViewCount:        d.ViewCount,
 		})
 	}
