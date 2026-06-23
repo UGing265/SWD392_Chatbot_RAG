@@ -1,10 +1,11 @@
 "use client";
 
 import { useUsers } from "@/hooks/admin/use-users";
+import { AdminPageShell } from "@/components/layout/admin-page-shell";
 import { UserTable } from "./user-table";
 import { CreateUserModal, EditUserModal, ChangePasswordModal } from "./user-modals";
-import { Title, Text, Button, TextInput, Paper, Center, Loader, Group } from "@mantine/core";
-import { IconSearch, IconPlus } from "@tabler/icons-react";
+import { Button, Center, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 
 export function AdminUsersView() {
   const {
@@ -42,71 +43,58 @@ export function AdminUsersView() {
   );
 
   return (
-    <div style={{ padding: "var(--mantine-spacing-xl)" }}>
-      {/* Header section */}
-      <Group justify="space-between" align="flex-start" mb="xl">
-        <div>
-          <Title order={1} size="h2" mb={4}>
-            Quản lý tài khoản người dùng
-          </Title>
-          <Text size="sm" c="dimmed">
-            Quản lý vai trò và trạng thái truy cập của người dùng trong hệ thống
-          </Text>
-        </div>
+    <AdminPageShell
+      eyebrow="QUẢN LÝ NGƯỜI DÙNG"
+      title="Tài Khoản."
+      description="Quản lý vai trò và trạng thái truy cập của người dùng trong hệ thống."
+      actions={
         <Button
           leftSection={<IconPlus size={16} />}
           onClick={openCreateModal}
           size="md"
-          radius="lg"
+          radius="xl"
           color="dark"
+          className="h-11 px-6"
         >
           Thêm người dùng
         </Button>
-      </Group>
+      }
+    >
+      <Stack gap="xl">
+        <Paper withBorder radius={24} p="lg" className="overflow-hidden bg-white shadow-sm">
+          <TextInput
+            placeholder="Tìm người dùng theo tên, email..."
+            leftSection={<IconSearch size={16} />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="md"
+            radius="lg"
+            className="mb-6 max-w-[650px]"
+          />
+          {loading ? (
+            <Center py={60}>
+              <Loader size="lg" color="dark" />
+            </Center>
+          ) : (
+            <>
+              <UserTable
+                users={filteredUsers}
+                onToggleBlock={handleToggleBlock}
+                onEdit={openEditModal}
+                onPassword={openPasswordModal}
+                onDelete={handleDeleteUser}
+              />
 
-      {/* Search Filter */}
-      <TextInput
-        placeholder="Tìm người dùng theo tên, email..."
-        leftSection={<IconSearch size={16} />}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        mb="lg"
-        size="md"
-        radius="lg"
-        style={{ maxWidth: 480 }}
-      />
+              <Group justify="space-between" mt="md" pt="md" className="border-t border-zinc-200">
+                <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
+                  Hiển thị {filteredUsers.length} trên {users.length} người dùng
+                </Text>
+              </Group>
+            </>
+          )}
+        </Paper>
+      </Stack>
 
-      {/* Table Container */}
-      <Paper withBorder radius="lg" p="md">
-        {loading ? (
-          <Center py={60}>
-            <Loader size="lg" />
-          </Center>
-        ) : (
-          <>
-            <UserTable
-              users={filteredUsers}
-              onToggleBlock={handleToggleBlock}
-              onEdit={openEditModal}
-              onPassword={openPasswordModal}
-              onDelete={handleDeleteUser}
-            />
-
-            <Group
-              justify="space-between"
-              mt="md"
-              pt="md"
-              style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
-            >
-              <Text size="xs" c="dimmed">
-                Hiển thị {filteredUsers.length} trên {users.length} người dùng
-              </Text>
-            </Group>
-          </>
-        )}
-      </Paper>
-
-      {/* Modals */}
       <CreateUserModal
         opened={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
@@ -131,6 +119,6 @@ export function AdminUsersView() {
         onChange={setNewPassword}
         userName={selectedUser?.name || ""}
       />
-    </div>
+    </AdminPageShell>
   );
 }

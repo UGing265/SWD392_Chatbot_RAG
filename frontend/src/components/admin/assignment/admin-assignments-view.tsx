@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { useAssignments } from "@/hooks/admin/use-assignments";
+import { AdminPageShell } from "@/components/layout/admin-page-shell";
 import {
   Button,
-  Group,
-  Stack,
-  Title,
-  Text,
-  Paper,
-  Loader,
-  Select,
   Checkbox,
   Grid,
+  Group,
+  Loader,
+  Paper,
+  Select,
+  Stack,
+  Text,
   TextInput,
 } from "@mantine/core";
-import { IconBook, IconDeviceFloppy, IconUserCheck, IconSearch } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconSearch, IconUserCheck } from "@tabler/icons-react";
 
 export function AdminAssignmentsView() {
   const {
@@ -33,7 +33,6 @@ export function AdminAssignmentsView() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Map lecturers into Mantine Select data format
   const selectData = lecturers.map((lec) => ({
     value: lec.id,
     label: `${lec.name} (${lec.email})`,
@@ -42,45 +41,33 @@ export function AdminAssignmentsView() {
   const filteredSubjects = subjects.filter(
     (sub) =>
       sub.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.name.toLowerCase().includes(searchQuery.toLowerCase())
+      sub.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
-    <Stack gap="xl" p="md" style={{ maxWidth: 800, margin: "0 auto" }}>
-      {/* Header Section */}
-      <div>
-        <Title order={2}>
-          Phân công môn học giảng dạy
-        </Title>
-        <Text size="sm" c="dimmed">
-          Thiết lập danh sách môn học mà giảng viên có quyền quản lý và tải tài liệu
-        </Text>
-      </div>
-
-      <Paper withBorder radius="lg" p="xl">
+    <AdminPageShell
+      eyebrow="PHÂN QUYỀN GIẢNG DẠY"
+      title="Phân Công."
+      description="Thiết lập danh sách môn học mà giảng viên có quyền quản lý và tải tài liệu."
+    >
+      <Paper withBorder radius={24} p="xl" className="bg-white shadow-sm">
         <Group gap="sm" mb="xl">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 36,
-              height: 36,
-              borderRadius: "8px",
-              border: "1px solid var(--mantine-color-default-border)",
-              backgroundColor: "rgba(0,0,0,0.02)",
-            }}
-          >
-            <IconUserCheck size={18} style={{ color: "var(--mantine-color-text)" }} />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-zinc-700">
+            <IconUserCheck size={20} stroke={1.5} />
           </div>
-          <Text fw={700} size="lg">
-            Phân công môn học cho giảng viên
-          </Text>
+          <div>
+            <Text fw={700} className="font-serif text-[20px] tracking-[-0.02em] text-zinc-900">
+              Phân công môn học cho giảng viên
+            </Text>
+            <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
+              Đã chọn {assignedSubjects.length} môn
+            </Text>
+          </div>
         </Group>
 
         {loading ? (
           <Group justify="center" py="xl">
-            <Loader size="lg" color="blue" />
+            <Loader size="lg" color="dark" />
           </Group>
         ) : (
           <Stack gap="lg">
@@ -97,30 +84,26 @@ export function AdminAssignmentsView() {
               leftSection={<IconUserCheck size={16} />}
             />
 
-            <div>
-              <Group justify="space-between" align="center" mb="xs">
-                <Text size="sm" fw={700}>
+            <Stack gap="sm">
+              <Group justify="space-between" align="center">
+                <Text size="sm" fw={700} className="text-zinc-900">
                   Môn học phân công
                 </Text>
                 {subjects.length > 0 && (
-                  <Text size="xs" c="dimmed">
-                    Đã chọn {assignedSubjects.length} môn
+                  <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
+                    {subjects.length} môn khả dụng
                   </Text>
                 )}
               </Group>
+
               {subjects.length === 0 ? (
-                <Paper
-                  withBorder
-                  p="md"
-                  radius="lg"
-                  style={{ borderStyle: "dashed", textAlign: "center" }}
-                >
+                <Paper withBorder p="xl" radius={24} className="border-dashed text-center">
                   <Text size="sm" c="dimmed">
                     Chưa có môn học nào trong hệ thống.
                   </Text>
                 </Paper>
               ) : (
-                <Stack gap="sm">
+                <>
                   <TextInput
                     placeholder="Tìm kiếm môn học theo mã hoặc tên..."
                     value={searchQuery}
@@ -130,18 +113,13 @@ export function AdminAssignmentsView() {
                   />
 
                   {filteredSubjects.length === 0 ? (
-                    <Paper
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      style={{ borderStyle: "dashed", textAlign: "center" }}
-                    >
+                    <Paper withBorder p="xl" radius={24} className="border-dashed text-center">
                       <Text size="sm" c="dimmed">
                         Không tìm thấy môn học nào khớp với từ khóa tìm kiếm.
                       </Text>
                     </Paper>
                   ) : (
-                    <div style={{ maxHeight: 320, overflowY: "auto", overflowX: "hidden", paddingRight: 4 }}>
+                    <div className="max-h-[360px] overflow-y-auto overflow-x-hidden pr-1">
                       <Grid>
                         {filteredSubjects.map((subject) => {
                           const existing = assignedBySubject.get(subject.id);
@@ -155,32 +133,35 @@ export function AdminAssignmentsView() {
                               <Paper
                                 withBorder
                                 p="md"
-                                radius="lg"
-                                bg="transparent"
+                                radius={24}
                                 onClick={() => !assignedToOther && toggleSubject(subject.id)}
+                                className="group bg-white transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                                 style={{
                                   cursor: assignedToOther ? "not-allowed" : "pointer",
-                                  borderColor: checked ? "var(--mantine-color-text)" : undefined,
+                                  borderColor: checked ? "var(--mantine-color-dark-6)" : undefined,
                                   borderWidth: checked ? "1.5px" : "1px",
                                   opacity: assignedToOther ? 0.6 : 1,
-                                  transition: "all 150ms ease",
                                 }}
                               >
-                                <Group justify="space-between" wrap="nowrap" style={{ width: "100%", minWidth: 0 }}>
-                                  <Group gap="sm" style={{ flex: 1, minWidth: 0 }} wrap="nowrap">
+                                <Group
+                                  justify="space-between"
+                                  wrap="nowrap"
+                                  className="w-full min-w-0"
+                                >
+                                  <Group gap="sm" className="min-w-0 flex-1" wrap="nowrap">
                                     <Checkbox
                                       checked={checked}
                                       disabled={assignedToOther}
-                                      onChange={() => {}} // Click is handled by parent Paper
+                                      onChange={() => {}}
                                       radius="xs"
                                       color="dark"
-                                      style={{ flexShrink: 0 }}
+                                      className="shrink-0"
                                     />
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <Text size="sm" fw={600}>
+                                    <div className="min-w-0 flex-1">
+                                      <Text size="sm" fw={700} className="font-serif text-zinc-900">
                                         {subject.code}
                                       </Text>
-                                      <Text size="xs" c="dimmed" truncate style={{ display: "block" }}>
+                                      <Text size="xs" c="dimmed" truncate className="block">
                                         {subject.name}
                                       </Text>
                                     </div>
@@ -190,7 +171,7 @@ export function AdminAssignmentsView() {
                                     <Text
                                       size="xs"
                                       c="red.6"
-                                      style={{ maxWidth: 120, flexShrink: 0 }}
+                                      className="max-w-[120px] shrink-0"
                                       truncate
                                       title={existing?.lecturerEmail}
                                     >
@@ -205,25 +186,26 @@ export function AdminAssignmentsView() {
                       </Grid>
                     </div>
                   )}
-                </Stack>
+                </>
               )}
-            </div>
+            </Stack>
 
             <Button
               leftSection={<IconDeviceFloppy size={18} />}
               onClick={handleSave}
               loading={saving}
               disabled={!selectedLecturer}
-              radius="lg"
+              radius="xl"
               size="md"
               fullWidth
               color="dark"
+              className="h-11"
             >
               Lưu phân công môn học
             </Button>
           </Stack>
         )}
       </Paper>
-    </Stack>
+    </AdminPageShell>
   );
 }
