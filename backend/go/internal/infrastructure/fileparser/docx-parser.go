@@ -83,6 +83,8 @@ func extractRunText(run *docx.Run, sb *strings.Builder) {
 		switch c := child.(type) {
 		case string:
 			sb.WriteString(c)
+		case *docx.Text:
+			sb.WriteString(c.Text)
 		case *docx.Run:
 			extractRunText(c, sb)
 		}
