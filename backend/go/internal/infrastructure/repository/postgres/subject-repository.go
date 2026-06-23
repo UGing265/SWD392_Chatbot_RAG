@@ -79,6 +79,34 @@ func (r *SubjectRepository) FindAll(ctx context.Context) ([]*subject.Subject, er
 	return subs, nil
 }
 
+func (r *SubjectRepository) FindAllPublic(ctx context.Context) ([]*subject.Subject, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	rows, err := r.pool.Query(ctx,
+		`SELECT s.id, s.code, s.name, s.academic_term_id, s.created_at, at.name as academic_term_name
+		FROM subjects s
+		LEFT JOIN academic_terms at ON s.academic_term_id = at.id
+		WHERE s.status = 'public'
+		ORDER BY s.code ASC`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subs []*subject.Subject
+	for rows.Next() {
+		var sub subject.Subject
+		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.AcademicTermID, &sub.CreatedAt, &sub.AcademicTermName)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, &sub)
+	}
+	return subs, nil
+}
+
 func (r *SubjectRepository) FindAllByOwner(ctx context.Context, ownerID uuid.UUID) ([]*subject.Subject, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
