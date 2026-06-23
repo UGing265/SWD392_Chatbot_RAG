@@ -167,7 +167,7 @@ export function AdminDashboardView() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-[#333333] dark:text-[#e4e4e7] font-sans">
-                            {doc.owner_name || "Không rõ"}
+                            {doc.owner_name || doc.owner_email || "Không rõ"}
                           </span>
                         </td>
                         <td className="px-6 py-4">

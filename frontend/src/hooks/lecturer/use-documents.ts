@@ -19,6 +19,7 @@ export interface Chapter {
 
 export interface Material {
   id: string;
+  slug: string;
   resource: string;
   subjectId: string;
   date: string;
@@ -155,6 +156,7 @@ export function useLecturerDocuments() {
 
         return {
           id: doc.id,
+          slug: doc.slug,
           resource: doc.title,
           subjectId: doc.subject_id || "",
           date: new Date(doc.created_at).toLocaleDateString("en-US", {
@@ -182,6 +184,36 @@ export function useLecturerDocuments() {
     load();
   }, [fetchLookups, fetchMyDocuments]);
 
+  const prevMaterialsRef = useRef<Material[]>([]);
+
+  useEffect(() => {
+    // Check for transitions from Processing to Ready/Failed
+    const prevMaterials = prevMaterialsRef.current;
+    
+    materials.forEach(material => {
+      const prevMaterial = prevMaterials.find(m => m.id === material.id);
+      if (prevMaterial && prevMaterial.status === "Processing") {
+        if (material.status === "Ready") {
+          notify.success("Phân đoạn hoàn tất", `Tài liệu "${material.resource}" đã sẵn sàng!`);
+        } else if (material.status === "Failed") {
+          notify.error("Phân đoạn thất bại", `Tài liệu "${material.resource}" đã gặp lỗi trong quá trình xử lý.`);
+        }
+      }
+    });
+
+    prevMaterialsRef.current = materials;
+  }, [materials]);
+
+  useEffect(() => {
+    const hasProcessing = materials.some(m => m.status === "Processing");
+    if (!hasProcessing) return;
+
+    const intervalId = setInterval(() => {
+      fetchMyDocuments();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [materials, fetchMyDocuments]);
   const filteredMaterials = useMemo(
     () => (selectedSubject ? materials.filter((m) => m.subjectId === selectedSubject.id) : []),
     [materials, selectedSubject]
@@ -202,7 +234,7 @@ export function useLecturerDocuments() {
     if (currentMaterial?.id) {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:8080/api/documents/${currentMaterial.id}/delete`, {
+        const res = await fetch(`http://localhost:8080/api/documents/${currentMaterial.slug}/delete`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });

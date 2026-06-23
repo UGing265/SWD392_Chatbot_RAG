@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export interface Document {
   id: string;
@@ -10,108 +10,172 @@ export interface Document {
   visibility: string;
   status: string;
   created_at: string;
+  updated_at: string;
   slug?: string;
+  view_count: number;
+}
+
+export interface Subject {
+  id: string;
+  code: string;
+  name: string;
+  academicTermId?: string;
+}
+
+export interface AcademicTerm {
+  id: string;
+  name: string;
+  year?: string;
+  order?: number;
+}
+
+export interface DocumentType {
+  id: string;
+  name: string;
+}
+
+export interface Language {
+  id: string;
+  name: string;
+}
+
+export interface DocumentSource {
+  id: string;
+  name: string;
 }
 
 export function useMyDocuments() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const role = pathname.split("/")[1] || "student";
+
+  // URL state
+  const q = searchParams.get("q") || "";
+  const subjectId = searchParams.get("subjectId") || "";
+  const termId = searchParams.get("termId") || "";
+  const documentTypeId = searchParams.get("documentTypeId") || "";
+  const languageId = searchParams.get("languageId") || "";
+  const documentSourceId = searchParams.get("documentSourceId") || "";
+  const sortBy = searchParams.get("sortBy") || "date_desc";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = 12;
+
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "subject" | "term">("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const useMockData = () => {
-    const mockDocuments: Document[] = [
-      {
-        id: "1",
-        title: "Giáo trình Lập trình Web - Chương 1",
-        description: "Giới thiệu về HTML, CSS và JavaScript cơ bản",
-        subject_name: "Lập trình Web",
-        academic_term_name: "HK1 2024-2025",
-        visibility: "private",
-        status: "completed",
-        created_at: "2024-01-15T10:30:00Z",
-      },
-      {
-        id: "2",
-        title: "Bài giảng Cơ sở dữ liệu - Chương 3",
-        description: "SQL và các câu truy vấn cơ bản",
-        subject_name: "Cơ sở dữ liệu",
-        academic_term_name: "HK1 2024-2025",
-        visibility: "private",
-        status: "completed",
-        created_at: "2024-01-20T14:00:00Z",
-      },
-      {
-        id: "3",
-        title: "Tài liệu ôn thi Toán cao cấp",
-        description: "Tổng hợp các bài tập và lý thuyết",
-        subject_name: "Toán cao cấp",
-        academic_term_name: "HK2 2024-2025",
-        visibility: "public",
-        status: "completed",
-        created_at: "2024-02-01T09:15:00Z",
-      },
-    ];
-    setDocuments(mockDocuments);
-  };
+  // Lookups
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [terms, setTerms] = useState<AcademicTerm[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
-  const fetchDocuments = async () => {
+  useEffect(() => {
+    const fetchLookups = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:8080/api/documents/lookups", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // MyDocuments usually shows ALL terms/subjects the user has access to or global. 
+        // We will just map them as returned.
+        setSubjects((data.subjects || []).map((s: any) => ({
+          id: s.id,
+          code: s.code,
+          name: s.name,
+          academicTermId: s.academic_term_id,
+        })));
+        setTerms((data.academicTerms || []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          year: t.year,
+          order: t.order,
+        })));
+        setDocumentTypes((data.documentTypes || []).map((dt: any) => ({ id: dt.id, name: dt.name })));
+        setLanguages((data.languages || []).map((l: any) => ({ id: l.id, name: l.name })));
+        setDocumentSources((data.documentSources || []).map((ds: any) => ({ id: ds.id, name: ds.name })));
+      } catch (err) {
+        console.error("Failed to fetch lookups:", err);
+      }
+    };
+    fetchLookups();
+  }, []);
+
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/documents/my", {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        sortBy: sortBy,
+      });
+      if (q) params.set("q", q);
+      if (subjectId) params.set("subjectId", subjectId);
+      if (termId) params.set("termId", termId);
+      if (documentTypeId) params.set("documentTypeId", documentTypeId);
+      if (languageId) params.set("languageId", languageId);
+      if (documentSourceId) params.set("documentSourceId", documentSourceId);
+
+      const response = await fetch(`http://localhost:8080/api/documents/my?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         setDocuments(data.documents || []);
+        setTotalDocuments(data.total || 0);
+        setTotalPages(data.totalPages || 1);
       } else {
-        const errText = await response.text();
-        console.warn("Failed to fetch documents:", response.status, errText);
-        useMockData();
+        setDocuments([]);
       }
     } catch (error) {
       console.error("Failed to fetch documents:", error);
-      useMockData();
     } finally {
       setLoading(false);
     }
-  };
+  }, [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page]);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
-  const sortedDocuments = [...documents].sort((a, b) => {
-    let comparison = 0;
-    if (sortBy === "date") {
-      comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    } else if (sortBy === "subject") {
-      comparison = (a.subject_name || "").localeCompare(b.subject_name || "");
-    } else if (sortBy === "term") {
-      comparison = (a.academic_term_name || "").localeCompare(b.academic_term_name || "");
+  const updateFilters = (newParams: Record<string, string | null>) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        current.delete(key);
+      } else {
+        current.set(key, value);
+      }
+    });
+    // Reset page to 1 when filters change (unless page is explicitly passed)
+    if (!newParams.page) {
+      current.delete("page");
     }
-    return sortOrder === "asc" ? comparison : -comparison;
-  });
+    router.push(`/${role}/documents/my?${current.toString()}`);
+  };
 
-  const filteredDocuments = sortedDocuments.filter(
-    (doc) =>
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const clearFilters = () => {
+    router.push(`/${role}/documents/my`);
+  };
 
-  const handleDelete = async (e: React.MouseEvent, docId: string) => {
+  const handleDelete = async (e: React.MouseEvent, docSlug: string | undefined) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this document?")) return;
+    if (!docSlug) return;
+    if (!confirm("Bạn có chắc chắn muốn xoá tài liệu này không?")) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/documents/${docId}/delete`, {
-        method: "POST",
+      const response = await fetch(`http://localhost:8080/api/documents/${docSlug}/delete`, {
+        method: "POST", // Adjust to actual HTTP method if it's DELETE
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -129,14 +193,24 @@ export function useMyDocuments() {
     role,
     router,
     loading,
-    searchQuery,
-    setSearchQuery,
+    documents,
+    totalDocuments,
+    totalPages,
+    page,
+    q,
+    subjectId,
+    termId,
+    documentTypeId,
+    languageId,
+    documentSourceId,
     sortBy,
-    setSortBy,
-    sortOrder,
-    setSortOrder,
-    documents: filteredDocuments,
+    updateFilters,
+    clearFilters,
+    subjects,
+    terms,
+    documentTypes,
+    languages,
+    documentSources,
     handleDelete,
-    refresh: fetchDocuments,
   };
 }

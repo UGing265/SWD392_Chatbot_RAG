@@ -14,26 +14,33 @@ import {
   IconSelector,
   IconSettings,
   IconCrown,
-  IconChevronRight,
+  IconEdit,
+  IconChevronDown,
+  IconLayoutSidebar,
   IconLogout,
   IconBell,
-  IconLayoutSidebar,
-  IconEdit,
 } from "@tabler/icons-react";
-import { Menu, Avatar, Text, Group, Stack, Badge, UnstyledButton } from "@mantine/core";
-import type { ReactNode } from "react";
+import {
+  Menu,
+  Avatar,
+  Text,
+  Group,
+  Stack,
+  Badge,
+  UnstyledButton,
+  Collapse,
+  ActionIcon,
+} from "@mantine/core";
+import { ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { createSession, sessionList } from "@/lib/sessions-store";
 
 const nav = [
-  { to: "/chat", label: "Chat", icon: IconSparkles, studentOnly: true },
-  { to: "/sessions", label: "Lịch sử chat", icon: IconHistory, studentOnly: true },
+  { to: "/chat", label: "Chat mới", icon: IconEdit, studentOnly: true },
   { to: "/documents/shared", label: "Tài liệu chung", icon: IconBook },
   { to: "/documents/my", label: "Tài liệu riêng", icon: IconFileText, lecturerOnly: true },
   { to: "/upload", label: "Upload Tài liệu", icon: IconUpload, lecturerOnly: true },
-  { to: "/quiz/create", label: "Tạo Quiz", icon: IconPlus, lecturerOnly: true },
-  { to: "/quiz/take", label: "Làm Quiz", icon: IconClipboardList, studentOnly: true },
 ];
 
 function getRoleLabel(role?: string) {
@@ -69,19 +76,17 @@ function SidebarItem({
     <Link
       href={to}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors",
-        active
-          ? "bg-zinc-200/50 text-gray-900"
-          : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900"
+        "group flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px] font-medium transition-colors",
+        active ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
       )}
     >
       <Icon
         size={18}
-        className={cn(
-          active ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900"
-        )}
+        className={cn(active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700")}
       />
-      <span className="flex-1">{label}</span>
+      <span className="flex-1">
+        {label}
+      </span>
     </Link>
   );
 }
@@ -96,52 +101,30 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { signOut, session } = useAuth();
   const roleLabel = getRoleLabel(session?.role || role);
   const router = useRouter();
+  const [historyOpened, setHistoryOpened] = useState(true);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-blue-100">
+    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
       {/* Sidebar */}
-      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-gray-200 bg-zinc-50 md:flex">
+      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-slate-200 bg-[#FAFAFA] md:flex">
         {/* Brand */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-3.5">
-          <Link href={`${basePath}/chat`} className="text-[18px] font-bold tracking-tight text-gray-900 px-1">
+        <div className="flex items-center justify-between px-4 pt-5 pb-4">
+          <Link
+            href={`${basePath}/chat`}
+            className="text-[18px] font-bold tracking-tight text-slate-900 px-1"
+          >
             StudyMate
           </Link>
-          <UnstyledButton className="rounded-lg p-1.5 text-gray-400 hover:bg-zinc-150 hover:text-gray-900 transition-colors">
+          <UnstyledButton className="rounded-[6px] p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors">
             <IconLayoutSidebar size={18} />
           </UnstyledButton>
         </div>
 
-        {/* New Chat Button for Student */}
-        {role === "student" && (
-          <div className="px-3 mb-2">
-            <Link
-              href={`${basePath}/chat`}
-              className={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors w-full",
-                pathname === `${basePath}/chat` && !searchParams?.get("session")
-                  ? "bg-zinc-200/50 text-gray-900"
-                  : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900"
-              )}
-            >
-              <IconEdit
-                size={18}
-                className={cn(
-                  pathname === `${basePath}/chat` && !searchParams?.get("session")
-                    ? "text-gray-900"
-                    : "text-gray-400 group-hover:text-gray-900"
-                )}
-              />
-              <span className="flex-1">Chat mới</span>
-            </Link>
-          </div>
-        )}
-
-        <nav className="flex flex-col gap-1 px-3">
+        <nav className="flex flex-col gap-1 px-3 mt-2">
           {nav
             .filter((n) => {
               if (n.studentOnly && role !== "student") return false;
               if (n.lecturerOnly && role !== "lecturer" && role !== "teacher") return false;
-              if (n.to === "/chat" && role === "student") return false;
               return true;
             })
             .map((n) => {
@@ -161,68 +144,107 @@ export function AppLayout({ children }: { children: ReactNode }) {
             })}
         </nav>
 
-        {/* Recent Chats Section */}
+        {/* Recent Chats Section / History */}
         {role === "student" && (
-          <div className="mt-5 px-3">
-            <Text size="xs" fw={600} className="text-gray-500 px-3 py-1 font-semibold uppercase tracking-wider text-[11px]">
-              Gần đây
-            </Text>
-            <div className="flex flex-col gap-0.5 mt-1">
-              {sessionList.slice(0, 5).map((session) => {
-                const isActive = searchParams?.get("session") === session.id;
-                return (
-                  <Link
-                    key={session.id}
-                    href={`${basePath}/chat?session=${session.id}`}
-                    className={cn(
-                      "group block rounded-lg px-3 py-1.5 text-[13.5px] truncate transition-colors",
-                      isActive
-                        ? "bg-zinc-200/50 text-gray-900 font-medium"
-                        : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900",
-                    )}
-                  >
-                    {session.title}
-                  </Link>
-                );
-              })}
-            </div>
+          <div className="mt-6 px-3">
+            <UnstyledButton
+              onClick={() => setHistoryOpened((o) => !o)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[8px] hover:bg-slate-100 transition-colors group"
+            >
+              <IconChevronDown
+                size={16}
+                className={cn(
+                  "text-slate-400 transition-transform duration-200",
+                  !historyOpened && "-rotate-90",
+                )}
+              />
+              <Text
+                className="flex-1 text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors"
+              >
+                Lịch sử
+              </Text>
+            </UnstyledButton>
+
+            <Collapse in={historyOpened}>
+              <div className="flex flex-col gap-0.5 mt-1">
+                {sessionList.slice(0, 8).map((session) => {
+                  const isActive = searchParams?.get("session") === session.id;
+                  return (
+                    <Link
+                      key={session.id}
+                      href={`${basePath}/chat?session=${session.id}`}
+                      className={cn(
+                        "group block rounded-[8px] px-3 py-2 text-[13px] truncate transition-colors",
+                        isActive
+                          ? "bg-slate-200 text-slate-900 font-medium"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                      )}
+                    >
+                      {session.title}
+                    </Link>
+                  );
+                })}
+              </div>
+            </Collapse>
           </div>
         )}
 
         {/* Profile / Bottom actions */}
-        <div className="mt-auto border-t border-gray-200">
-          <Menu shadow="md" width={240} position="top-start" radius="lg" offset={8}>
+        <div className="mt-auto px-3 py-4 flex flex-col gap-3">
+          <UnstyledButton className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-all w-fit mx-auto">
+            <IconCrown size={15} className="text-yellow-600" />
+            <Text className="text-[12px] font-semibold text-slate-700 pr-1">
+              Nâng cấp gói
+            </Text>
+          </UnstyledButton>
+
+          <Menu shadow="md" position="top-start" radius="lg" offset={12} withArrow>
             <Menu.Target>
-              <UnstyledButton className="flex w-full items-center gap-3 !px-5 !py-4 text-left hover:!bg-zinc-200 transition-colors duration-150">
-                <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
+              <UnstyledButton className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-slate-200 transition-colors duration-150">
+                <Avatar
+                  color="blue"
+                  variant="light"
+                  radius="xl"
+                  size="sm"
+                  className="font-bold text-xs"
+                >
                   {getInitials(session?.user?.name)}
                 </Avatar>
                 <div className="flex-1 min-w-0 leading-tight">
-                  <Text size="sm" fw={550} className="truncate text-gray-900">
+                  <Text size="sm" fw={600} className="truncate text-slate-900">
                     {session?.user?.name || "Người dùng"}
                   </Text>
-                  <Text size="xs" className="text-gray-500 font-normal mt-0.5 capitalize">
+                  <Text
+                    size="xs"
+                    className="text-slate-500 font-medium mt-0.5 capitalize"
+                  >
                     {roleLabel}
                   </Text>
                 </div>
               </UnstyledButton>
             </Menu.Target>
 
-            <Menu.Dropdown className="p-1" style={{ marginLeft: '16px' }}>
+            <Menu.Dropdown className="p-1 min-w-[200px]">
               <Menu.Item
                 component={Link}
                 href={`/${session?.role || "student"}/change-password`}
-                className="!p-0 hover:bg-zinc-100 transition-colors duration-150"
+                className="hover:bg-slate-50 transition-colors duration-150"
               >
-                <div className="px-3 py-3 flex items-center gap-3">
-                  <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
+                <div className="px-1 py-1 flex items-center gap-3">
+                  <Avatar
+                    color="blue"
+                    variant="light"
+                    radius="xl"
+                    size="md"
+                    className="font-bold text-sm"
+                  >
                     {getInitials(session?.user?.name)}
                   </Avatar>
                   <div className="flex flex-col min-w-0 leading-tight">
-                    <Text size="sm" fw={600} className="truncate text-gray-900">
+                    <Text size="sm" fw={600} className="whitespace-nowrap text-slate-900">
                       {session?.user?.name || "Người dùng"}
                     </Text>
-                    <Text size="xs" className="truncate text-gray-500 mt-0.5">
+                    <Text size="xs" className="whitespace-nowrap text-slate-500 mt-0.5">
                       {session?.user?.email || "Email"}
                     </Text>
                   </div>
@@ -232,15 +254,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <Menu.Item
                 component={Link}
                 href={`/${session?.role || "student"}/settings`}
-                leftSection={<IconSettings size={16} className="text-zinc-500" />}
+                leftSection={<IconSettings size={16} className="text-slate-600" />}
+                className="text-slate-700 hover:bg-slate-50"
               >
                 Tất cả cài đặt
               </Menu.Item>
-              <Menu.Item leftSection={<IconCrown size={16} className="text-zinc-500" />}>
-                Nâng cấp gói
-              </Menu.Item>
               <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconLogout size={16} className="text-red-500" />} onClick={() => signOut()}>
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={16} />}
+                onClick={() => signOut()}
+                className="text-red-600 hover:bg-red-50"
+              >
                 Đăng xuất
               </Menu.Item>
             </Menu.Dropdown>
@@ -248,34 +273,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white/70 px-6 backdrop-blur-md md:px-8">
-          <div className="flex min-w-0 items-center gap-4">
-            {pathname.endsWith("/chat") && (
-              <Text size="sm" fw={700} className="text-gray-900 truncate max-w-[300px] md:max-w-[500px]">
-                {(() => {
-                  const sessionId = searchParams?.get("session");
-                  const currentSession = sessionId
-                    ? sessionList.find((s) => s.id === sessionId)
-                    : null;
-                  return currentSession ? currentSession.title : "Phiên chat mới";
-                })()}
-              </Text>
-            )}
-          </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white transition-all duration-300 relative">
 
-          <Group gap="sm">
-            <Badge color="blue" variant="light" size="md">
-              Gói miễn phí
-            </Badge>
-            <UnstyledButton className="relative rounded-md p-2 text-gray-400 transition-colors hover:bg-zinc-100 hover:text-gray-600">
-              <IconBell size={20} />
-            </UnstyledButton>
-          </Group>
-        </header>
-
-        <main className="flex-1 overflow-y-auto min-h-0">{children}</main>
+        <main className="flex-1 flex flex-col bg-white overflow-y-auto">{children}</main>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 export interface Subject {
   id: string;
   name: string;
+  academicTermId?: string;
 }
 
 export interface AcademicTerm {
@@ -10,7 +11,17 @@ export interface AcademicTerm {
   name: string;
 }
 
-export interface Chapter {
+export interface DocumentType {
+  id: string;
+  name: string;
+}
+
+export interface Language {
+  id: string;
+  name: string;
+}
+
+export interface DocumentSource {
   id: string;
   name: string;
 }
@@ -19,41 +30,91 @@ export function useUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [subjectId, setSubjectId] = useState("");
-  const [termId, setTermId] = useState("");
-  const [chapterId, setChapterId] = useState("");
+  
+  const [subjectId, setSubjectIdRaw] = useState("");
+  const [termId, setTermIdRaw] = useState("");
+  const [documentTypeId, setDocumentTypeId] = useState("");
+  const [languageId, setLanguageId] = useState("");
+  const [documentSourceId, setDocumentSourceId] = useState("");
+  
   const [visibility, setVisibility] = useState("private");
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
   useEffect(() => {
-    // Mock data for development
-    const mockSubjects: Subject[] = [
-      { id: "1", name: "Lập trình Web" },
-      { id: "2", name: "Cơ sở dữ liệu" },
-      { id: "3", name: "Toán cao cấp" },
-      { id: "4", name: "Mạng máy tính" },
-    ];
+    const fetchLookups = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:8080/api/documents/lookups", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch lookups");
+        const data = await res.json();
 
-    const mockTerms: AcademicTerm[] = [
-      { id: "1", name: "HK1 2024-2025" },
-      { id: "2", name: "HK2 2024-2025" },
-      { id: "3", name: "HK1 2025-2026" },
-    ];
+        // 1. Get assigned subjects for the lecturer
+        const apiSubjects = data.subjects || [];
+        const mappedSubjects: Subject[] = apiSubjects.map((s: any) => ({
+          id: s.id,
+          name: `${s.code} - ${s.name}`,
+          academicTermId: s.academic_term_id || "",
+        }));
+        setSubjects(mappedSubjects);
 
-    const mockChapters: Chapter[] = [
-      { id: "1", name: "Chương 1: Tổng quan" },
-      { id: "2", name: "Chương 2: Cơ sở lý thuyết" },
-      { id: "3", name: "Chương 3: Phương pháp nghiên cứu" },
-    ];
+        // 2. Filter terms: only include terms associated with the assigned subjects
+        const assignedTermIds = new Set(apiSubjects.map((s: any) => s.academic_term_id).filter(Boolean));
+        const apiTerms = data.academicTerms || [];
+        const mappedTerms: AcademicTerm[] = apiTerms
+          .filter((t: any) => assignedTermIds.has(t.id))
+          .map((t: any) => ({
+            id: t.id,
+            name: t.name,
+          }));
+        setTerms(mappedTerms);
 
-    setSubjects(mockSubjects);
-    setTerms(mockTerms);
-    setChapters(mockChapters);
+        // 3. Document Types
+        const apiDocTypes = data.documentTypes || [];
+        setDocumentTypes(apiDocTypes.map((dt: any) => ({ id: dt.id, name: dt.name })));
+
+        // 4. Languages
+        const apiLanguages = data.languages || [];
+        setLanguages(apiLanguages.map((l: any) => ({ id: l.id, name: l.name })));
+
+        // 5. Document Sources
+        const apiSources = data.documentSources || [];
+        setDocumentSources(apiSources.map((ds: any) => ({ id: ds.id, name: ds.name })));
+
+      } catch (err) {
+        console.error("Failed to fetch lookups in useUpload:", err);
+      }
+    };
+    fetchLookups();
   }, []);
+
+  const setSubjectId = (id: string) => {
+    setSubjectIdRaw(id);
+    if (id) {
+      const sub = subjects.find((s) => s.id === id);
+      if (sub && sub.academicTermId) {
+        setTermIdRaw(sub.academicTermId);
+      }
+    }
+  };
+
+  const setTermId = (id: string) => {
+    setTermIdRaw(id);
+    if (id && subjectId) {
+      const sub = subjects.find((s) => s.id === subjectId);
+      if (sub && sub.academicTermId !== id) {
+        setSubjectIdRaw("");
+      }
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -69,9 +130,11 @@ export function useUpload() {
     setFile(null);
     setTitle("");
     setDescription("");
-    setSubjectId("");
-    setTermId("");
-    setChapterId("");
+    setSubjectIdRaw("");
+    setTermIdRaw("");
+    setDocumentTypeId("");
+    setLanguageId("");
+    setDocumentSourceId("");
     setVisibility("private");
   };
 
@@ -91,9 +154,12 @@ export function useUpload() {
     formData.append("file", file);
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("subject_id", subjectId);
-    formData.append("academic_term_id", termId);
-    formData.append("chapter_id", chapterId);
+    
+    if (subjectId) formData.append("subject_id", subjectId);
+    if (termId) formData.append("academic_term_id", termId);
+    if (documentTypeId) formData.append("document_type_id", documentTypeId);
+    if (languageId) formData.append("language_id", languageId);
+    if (documentSourceId) formData.append("document_source_id", documentSourceId);
     formData.append("visibility", visibility);
 
     try {
@@ -136,15 +202,21 @@ export function useUpload() {
     setSubjectId,
     termId,
     setTermId,
-    chapterId,
-    setChapterId,
+    documentTypeId,
+    setDocumentTypeId,
+    languageId,
+    setLanguageId,
+    documentSourceId,
+    setDocumentSourceId,
     visibility,
     setVisibility,
     uploading,
     uploaded,
     subjects,
     terms,
-    chapters,
+    documentTypes,
+    languages,
+    documentSources,
     handleFileChange,
     removeFile,
     handleUpload,

@@ -96,42 +96,42 @@
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.25 0.01 260);
+  --background: #000000;
+  --foreground: #ffffff;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.01 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.01 260);
+  --card: #0d0d0d;
+  --card-foreground: #ffffff;
+  --popover: #0d0d0d;
+  --popover-foreground: #ffffff;
 
-  --primary: oklch(0.6 0.12 210); /* Cleaner blue/cyan */
-  --primary-foreground: oklch(1 0 0);
-  --primary-soft: oklch(0.95 0.02 210);
-  --primary-deep: oklch(0.4 0.15 210);
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --primary-soft: rgba(255, 255, 255, 0.1);
+  --primary-deep: #ffffff;
 
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.4 0.02 260);
-  --secondary-soft: oklch(0.98 0.005 260);
+  --secondary: #171717;
+  --secondary-foreground: #ffffff;
+  --secondary-soft: rgba(255, 255, 255, 0.05);
 
-  --accent: oklch(0.96 0.01 260);
-  --accent-foreground: oklch(0.3 0.01 260);
-  --accent-soft: oklch(0.98 0.005 260);
+  --accent: #171717;
+  --accent-foreground: #ffffff;
+  --accent-soft: rgba(255, 255, 255, 0.05);
 
-  --muted: oklch(0.97 0.01 260);
-  --muted-foreground: oklch(0.5 0.02 260);
+  --muted: #0d0d0d;
+  --muted-foreground: rgba(255, 255, 255, 0.7);
 
-  --destructive: oklch(0.6 0.15 25);
-  --destructive-foreground: oklch(1 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  --border: oklch(0.92 0.01 260);
-  --input: oklch(0.92 0.01 260);
-  --ring: oklch(0.8 0.05 210);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.05);
+  --ring: #ffffff;
 
-  --sidebar: oklch(0.98 0.005 260);
-  --sidebar-foreground: oklch(0.3 0.01 260);
-  --sidebar-accent: oklch(0.94 0.01 260);
-  --sidebar-accent-foreground: oklch(0.2 0.01 260);
-  --sidebar-border: oklch(0.92 0.01 260);
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-accent: #171717;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
