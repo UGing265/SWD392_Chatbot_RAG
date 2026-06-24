@@ -1,15 +1,43 @@
 "use client";
-
 import { useDashboard } from "@/hooks/admin/use-dashboard";
-import { Loader } from "@mantine/core";
 import {
-  IconUsers,
-  IconDatabase,
-  IconShieldCheck,
+  Badge,
+  Button,
+  Center,
+  Group,
+  Loader,
+  Paper,
+  Stack,
+  Table,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
+import {
   IconAlertCircle,
-  IconRefresh,
+  IconDatabase,
   IconFileText,
+  IconRefresh,
+  IconShieldCheck,
+  IconUsers,
 } from "@tabler/icons-react";
+
+const statusConfig = {
+  completed: { label: "Hoạt động", color: "green" },
+  pending: { label: "Đang xử lý", color: "yellow" },
+  processing: { label: "Đang xử lý", color: "blue" },
+  failed: { label: "Thất bại", color: "red" },
+  rejected: { label: "Bị từ chối", color: "red" },
+} as const;
+
+type RecentDocument = {
+  id: string;
+  title: string;
+  owner_name?: string | null;
+  owner_email?: string | null;
+  created_at?: string | null;
+  status?: string | null;
+};
 
 export function AdminDashboardView() {
   const { stats, recentDocs, loading, refresh } = useDashboard();
@@ -19,185 +47,254 @@ export function AdminDashboardView() {
       label: "Tổng người dùng",
       value: stats.totalUsers.toString(),
       icon: IconUsers,
-      bg: "rgba(31, 108, 159, 0.08)",
-      color: "#1F6C9F",
       description: "Tài khoản đăng ký hệ thống",
+      tone: "gray",
     },
     {
       label: "Tài liệu học tập",
       value: stats.totalDocuments.toString(),
       icon: IconDatabase,
-      bg: "rgba(52, 101, 56, 0.08)",
-      color: "#346538",
       description: "Tài liệu học tập đã tải lên",
+      tone: "gray",
     },
     {
       label: "Vector Embeddings",
       value: stats.totalEmbeddings.toString(),
       icon: IconShieldCheck,
-      bg: "rgba(107, 33, 168, 0.08)",
-      color: "#6B21A8",
       description: "Các đoạn văn bản đã nhúng RAG",
+      tone: "gray",
     },
     {
       label: "Tài liệu bị báo cáo",
       value: stats.totalReports.toString(),
       icon: IconAlertCircle,
-      bg: stats.totalReports > 0 ? "rgba(159, 47, 45, 0.08)" : "rgba(120, 119, 116, 0.08)",
-      color: stats.totalReports > 0 ? "#9F2F2D" : "#787774",
       description: "Cần quản trị viên kiểm duyệt",
+      tone: stats.totalReports > 0 ? "red" : "gray",
     },
   ];
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-8">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAEAEA] dark:border-[#333333]">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-3xl font-bold tracking-tight text-[#111111] dark:text-[#f8fafc]">
-            Hệ thống quản trị & Thống kê
-          </h1>
-          <p className="text-sm text-[#787774] dark:text-[#94a3b8] font-sans font-normal">
-            Theo dõi hiệu suất hệ thống RAG và hoạt động tải lên tài liệu học tập.
-          </p>
-        </div>
-        <div>
-          <button
-            onClick={refresh}
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-[#111111] hover:bg-[#222222] dark:bg-[#f8fafc] dark:hover:bg-[#e2e8f0] text-white dark:text-[#111111] font-sans font-medium text-sm rounded-xl transition-all active:scale-98 cursor-pointer border-0 shadow-none"
+    <div className="relative min-h-full w-full flex-1 bg-zinc-50 font-sans">
+      <div className="w-full px-4 py-10 sm:px-6 md:px-8 md:py-12 xl:px-[72px]">
+        <div className="w-full">
+          <Group
+            justify="space-between"
+            align="flex-end"
+            gap="md"
+            className="mb-12 animate-in fade-in slide-in-from-top-4 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
           >
-            <IconRefresh size={16} strokeWidth={2.2} />
-            <span>Làm mới</span>
-          </button>
+            <Stack gap={0}>
+              <Text
+                size="xs"
+                fw={600}
+                className="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-zinc-500"
+              >
+                TỔNG QUAN HỆ THỐNG
+              </Text>
+              <Title
+                order={1}
+                className="mb-3 select-none font-serif text-[40px] leading-none tracking-[-0.03em] text-zinc-900"
+              >
+                Quản Trị.
+              </Title>
+              <Text size="sm" c="dimmed" className="max-w-2xl font-sans font-medium">
+                Theo dõi hiệu suất hệ thống RAG và hoạt động tải lên tài liệu học tập.
+              </Text>
+            </Stack>
+
+            <Button
+              onClick={refresh}
+              color="dark"
+              radius="xl"
+              leftSection={<IconRefresh size={16} />}
+              className="h-11 px-6 transition-transform duration-150 active:scale-[0.98]"
+            >
+              Làm mới
+            </Button>
+          </Group>
+
+          {loading ? (
+            <Center py={80}>
+              <Loader size="lg" color="dark" />
+            </Center>
+          ) : (
+            <Stack
+              gap="xl"
+              className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            >
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {metrics.map((metric) => {
+                  const Icon = metric.icon;
+                  const isReported =
+                    metric.label === "Tài liệu bị báo cáo" && stats.totalReports > 0;
+
+                  return (
+                    <Paper
+                      key={metric.label}
+                      withBorder
+                      p="lg"
+                      radius={24}
+                      className="group min-h-[180px] bg-white shadow-sm transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                    >
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={8}>
+                          <Text
+                            size="xs"
+                            fw={900}
+                            className="font-mono text-[11px] uppercase tracking-widest text-zinc-900"
+                          >
+                            {metric.label}
+                          </Text>
+                          <Group align="center" gap="xs">
+                            <Text className="font-serif text-[36px] font-black leading-none tracking-[-0.03em] text-zinc-950">
+                              {metric.value}
+                            </Text>
+                            {isReported && (
+                              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]" />
+                            )}
+                          </Group>
+                        </Stack>
+
+                        <ThemeIcon
+                          color={metric.tone}
+                          variant="light"
+                          size={48}
+                          radius={16}
+                          className="border border-zinc-200 bg-zinc-100 text-zinc-700 transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white"
+                        >
+                          <Icon size={20} />
+                        </ThemeIcon>
+                      </Group>
+
+                      <Text size="sm" fw={700} className="mt-8 leading-relaxed text-zinc-900">
+                        {metric.description}
+                      </Text>
+                    </Paper>
+                  );
+                })}
+              </div>
+
+              <Paper
+                withBorder
+                radius={24}
+                className="overflow-hidden bg-white shadow-sm animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100"
+              >
+                <Group
+                  justify="space-between"
+                  align="flex-start"
+                  p="lg"
+                  className="border-b border-zinc-200 bg-white"
+                >
+                  <Stack gap={2}>
+                    <Text
+                      fw={700}
+                      className="font-serif text-[20px] tracking-[-0.02em] text-zinc-900"
+                    >
+                      Tiến trình hệ thống & Tài liệu mới tải lên
+                    </Text>
+                    <Text size="xs" className="font-medium text-zinc-500">
+                      Danh sách các tài liệu mới nhất đã được phê duyệt và lưu trữ trong hệ thống
+                      RAG.
+                    </Text>
+                  </Stack>
+                  <Badge
+                    color="dark"
+                    variant="light"
+                    radius="xl"
+                    className="font-mono tracking-widest"
+                  >
+                    {recentDocs.length} tài liệu
+                  </Badge>
+                </Group>
+
+                <Table.ScrollContainer minWidth={760}>
+                  <Table striped highlightOnHover verticalSpacing="md" horizontalSpacing="md">
+                    <Table.Thead className="bg-zinc-50">
+                      <Table.Tr>
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
+                          Tài liệu
+                        </Table.Th>
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
+                          Giảng viên
+                        </Table.Th>
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
+                          Trạng thái
+                        </Table.Th>
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
+                          Ngày cập nhật
+                        </Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {recentDocs.length === 0 ? (
+                        <Table.Tr>
+                          <Table.Td colSpan={4}>
+                            <Center py={48}>
+                              <Text size="sm" c="dimmed">
+                                Chưa có tài liệu nào trong hệ thống
+                              </Text>
+                            </Center>
+                          </Table.Td>
+                        </Table.Tr>
+                      ) : (
+                        recentDocs.map((doc: RecentDocument) => {
+                          const statusKey =
+                            doc.status && doc.status in statusConfig
+                              ? (doc.status as keyof typeof statusConfig)
+                              : "completed";
+                          const status = statusConfig[statusKey];
+
+                          return (
+                            <Table.Tr key={doc.id} className="transition-colors duration-150">
+                              <Table.Td>
+                                <Group gap="sm" wrap="nowrap">
+                                  <ThemeIcon color="gray" variant="light" size="md" radius="lg">
+                                    <IconFileText size={16} />
+                                  </ThemeIcon>
+                                  <Text
+                                    size="sm"
+                                    fw={700}
+                                    className="font-serif text-[16px] text-zinc-900"
+                                    lineClamp={1}
+                                  >
+                                    {doc.title}
+                                  </Text>
+                                </Group>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="sm" className="font-medium text-zinc-700">
+                                  {doc.owner_name || doc.owner_email || "Không rõ"}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge
+                                  color={status.color}
+                                  variant="dot"
+                                  radius="xl"
+                                  className="font-mono tracking-widest"
+                                >
+                                  {status.label}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size="xs" c="dimmed" className="font-mono tracking-wider">
+                                  {doc.created_at
+                                    ? new Date(doc.created_at).toLocaleDateString("vi-VN")
+                                    : "-"}
+                                </Text>
+                              </Table.Td>
+                            </Table.Tr>
+                          );
+                        })
+                      )}
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              </Paper>
+            </Stack>
+          )}
         </div>
       </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader size="md" color="dark" />
-        </div>
-      ) : (
-        <>
-          {/* Metrics Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {metrics.map((m) => {
-              const Icon = m.icon;
-              const isReported = m.label === "Tài liệu bị báo cáo" && stats.totalReports > 0;
-              return (
-                <div
-                  key={m.label}
-                  className={`border rounded-xl p-6 bg-white dark:bg-[#18181b] transition-all flex flex-col justify-between min-h-[160px] ${
-                    isReported
-                      ? "border-red-200 dark:border-red-950/40 hover:border-red-300 dark:hover:border-red-900"
-                      : "border-[#EAEAEA] dark:border-[#333333] hover:border-[#CCCCCC] dark:hover:border-[#555555]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-[11px] text-[#787774] dark:text-[#94a3b8] font-sans tracking-wider uppercase font-semibold">
-                      {m.label}
-                    </span>
-                    <div className="w-9 h-9 rounded-xl border border-border flex items-center justify-center shrink-0 text-[#787774] dark:text-[#94a3b8] bg-[#FCFCFB] dark:bg-[#1c1c21]">
-                      <Icon size={18} strokeWidth={1.8} />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className="text-3xl font-normal font-sans tracking-tight text-[#111111] dark:text-[#f8fafc]">
-                      {m.value}
-                    </span>
-                    {isReported && (
-                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-                    )}
-                  </div>
-
-                  <p className="text-[12px] text-[#787774] dark:text-[#94a3b8] mt-3 font-sans font-normal leading-relaxed">
-                    {m.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Recent Documents Table Section */}
-          <div className="border border-[#EAEAEA] dark:border-[#333333] rounded-xl bg-white dark:bg-[#18181b] overflow-hidden">
-            <div className="p-6 border-b border-[#EAEAEA] dark:border-[#333333] bg-[#FCFCFB] dark:bg-[#1b1b1f]">
-              <h3 className="font-sans text-xl font-bold text-[#111111] dark:text-[#f8fafc] leading-tight">
-                Tiến trình hệ thống & Tài liệu mới tải lên
-              </h3>
-              <p className="text-xs text-[#787774] dark:text-[#94a3b8] mt-1 font-sans">
-                Danh sách các tài liệu mới nhất đã được phê duyệt và lưu trữ trong hệ thống RAG.
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-[#EAEAEA] dark:border-[#333333] bg-[#F9F9F8] dark:bg-[#151518]">
-                    <th className="px-6 py-3.5 text-xs font-sans tracking-wider uppercase text-[#787774] dark:text-[#94a3b8] font-semibold">
-                      Tài liệu
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-sans tracking-wider uppercase text-[#787774] dark:text-[#94a3b8] font-semibold">
-                      Giảng viên
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-sans tracking-wider uppercase text-[#787774] dark:text-[#94a3b8] font-semibold">
-                      Trạng thái
-                    </th>
-                    <th className="px-6 py-3.5 text-xs font-sans tracking-wider uppercase text-[#787774] dark:text-[#94a3b8] font-semibold">
-                      Ngày cập nhật
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EAEAEA] dark:divide-[#333333]">
-                  {recentDocs.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-sm text-[#787774] dark:text-[#94a3b8] font-sans">
-                        Chưa có tài liệu nào trong hệ thống
-                      </td>
-                    </tr>
-                  ) : (
-                    recentDocs.map((doc: any) => (
-                      <tr key={doc.id} className="hover:bg-[#FCFCFB] dark:hover:bg-[#1c1c21] transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <IconFileText size={18} className="text-[#a1a1aa] dark:text-[#71717a] shrink-0" />
-                            <span className="text-sm font-medium text-[#111111] dark:text-[#f8fafc] font-sans">
-                              {doc.title}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-[#333333] dark:text-[#e4e4e7] font-sans">
-                            {doc.owner_name || doc.owner_email || "Không rõ"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="inline-flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${
-                              doc.status === "completed" 
-                                ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" 
-                                : doc.status === "pending"
-                                ? "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.4)]"
-                                : "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"
-                            }`} />
-                            <span className="text-xs font-sans tracking-wider uppercase font-semibold text-muted-foreground">
-                              {doc.status === "completed" ? "Thành công" : doc.status === "pending" ? "Đang xử lý" : doc.status || "Thành công"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-sans text-[#787774] dark:text-[#94a3b8]">
-                            {doc.created_at ? new Date(doc.created_at).toLocaleDateString("vi-VN") : "—"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

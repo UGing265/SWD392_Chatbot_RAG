@@ -3,32 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  IconLayoutDashboard,
-  IconUsers,
-  IconTerminal2,
   IconBook,
-  IconShieldCheck,
   IconClipboardList,
-  IconSelector,
-  IconSettings,
-  IconCrown,
-  IconChevronRight,
-  IconLogout,
-  IconBell,
+  IconLayoutDashboard,
   IconLayoutSidebar,
+  IconLogout,
+  IconShieldCheck,
+  IconTerminal2,
+  IconUsers,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
-import { Menu, Avatar, Text, Group, Stack, Badge, UnstyledButton } from "@mantine/core";
+import { useState } from "react";
+import { Avatar, Badge, Group, Menu, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
+type TablerIcon = typeof IconUsers;
+
 const nav = [
-  { to: "", label: "Bảng điều khiển", icon: IconLayoutDashboard, end: true },
-  { to: "/users", label: "Quản lý tài khoản", icon: IconUsers },
-  { to: "/assignment", label: "Phân công môn học", icon: IconTerminal2 },
-  { to: "/curriculum", label: "Quản lý học kỳ", icon: IconBook },
-  { to: "/metadata", label: "Danh mục khác", icon: IconClipboardList },
-  { to: "/moderation", label: "Kiểm duyệt tài liệu", icon: IconShieldCheck },
+  { to: "", label: "Bảng Điều Khiển", icon: IconLayoutDashboard, end: true },
+  { to: "/users", label: "Quản Lý Tài Khoản", icon: IconUsers },
+  { to: "/assignment", label: "Phân Công Môn Học", icon: IconTerminal2 },
+  { to: "/curriculum", label: "Quản Lý Học Kỳ", icon: IconBook },
+  { to: "/metadata", label: "Danh Mục Khác", icon: IconClipboardList },
+  { to: "/moderation", label: "Báo Cáo Tài Liệu Xấu", icon: IconShieldCheck },
 ];
 
 function getRoleLabel(role?: string) {
@@ -65,36 +63,47 @@ function SidebarItem({
   label,
   icon: Icon,
   active,
+  collapsed,
 }: {
   to: string;
   label: string;
-  icon: any;
+  icon: TablerIcon;
   active: boolean;
+  collapsed: boolean;
 }) {
-  return (
+  const item = (
     <Link
       href={to}
+      aria-label={collapsed ? label : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors",
+        "group flex items-center rounded-[8px] py-2.5 text-[14px] font-medium transition-colors duration-150",
+        collapsed ? "justify-center px-2" : "gap-3 px-3",
         active
-          ? "bg-zinc-200/50 text-gray-900"
-          : "text-gray-600 hover:bg-zinc-100/60 hover:text-gray-900",
+          ? "bg-slate-200 text-slate-900"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
       )}
     >
       <Icon
         size={18}
-        className={cn(
-          active ? "text-gray-900" : "text-gray-400 group-hover:text-gray-900",
-        )}
+        className={cn(active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700")}
       />
-      <span className="flex-1">{label}</span>
+      {!collapsed && <span className="flex-1">{label}</span>}
     </Link>
+  );
+
+  if (!collapsed) return item;
+
+  return (
+    <Tooltip label={label} position="right" withArrow>
+      {item}
+    </Tooltip>
   );
 }
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { signOut, session } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const basePath = "/admin";
   const displayName = session?.user?.name || "Người dùng";
   const roleLabel = getRoleLabel(session?.role || "admin");
@@ -109,19 +118,43 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-blue-100">
-      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-gray-200 bg-zinc-50 md:flex">
-        {/* Brand */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-3.5">
-          <Link href={basePath} className="text-[18px] font-bold tracking-tight text-gray-900 px-1">
-            StudyMate
-          </Link>
-          <UnstyledButton className="rounded-lg p-1.5 text-gray-400 hover:bg-zinc-150 hover:text-gray-900 transition-colors">
-            <IconLayoutSidebar size={18} />
-          </UnstyledButton>
+    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-slate-200 bg-[#FAFAFA] transition-[width] duration-300 md:flex",
+          sidebarCollapsed ? "w-[76px]" : "w-[260px]",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center pb-4 pt-5",
+            sidebarCollapsed ? "justify-center px-3" : "justify-between px-4",
+          )}
+        >
+          {!sidebarCollapsed && (
+            <Link
+              href={basePath}
+              className="px-1 text-[18px] font-bold tracking-tight text-slate-900"
+            >
+              StudyMate
+            </Link>
+          )}
+          <Tooltip
+            label={sidebarCollapsed ? "Mở sidebar" : "Đóng sidebar"}
+            position="right"
+            withArrow
+          >
+            <UnstyledButton
+              aria-label={sidebarCollapsed ? "Mở sidebar" : "Đóng sidebar"}
+              onClick={() => setSidebarCollapsed((current) => !current)}
+              className="rounded-[6px] p-1.5 text-slate-500 transition-colors duration-150 hover:bg-slate-200 hover:text-slate-900"
+            >
+              <IconLayoutSidebar size={18} />
+            </UnstyledButton>
+          </Tooltip>
         </div>
 
-        <nav className="flex flex-col gap-1 px-3">
+        <nav className="mt-2 flex flex-col gap-1 px-3">
           {nav.map((item) => (
             <SidebarItem
               key={item.to}
@@ -129,44 +162,64 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               label={item.label}
               icon={item.icon}
               active={isActive(item.to, item.end)}
+              collapsed={sidebarCollapsed}
             />
           ))}
         </nav>
 
-        {/* Profile / Bottom actions */}
-        <div className="mt-auto border-t border-gray-200">
-          <Menu shadow="md" width={240} position="top-start" radius="lg" offset={8}>
+        <div className="mt-auto flex flex-col gap-3 px-3 py-4">
+          <Menu shadow="md" position="top-start" radius="lg" offset={12} withArrow>
             <Menu.Target>
-              <UnstyledButton className="flex w-full items-center gap-3 !px-5 !py-4 text-left hover:!bg-zinc-200 transition-colors duration-150">
-                <Avatar color="dark" radius="xl" size="sm" className="font-semibold text-xs">
+              <UnstyledButton
+                aria-label={sidebarCollapsed ? "Tài khoản Admin" : undefined}
+                className={cn(
+                  "flex w-full items-center rounded-[8px] transition-colors duration-150 hover:bg-slate-200",
+                  sidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+                )}
+              >
+                <Avatar
+                  color="blue"
+                  variant="light"
+                  radius="xl"
+                  size="sm"
+                  className="text-xs font-bold"
+                >
                   {initials}
                 </Avatar>
-                <div className="flex-1 min-w-0 leading-tight">
-                  <Text size="sm" fw={550} className="truncate text-gray-900">
-                    {displayName}
-                  </Text>
-                  <Text size="xs" className="text-gray-500 font-normal mt-0.5 capitalize">
-                    {roleLabel}
-                  </Text>
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0 flex-1 leading-tight">
+                    <Text size="sm" fw={600} className="truncate text-slate-900">
+                      {displayName}
+                    </Text>
+                    <Text size="xs" className="mt-0.5 font-medium capitalize text-slate-500">
+                      {roleLabel}
+                    </Text>
+                  </div>
+                )}
               </UnstyledButton>
             </Menu.Target>
 
-            <Menu.Dropdown className="p-1" style={{ marginLeft: '16px' }}>
+            <Menu.Dropdown className="min-w-[200px] p-1">
               <Menu.Item
                 component={Link}
                 href="/admin/change-password"
-                className="!p-0 hover:bg-zinc-100 transition-colors duration-150"
+                className="transition-colors duration-150 hover:bg-slate-50"
               >
-                <div className="px-3 py-3 flex items-center gap-3">
-                  <Avatar color="dark" radius="xl" size="md" className="font-semibold text-sm">
+                <div className="flex items-center gap-3 px-1 py-1">
+                  <Avatar
+                    color="blue"
+                    variant="light"
+                    radius="xl"
+                    size="md"
+                    className="text-sm font-bold"
+                  >
                     {initials}
                   </Avatar>
-                  <div className="flex flex-col min-w-0 leading-tight">
-                    <Text size="sm" fw={600} className="truncate text-gray-900">
+                  <div className="flex min-w-0 flex-col leading-tight">
+                    <Text size="sm" fw={600} className="whitespace-nowrap text-slate-900">
                       {displayName}
                     </Text>
-                    <Text size="xs" className="truncate text-gray-500 mt-0.5">
+                    <Text size="xs" className="mt-0.5 whitespace-nowrap text-slate-500">
                       {session?.user?.email || "Email"}
                     </Text>
                   </div>
@@ -174,17 +227,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item
-                component={Link}
-                href="/admin/settings"
-                leftSection={<IconSettings size={16} className="text-zinc-500" />}
+                color="red"
+                leftSection={<IconLogout size={16} />}
+                onClick={() => signOut()}
+                className="text-red-600 hover:bg-red-50"
               >
-                Cài đặt
-              </Menu.Item>
-              <Menu.Item leftSection={<IconCrown size={16} className="text-zinc-500" />}>
-                Nâng cấp gói
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconLogout size={16} className="text-red-500" />} onClick={() => signOut()}>
                 Đăng xuất
               </Menu.Item>
             </Menu.Dropdown>
@@ -192,27 +239,29 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white/70 px-6 backdrop-blur-md md:px-8">
-          <div className="flex min-w-0 items-center gap-4">
-            <Text size="sm" fw={700} className="truncate text-gray-900 md:max-w-[500px]">
+      <div className="relative flex min-w-0 flex-1 flex-col bg-white transition-all duration-300">
+        <header className="flex h-16 shrink-0 items-center border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md sm:px-6 md:px-8 xl:px-10">
+          <div className="flex w-full items-center justify-between gap-3">
+            <Text size="sm" fw={700} className="truncate text-slate-900 md:max-w-[500px]">
               {pageTitle}
             </Text>
+
+            <Group gap="sm">
+              <Badge color="dark" variant="light" size="md" radius="lg">
+                Admin workspace
+              </Badge>
+            </Group>
           </div>
-
-          <Group gap="sm">
-            <UnstyledButton className="relative rounded-md p-2 text-gray-400 transition-colors hover:bg-zinc-100 hover:text-gray-600">
-              <IconBell size={20} />
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-green-500" />
-            </UnstyledButton>
-
-            <Badge color="dark" variant="light" size="md">
-              Admin workspace
-            </Badge>
-          </Group>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 font-sans">
+          <div
+            key={pathname}
+            className="min-h-full animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          >
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
