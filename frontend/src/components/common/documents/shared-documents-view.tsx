@@ -23,27 +23,6 @@ import {
 } from "@mantine/core";
 import { useSharedDocuments } from "@/hooks/lecturer/use-shared-documents";
 
-const getVisibilityBadge = (visibility: string) => {
-  switch (visibility) {
-    case "private":
-      return {
-        label: "Riêng tư",
-        className: "bg-rose-50 border-rose-200 text-rose-600",
-      };
-    case "school_wide":
-      return {
-        label: "Nội bộ",
-        className: "bg-sky-50 border-sky-200 text-sky-600",
-      };
-    case "public":
-    default:
-      return {
-        label: "Công khai",
-        className: "bg-emerald-50 border-emerald-200 text-emerald-600",
-      };
-  }
-};
-
 export function SharedDocumentsView() {
   const {
     role,
@@ -208,18 +187,14 @@ export function SharedDocumentsView() {
                     <div
                       key={sub.id}
                       onClick={() => updateFilters({ subjectId: sub.id, termId: termId })}
-                      className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-[24px] p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group min-h-[180px]"
+                      className="cursor-pointer bg-white border border-zinc-200 p-6 rounded-[24px] hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group flex gap-4 items-start"
                     >
-                      <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                      <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                         <IconBook size={24} stroke={1.5} />
                       </div>
-                      <div className="flex-1 w-full">
-                        <h3 className="text-[16px] font-bold text-zinc-900 mb-2 font-sans line-clamp-2 leading-tight">
-                          {sub.code} - {sub.name}
-                        </h3>
-                        <Text size="xs" className="font-mono mt-1 text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
-                          Bấm để xem tài liệu
-                        </Text>
+                      <div>
+                        <h3 className="text-[16px] font-bold text-zinc-900 mb-1 leading-tight font-sans">{sub.code}</h3>
+                        <Text size="xs" className="text-zinc-500 line-clamp-2 leading-relaxed">{sub.name}</Text>
                       </div>
                     </div>
                   ))}
@@ -228,7 +203,7 @@ export function SharedDocumentsView() {
           </div>
         )}
 
-        {/* STATE 3: DOCUMENTS LIST */}
+        {/* STATE 3: DOCUMENTS & SEARCH FORM */}
         {(isSubjectMode || isSearchMode) && (
           <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {/* Search & Filter Form */}
@@ -239,7 +214,6 @@ export function SharedDocumentsView() {
                   <div className="flex-1 relative min-w-[200px]">
                     <IconSearch size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" />
                     <input
-                      key={q}
                       name="q"
                       defaultValue={q}
                       placeholder="Tìm kiếm tài liệu..."
@@ -249,9 +223,11 @@ export function SharedDocumentsView() {
                   <button type="submit" className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 text-white text-[14px] font-medium rounded-2xl transition-colors">
                     Tìm Kiếm
                   </button>
-                  <button type="button" onClick={() => clearFilters()} className="h-12 px-6 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-[14px] font-medium rounded-2xl transition-colors">
-                    Xóa lọc
-                  </button>
+                  {(q || subjectId || documentTypeId || languageId || documentSourceId) && (
+                    <button type="button" onClick={() => clearFilters()} className="h-12 px-6 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-[14px] font-medium rounded-2xl transition-colors">
+                      Xóa lọc
+                    </button>
+                  )}
                 </form>
 
                 {/* Row 2: Selects */}
@@ -345,23 +321,13 @@ export function SharedDocumentsView() {
                     >
                       <div className="flex-grow">
                         {/* Top Badges */}
-                        <div className="mb-6 flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
-                              <IconBook size={20} stroke={1.5} />
-                            </div>
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-[10px] font-bold text-zinc-600 font-mono uppercase tracking-widest">
-                              {item.subject_code || item.subject_name || "TÀI LIỆU"}
-                            </span>
+                        <div className="mb-6 flex justify-between items-start">
+                          <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
+                            <IconBook size={20} stroke={1.5} />
                           </div>
-                          {(() => {
-                            const badge = getVisibilityBadge(item.visibility);
-                            return (
-                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-bold font-sans uppercase tracking-wider ${badge.className}`}>
-                                {badge.label}
-                              </span>
-                            );
-                          })()}
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-[10px] font-bold text-zinc-600 font-mono uppercase tracking-widest">
+                            {item.subject_code || item.subject_name || "TÀI LIỆU"}
+                          </span>
                         </div>
 
                         {/* Title */}
