@@ -23,7 +23,7 @@ import {
 } from "@tabler/icons-react";
 
 const statusConfig = {
-  completed: { label: "Thành công", color: "green" },
+  completed: { label: "Hoạt động", color: "green" },
   pending: { label: "Đang xử lý", color: "yellow" },
   processing: { label: "Đang xử lý", color: "blue" },
   failed: { label: "Thất bại", color: "red" },
@@ -140,13 +140,13 @@ export function AdminDashboardView() {
                         <Stack gap={8}>
                           <Text
                             size="xs"
-                            fw={700}
-                            className="font-mono text-[11px] uppercase tracking-widest text-zinc-500"
+                            fw={900}
+                            className="font-mono text-[11px] uppercase tracking-widest text-zinc-900"
                           >
                             {metric.label}
                           </Text>
                           <Group align="center" gap="xs">
-                            <Text className="font-serif text-[36px] font-bold leading-none tracking-[-0.03em] text-zinc-900">
+                            <Text className="font-serif text-[36px] font-black leading-none tracking-[-0.03em] text-zinc-950">
                               {metric.value}
                             </Text>
                             {isReported && (
@@ -166,7 +166,7 @@ export function AdminDashboardView() {
                         </ThemeIcon>
                       </Group>
 
-                      <Text size="sm" className="mt-8 leading-relaxed text-zinc-500">
+                      <Text size="sm" fw={700} className="mt-8 leading-relaxed text-zinc-900">
                         {metric.description}
                       </Text>
                     </Paper>
@@ -211,16 +211,16 @@ export function AdminDashboardView() {
                   <Table striped highlightOnHover verticalSpacing="md" horizontalSpacing="md">
                     <Table.Thead className="bg-zinc-50">
                       <Table.Tr>
-                        <Table.Th className="font-mono text-[11px] uppercase tracking-widest">
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
                           Tài liệu
                         </Table.Th>
-                        <Table.Th className="font-mono text-[11px] uppercase tracking-widest">
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
                           Giảng viên
                         </Table.Th>
-                        <Table.Th className="font-mono text-[11px] uppercase tracking-widest">
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
                           Trạng thái
                         </Table.Th>
-                        <Table.Th className="font-mono text-[11px] uppercase tracking-widest">
+                        <Table.Th className="text-center font-mono text-[11px] uppercase tracking-widest">
                           Ngày cập nhật
                         </Table.Th>
                       </Table.Tr>

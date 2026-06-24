@@ -2,6 +2,7 @@
 
 import { AdminPageShell } from "@/components/layout/admin-page-shell";
 import { useMetadata } from "@/hooks/admin/use-metadata";
+import { useState } from "react";
 import {
   ActionIcon,
   Alert,
@@ -28,7 +29,10 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
+type MetadataTab = "types" | "languages" | "sources";
+
 export function AdminMetadataView() {
+  const [activeTab, setActiveTab] = useState<MetadataTab>("types");
   const {
     documentTypes,
     languages,
@@ -108,7 +112,12 @@ export function AdminMetadataView() {
             <Loader size="lg" color="dark" />
           </Group>
         ) : (
-          <Tabs defaultValue="types" radius="xl" color="dark">
+          <Tabs
+            value={activeTab}
+            onChange={(value) => setActiveTab((value as MetadataTab | null) ?? "types")}
+            radius="xl"
+            color="dark"
+          >
             <Tabs.List className="mb-8 rounded-[24px] border border-zinc-200 bg-white p-2 shadow-none before:hidden">
               <Tabs.Tab value="types" leftSection={<IconCategory size={16} />}>
                 Loại học liệu

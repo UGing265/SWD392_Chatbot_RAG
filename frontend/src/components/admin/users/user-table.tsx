@@ -93,22 +93,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="flex-end">
-                      <ActionIcon
-                        variant="subtle"
-                        color={user.active ? "red" : "green"}
-                        onClick={() =>
-                          setUserToBlock({
-                            id: user.id,
-                            name: user.name,
-                            active: user.active,
-                          })
-                        }
-                        title={user.active ? "Khóa tài khoản" : "Mở khóa tài khoản"}
-                      >
-                        {user.active ? <IconLock size={16} /> : <IconLockOpen size={16} />}
-                      </ActionIcon>
-
-                      <Menu shadow="md" width={180} position="bottom-end" radius="lg">
+                      <Menu shadow="md" width={190} position="bottom-end" radius="lg">
                         <Menu.Target>
                           <ActionIcon variant="subtle" color="gray">
                             <IconDotsVertical size={16} />
@@ -129,6 +114,22 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                             Đổi mật khẩu
                           </Menu.Item>
                           <Menu.Divider />
+                          <Menu.Item
+                            color={user.active ? "red" : "green"}
+                            leftSection={
+                              user.active ? <IconLock size={14} /> : <IconLockOpen size={14} />
+                            }
+                            onClick={() =>
+                              setUserToBlock({
+                                id: user.id,
+                                name: user.name,
+                                active: user.active,
+                              })
+                            }
+                            style={{ fontWeight: 600 }}
+                          >
+                            {user.active ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                          </Menu.Item>
                           <Menu.Item
                             color="red"
                             leftSection={<IconTrash size={14} />}
