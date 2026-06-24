@@ -44,6 +44,7 @@ func (h *ChatHandler) ListSessions(c *gin.Context) {
 			ID: s.ID, CourseID: s.CourseID, Title: s.Title,
 			IsStarred: s.IsStarred, Status: s.Status,
 			CreatedAt: s.CreatedAt, UpdatedAt: s.UpdatedAt,
+			DocumentIDs: s.DocumentIDs,
 		})
 	}
 	c.JSON(http.StatusOK, result)
@@ -67,7 +68,12 @@ func (h *ChatHandler) CreateSession(c *gin.Context) {
 		return
 	}
 
-	session, err := h.useCase.CreateSession(c.Request.Context(), userID, req.CourseID, req.Title)
+	if len(req.DocumentIDs) > 5 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Maximum 5 documents allowed per session"})
+		return
+	}
+
+	session, err := h.useCase.CreateSession(c.Request.Context(), userID, req.CourseID, req.Title, req.DocumentIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -77,6 +83,7 @@ func (h *ChatHandler) CreateSession(c *gin.Context) {
 		ID: session.ID, CourseID: session.CourseID, Title: session.Title,
 		IsStarred: session.IsStarred, Status: session.Status,
 		CreatedAt: session.CreatedAt, UpdatedAt: session.UpdatedAt,
+		DocumentIDs: session.DocumentIDs,
 	})
 }
 
@@ -106,6 +113,7 @@ func (h *ChatHandler) GetSession(c *gin.Context) {
 		ID: session.ID, CourseID: session.CourseID, Title: session.Title,
 		IsStarred: session.IsStarred, Status: session.Status,
 		CreatedAt: session.CreatedAt, UpdatedAt: session.UpdatedAt,
+		DocumentIDs: session.DocumentIDs,
 	})
 }
 
@@ -191,24 +199,22 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		})
 	}
 
-	resp := response.SendMessageResponse{
+	c.JSON(http.StatusOK, response.SendMessageResponse{
 		UserMessage: response.MessageResponse{
-			ID:         result.UserMessage.ID,
-			Role:       result.UserMessage.Role,
-			Content:    result.UserMessage.Content,
-			OutOfScope: result.UserMessage.OutOfScope,
-			CreatedAt:  result.UserMessage.CreatedAt,
+			ID:          result.UserMessage.ID,
+			Role:        result.UserMessage.Role,
+			Content:     result.UserMessage.Content,
+			CreatedAt:   result.UserMessage.CreatedAt,
 		},
 		BotMessage: response.MessageResponse{
-			ID:         result.BotMessage.ID,
-			Role:       result.BotMessage.Role,
-			Content:    result.BotMessage.Content,
-			OutOfScope: result.BotMessage.OutOfScope,
-			Citations:  botCitations,
-			CreatedAt:  result.BotMessage.CreatedAt,
+			ID:          result.BotMessage.ID,
+			Role:        result.BotMessage.Role,
+			Content:     result.BotMessage.Content,
+			OutOfScope:  result.BotMessage.OutOfScope,
+			Citations:   botCitations,
+			CreatedAt:   result.BotMessage.CreatedAt,
 		},
-	}
-	c.JSON(http.StatusOK, resp)
+	})
 }
 
 // DeleteSession godoc
@@ -258,15 +264,23 @@ func (h *ChatHandler) StreamMessage(c *gin.Context) {
 		return
 	}
 
-	tokenCh, _, err := h.useCase.StreamMessage(c.Request.Context(), userID, sessionID, req.Content)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
+	// Set up SSE headers
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
+
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Streaming not supported"})
+		return
+	}
+
+	tokenCh, _, err := h.useCase.StreamMessage(c.Request.Context(), userID, sessionID, req.Content)
+	if err != nil {
+		c.SSEvent("error", err.Error())
+		flusher.Flush()
+		return
+	}
 
 	c.Stream(func(w io.Writer) bool {
 		token, ok := <-tokenCh

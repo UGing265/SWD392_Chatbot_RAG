@@ -22,12 +22,32 @@ func (r *ChatSessionRepository) Create(ctx context.Context, s *chatsession.ChatS
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	_, err := r.pool.Exec(ctx,
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx,
 		`INSERT INTO chat_sessions (id, user_id, course_id, title, is_starred, status, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		s.ID, s.UserID, s.CourseID, s.Title, s.IsStarred, s.Status, s.CreatedAt, s.UpdatedAt,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	for _, docID := range s.DocumentIDs {
+		_, err = tx.Exec(ctx,
+			`INSERT INTO chat_session_documents (session_id, document_id) VALUES ($1, $2)`,
+			s.ID, docID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *ChatSessionRepository) GetByID(ctx context.Context, id uuid.UUID) (*chatsession.ChatSession, error) {
@@ -42,7 +62,30 @@ func (r *ChatSessionRepository) GetByID(ctx context.Context, id uuid.UUID) (*cha
 	if err != nil {
 		return nil, err
 	}
+
+	docs, err := r.GetDocumentIDsBySession(ctx, id)
+	if err == nil {
+		s.DocumentIDs = docs
+	}
+
 	return s, nil
+}
+
+func (r *ChatSessionRepository) GetDocumentIDsBySession(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.pool.Query(ctx, `SELECT document_id FROM chat_session_documents WHERE session_id = $1`, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var docs []uuid.UUID
+	for rows.Next() {
+		var d uuid.UUID
+		if err := rows.Scan(&d); err == nil {
+			docs = append(docs, d)
+		}
+	}
+	return docs, nil
 }
 
 func (r *ChatSessionRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*chatsession.ChatSession, error) {
@@ -66,6 +109,13 @@ func (r *ChatSessionRepository) GetByUserID(ctx context.Context, userID uuid.UUI
 		}
 		sessions = append(sessions, s)
 	}
+
+	// Fetch document IDs for all sessions (this could be optimized with a JOIN or IN clause, but this works for now)
+	for _, s := range sessions {
+		docs, _ := r.GetDocumentIDsBySession(ctx, s.ID)
+		s.DocumentIDs = docs
+	}
+
 	return sessions, nil
 }
 

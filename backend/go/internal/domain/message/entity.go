@@ -12,9 +12,9 @@ type Message struct {
 	SessionID  uuid.UUID `json:"session_id" db:"session_id"`
 	Role       string    `json:"role" db:"role"` // user / bot
 	Content    string    `json:"content" db:"content"`
-	TokenCount *int      `json:"token_count,omitempty" db:"token_count"`
-	OutOfScope bool      `json:"out_of_scope" db:"out_of_scope"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	TokenCount  *int                `json:"token_count,omitempty" db:"token_count"`
+	OutOfScope  bool                `json:"out_of_scope" db:"out_of_scope"`
+	CreatedAt   time.Time           `json:"created_at" db:"created_at"`
 }
 
 // MessageCitation links a bot message to the chunk it cited.

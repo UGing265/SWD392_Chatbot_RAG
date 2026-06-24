@@ -54,6 +54,7 @@ func (r *MessageRepository) GetBySessionID(ctx context.Context, sessionID uuid.U
 		}
 		messages = append(messages, m)
 	}
+
 	return messages, nil
 }
 
@@ -111,11 +112,12 @@ func (r *MessageRepository) GetCitationsByMessageID(ctx context.Context, message
 }
 
 // SearchSimilarChunks performs cosine similarity search via pgvector.
-// Filters chunks by course_id through the documents table join.
+// Filters chunks by course_id through the documents table join, and optionally by specific document IDs.
 func (r *MessageRepository) SearchSimilarChunks(
 	ctx context.Context,
 	queryEmbedding []float32,
 	courseID uuid.UUID,
+	documentIDs []uuid.UUID,
 	topK int,
 ) ([]*message.SimilarChunk, error) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
@@ -123,7 +125,17 @@ func (r *MessageRepository) SearchSimilarChunks(
 
 	vector := pgvector.NewVector(queryEmbedding)
 
-	rows, err := r.pool.Query(ctx, `
+	// Build the IN clause for document_ids if provided
+	docFilter := ""
+	var args []interface{}
+	args = append(args, vector, courseID, topK)
+	
+	if len(documentIDs) > 0 {
+		docFilter = " AND d.id = ANY($4) "
+		args = append(args, documentIDs)
+	}
+
+	query := `
 		SELECT
 			c.id,
 			c.document_id,
@@ -137,9 +149,12 @@ func (r *MessageRepository) SearchSimilarChunks(
 		WHERE d.subject_id = $2
 		  AND d.status IN ('completed', 'approved')
 		  AND c.embedding IS NOT NULL
+		  ` + docFilter + `
 		ORDER BY c.embedding <=> $1
 		LIMIT $3
-	`, vector, courseID, topK)
+	`
+
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -12,5 +12,5 @@ type MessageRepository interface {
 	GetBySessionID(ctx context.Context, sessionID uuid.UUID, limit int) ([]*Message, error)
 	CreateCitations(ctx context.Context, citations []*MessageCitation) error
 	GetCitationsByMessageID(ctx context.Context, messageID uuid.UUID) ([]*MessageCitation, error)
-	SearchSimilarChunks(ctx context.Context, embedding []float32, courseID uuid.UUID, topK int) ([]*SimilarChunk, error)
+	SearchSimilarChunks(ctx context.Context, embedding []float32, courseID uuid.UUID, documentIDs []uuid.UUID, topK int) ([]*SimilarChunk, error)
 }

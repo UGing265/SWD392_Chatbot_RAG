@@ -51,7 +51,7 @@ func (uc *ChatUseCase) StreamMessage(ctx context.Context, userID, sessionID uuid
 	}
 
 	// 5. Semantic search — find top-K similar chunks
-	chunks, err := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, topKChunks)
+	chunks, err := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, session.DocumentIDs, topKChunks)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to search chunks: %w", err)
 	}

@@ -11,7 +11,11 @@ import (
 )
 
 // CreateSession creates a new chat session for the user.
-func (uc *ChatUseCase) CreateSession(ctx context.Context, userID, courseID uuid.UUID, title *string) (*chatsession.ChatSession, error) {
+func (uc *ChatUseCase) CreateSession(ctx context.Context, userID, courseID uuid.UUID, title *string, documentIDs []uuid.UUID) (*chatsession.ChatSession, error) {
+	if len(documentIDs) > 5 {
+		return nil, fmt.Errorf("không được chọn quá 5 tài liệu trong một phiên chat")
+	}
+
 	sessionTitle := "New chat"
 	if title != nil && *title != "" {
 		sessionTitle = *title
@@ -19,14 +23,15 @@ func (uc *ChatUseCase) CreateSession(ctx context.Context, userID, courseID uuid.
 
 	now := time.Now().UTC()
 	session := &chatsession.ChatSession{
-		ID:        uuid.New(),
-		UserID:    userID,
-		CourseID:  courseID,
-		Title:     sessionTitle,
-		IsStarred: false,
-		Status:    chatsession.StatusActive,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:          uuid.New(),
+		UserID:      userID,
+		CourseID:    courseID,
+		Title:       sessionTitle,
+		IsStarred:   false,
+		Status:      chatsession.StatusActive,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		DocumentIDs: documentIDs,
 	}
 
 	if err := uc.sessionRepo.Create(ctx, session); err != nil {

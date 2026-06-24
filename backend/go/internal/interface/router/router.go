@@ -77,7 +77,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	// Initialize Chat module
 	chatSessionRepo := postgres.NewChatSessionRepository(db)
 	msgRepo := postgres.NewMessageRepository(db)
-	chatUseCase := chatusecase.NewChatUseCase(chatSessionRepo, msgRepo, embedClient, llmClient)
+	chatUseCase := chatusecase.NewChatUseCase(chatSessionRepo, msgRepo, embedClient, llmClient, s3Storage)
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(db)
