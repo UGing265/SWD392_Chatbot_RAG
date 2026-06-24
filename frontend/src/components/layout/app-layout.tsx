@@ -37,10 +37,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { createSession, sessionList } from "@/lib/sessions-store";
 
 const nav = [
-  { to: "/chat", label: "Chat mới", icon: IconEdit, studentOnly: true },
-  { to: "/documents/shared", label: "Tài liệu chung", icon: IconBook },
-  { to: "/documents/my", label: "Tài liệu riêng", icon: IconFileText, lecturerOnly: true },
-  { to: "/upload", label: "Upload Tài liệu", icon: IconUpload, lecturerOnly: true },
+  { to: "/chat", label: "Chat Mới", icon: IconEdit, studentOnly: true },
+  { to: "/documents/shared", label: "Tài Liệu Chung", icon: IconBook },
+  { to: "/documents/my", label: "Tài Liệu Riêng", icon: IconFileText, lecturerOnly: true },
+  { to: "/upload", label: "Upload Tài Liệu", icon: IconUpload, lecturerOnly: true },
 ];
 
 function getRoleLabel(role?: string) {

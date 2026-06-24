@@ -15,7 +15,8 @@ export interface AdminDocument {
 
 export interface DocumentsResponse {
   documents: any[];
-  total: number;
+  total_documents: number;
+  total_pages: number;
 }
 
 export interface ComparisonDifference {
