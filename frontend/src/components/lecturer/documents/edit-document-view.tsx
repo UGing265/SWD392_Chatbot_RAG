@@ -117,17 +117,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
                   radius="lg"
                   size="md"
                 />
-                <Select
-                  label="Học kỳ"
-                  placeholder="Chọn học kỳ"
-                  value={termId}
-                  onChange={setTermId}
-                  data={terms.map(t => ({ value: t.id, label: t.name }))}
-                  searchable
-                  clearable
-                  radius="lg"
-                  size="md"
-                />
+
               </Group>
 
               <Group grow align="flex-start" gap="lg">

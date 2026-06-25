@@ -24,7 +24,7 @@ const nav = [
   { to: "", label: "Bảng Điều Khiển", icon: IconLayoutDashboard, end: true },
   { to: "/users", label: "Quản Lý Tài Khoản", icon: IconUsers },
   { to: "/assignment", label: "Phân Công Môn Học", icon: IconTerminal2 },
-  { to: "/curriculum", label: "Quản Lý Học Kỳ", icon: IconBook },
+  { to: "/curriculum", label: "Quản Lý Môn Học", icon: IconBook },
   { to: "/metadata", label: "Danh Mục Khác", icon: IconClipboardList },
   { to: "/moderation", label: "Báo Cáo Tài Liệu Xấu", icon: IconShieldCheck },
 ];

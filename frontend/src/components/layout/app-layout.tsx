@@ -1,40 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useParams, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useParams, useSearchParams } from "next/navigation";
 import {
-  IconSparkles,
-  IconHistory,
   IconBook,
   IconFileText,
   IconUpload,
-  IconPlus,
-  IconClipboardList,
-  IconMessage2,
-  IconSelector,
   IconSettings,
-  IconCrown,
   IconEdit,
   IconChevronDown,
   IconLayoutSidebar,
   IconLogout,
-  IconBell,
 } from "@tabler/icons-react";
-import {
-  Menu,
-  Avatar,
-  Text,
-  Group,
-  Stack,
-  Badge,
-  UnstyledButton,
-  Collapse,
-  ActionIcon,
-} from "@mantine/core";
-import { ReactNode, useState } from "react";
+import { Menu, Avatar, Text, UnstyledButton, Collapse } from "@mantine/core";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { createSession, sessionList } from "@/lib/sessions-store";
+import { sessionList } from "@/lib/sessions-store";
+
+type TablerIcon = typeof IconBook;
 
 const nav = [
   { to: "/chat", label: "Chat Mới", icon: IconEdit, studentOnly: true },
@@ -69,7 +54,7 @@ function SidebarItem({
 }: {
   to: string;
   label: string;
-  icon: any;
+  icon: TablerIcon;
   active: boolean;
 }) {
   return (
@@ -77,16 +62,16 @@ function SidebarItem({
       href={to}
       className={cn(
         "group flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px] font-medium transition-colors",
-        active ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+        active
+          ? "bg-slate-200 text-slate-900"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
       )}
     >
       <Icon
         size={18}
         className={cn(active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700")}
       />
-      <span className="flex-1">
-        {label}
-      </span>
+      <span className="flex-1">{label}</span>
     </Link>
   );
 }
@@ -100,7 +85,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const basePath = role ? `/${role}` : "";
   const { signOut, session } = useAuth();
   const roleLabel = getRoleLabel(session?.role || role);
-  const router = useRouter();
   const [historyOpened, setHistoryOpened] = useState(true);
 
   return (
@@ -158,9 +142,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   !historyOpened && "-rotate-90",
                 )}
               />
-              <Text
-                className="flex-1 text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors"
-              >
+              <Text className="flex-1 text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">
                 Lịch sử
               </Text>
             </UnstyledButton>
@@ -191,13 +173,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         {/* Profile / Bottom actions */}
         <div className="mt-auto px-3 py-4 flex flex-col gap-3">
-          <UnstyledButton className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-all w-fit mx-auto">
-            <IconCrown size={15} className="text-yellow-600" />
-            <Text className="text-[12px] font-semibold text-slate-700 pr-1">
-              Nâng cấp gói
-            </Text>
-          </UnstyledButton>
-
           <Menu shadow="md" position="top-start" radius="lg" offset={12} withArrow>
             <Menu.Target>
               <UnstyledButton className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-slate-200 transition-colors duration-150">
@@ -214,10 +189,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <Text size="sm" fw={600} className="truncate text-slate-900">
                     {session?.user?.name || "Người dùng"}
                   </Text>
-                  <Text
-                    size="xs"
-                    className="text-slate-500 font-medium mt-0.5 capitalize"
-                  >
+                  <Text size="xs" className="text-slate-500 font-medium mt-0.5 capitalize">
                     {roleLabel}
                   </Text>
                 </div>
@@ -275,7 +247,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-white transition-all duration-300 relative">
-
         <main className="flex-1 flex flex-col bg-white overflow-y-auto">{children}</main>
       </div>
     </div>
