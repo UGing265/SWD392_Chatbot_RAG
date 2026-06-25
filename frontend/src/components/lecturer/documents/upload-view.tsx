@@ -266,7 +266,6 @@ export function UploadView() {
                   leftSection={<IconBook size={16} className="text-[#A0A0A0]" />}
                   placeholder="Chọn môn học"
                   data={subjects
-                    .filter((s) => !termId || s.academicTermId === termId)
                     .map((s) => ({ value: s.id, label: s.code || (s.name ? s.name.split(" - ")[0] : "") }))}
                   value={subjectId}
                   onChange={(val) => setSubjectId(val || "")}
@@ -288,28 +287,7 @@ export function UploadView() {
                   }}
                 />
 
-                <Select
-                  id="term"
-                  label="Kỳ học"
-                  leftSection={<IconCalendar size={16} className="text-[#A0A0A0]" />}
-                  placeholder="Chọn kỳ học"
-                  data={terms.map((t) => ({ value: t.id, label: t.name }))}
-                  value={termId}
-                  onChange={(val) => setTermId(val || "")}
-                  disabled={uploading}
-                  size="md"
-                  radius="lg"
-                  maxDropdownHeight={250}
-                  comboboxProps={{ transitionProps: { transition: "scale-y", duration: 150 } }}
-                  classNames={{
-                    dropdown: "rounded-xl p-1 border-[#EAEAEA]",
-                    option: "px-3 py-2 text-[13px] rounded-lg transition-colors duration-100 hover:bg-[#F1F5F9] hover:text-[#111111] data-[hovered]:bg-[#F1F5F9] data-[hovered]:text-[#111111] data-[selected]:bg-[#EAEAEA] data-[selected]:text-[#111111] data-[selected]:font-semibold"
-                  }}
-                  styles={{
-                    label: { fontWeight: 500, fontSize: "13px", color: "#111111", marginBottom: "4px" },
-                    input: { backgroundColor: "#FAFAFA", borderColor: "#EAEAEA", "&:focus": { borderColor: "#111111", backgroundColor: "#FFFFFF" } }
-                  }}
-                />
+
 
                 <Select
                   id="documentType"

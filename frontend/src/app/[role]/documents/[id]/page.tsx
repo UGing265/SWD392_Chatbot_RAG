@@ -236,24 +236,7 @@ export default function DocumentDetailPage() {
               </Link>
               <div className="hidden sm:block h-3 w-px bg-zinc-300"></div>
               <div className="flex flex-wrap items-center gap-3">
-                {/* Academic Term */}
-                {isPrivate ? (
-                  <span
-                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-zinc-400 cursor-not-allowed flex items-center gap-1 uppercase select-none"
-                    title="Liên kết không khả dụng đối với tài liệu riêng tư"
-                  >
-                    <IconLock size={12} className="shrink-0 text-zinc-400" />
-                    {document.academic_term_name || "Học kỳ hiện tại"}
-                  </span>
-                ) : (
-                  <Link
-                    href={termFilterPath}
-                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-emerald-600 hover:text-emerald-800 hover:underline transition-colors uppercase cursor-pointer"
-                  >
-                    {document.academic_term_name || "Học kỳ hiện tại"}
-                  </Link>
-                )}
-                <span className="text-zinc-300 text-[10px]">●</span>
+
 
                 {/* Subject */}
                 {isPrivate ? (

@@ -32,11 +32,22 @@ const subjectSortOptions = [
 ];
 
 function getCardSpanClass(index: number) {
-  if (index === 0) return "md:col-span-2 xl:col-span-3";
-  if (index === 1) return "xl:col-span-3";
-  if (index % 5 === 0) return "md:col-span-2 xl:col-span-4";
-  if (index % 4 === 0) return "xl:col-span-4";
-  return "xl:col-span-2";
+  const pattern = index % 9;
+  switch (pattern) {
+    case 0:
+    case 1:
+      return "md:col-span-1 xl:col-span-3"; // 3 + 3 = 6
+    case 2:
+      return "md:col-span-1 xl:col-span-2";
+    case 3:
+      return "md:col-span-1 xl:col-span-4"; // 2 + 4 = 6
+    case 4:
+      return "md:col-span-1 xl:col-span-4";
+    case 5:
+      return "md:col-span-1 xl:col-span-2"; // 4 + 2 = 6
+    default:
+      return "md:col-span-1 xl:col-span-2"; // 2 + 2 + 2 = 6
+  }
 }
 
 export function SharedDocumentsView() {

@@ -37,14 +37,6 @@ const sortOptions = [
   { label: "Z-A", value: "name-desc" },
 ];
 
-function getCardSpanClass(index: number) {
-  if (index === 0) return "md:col-span-2 xl:col-span-3";
-  if (index === 1) return "xl:col-span-3";
-  if (index % 5 === 0) return "md:col-span-2 xl:col-span-4";
-  if (index % 4 === 0) return "xl:col-span-4";
-  return "xl:col-span-2";
-}
-
 export function AdminCurriculumView() {
   const {
     loading,
@@ -177,7 +169,7 @@ export function AdminCurriculumView() {
             </Stack>
           </Paper>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedSubjects.map((subject, index) => {
               const isEditingSubject = editingSubjectId === subject.id;
               const isSavingSubject = savingAction === `update-subject-${subject.id}`;
@@ -190,7 +182,7 @@ export function AdminCurriculumView() {
                   withBorder
                   radius={24}
                   p="lg"
-                  className={`${getCardSpanClass(index)} flex min-h-[178px] flex-col bg-white shadow-sm transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)]`}
+                  className="flex min-h-[178px] flex-col bg-white shadow-sm transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)]"
                 >
                   {isEditingSubject ? (
                     <Stack gap="md" className="flex-1">
