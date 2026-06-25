@@ -133,14 +133,21 @@ export function useSharedDocuments() {
     const fetchLookups = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/documents/lookups`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [res, resPublic] = await Promise.all([
+          fetch(`${API_BASE_URL}/documents/lookups`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/subjects/public`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+
         if (!res.ok) return;
         const data = await res.json();
+        
+        let publicSubjectsData: any[] = [];
+        if (resPublic.ok) {
+          publicSubjectsData = await resPublic.json();
+        }
 
         setSubjects(
-          (Array.isArray(data.subjects) ? data.subjects : []).map((item: unknown) => {
+          (Array.isArray(publicSubjectsData) ? publicSubjectsData : []).map((item: unknown) => {
             const s = asRecord(item);
 
             return {

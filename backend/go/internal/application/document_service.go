@@ -1053,7 +1053,7 @@ func (s *DocumentService) GetSubjects(ctx context.Context) ([]*SubjectDto, error
 }
 
 func (s *DocumentService) GetPublicSubjects(ctx context.Context) ([]*SubjectDto, error) {
-	subs, err := s.subjectRepo.FindAllPublic(ctx)
+	subs, err := s.subjectRepo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
