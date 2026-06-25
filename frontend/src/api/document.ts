@@ -5,16 +5,19 @@ export type DocStatus = "completed" | "pending" | "rejected" | "processing" | "f
 export interface AdminDocument {
   id: string;
   title: string;
+  subject_id?: string | null;
   subject_name: string | null;
+  subject_code?: string | null;
   owner_name: string;
   owner_initials: string;
   created_at: string;
   status: DocStatus;
   visibility: string;
+  view_count?: number;
 }
 
 export interface DocumentsResponse {
-  documents: any[];
+  documents: AdminDocument[];
   total_documents: number;
   total_pages: number;
 }
@@ -42,17 +45,17 @@ export const documentApi = {
     return response.data;
   },
 
-  approveDocument: async (docId: string): Promise<any> => {
+  approveDocument: async (docId: string): Promise<Record<string, unknown>> => {
     const response = await ragApi.post(`/admin/documents/${docId}/approve`);
     return response.data;
   },
 
-  rejectDocument: async (docId: string): Promise<any> => {
+  rejectDocument: async (docId: string): Promise<Record<string, unknown>> => {
     const response = await ragApi.post(`/admin/documents/${docId}/reject`);
     return response.data;
   },
 
-  deleteDocument: async (docId: string): Promise<any> => {
+  deleteDocument: async (docId: string): Promise<Record<string, unknown>> => {
     const response = await ragApi.post(`/admin/documents/${docId}/delete`);
     return response.data;
   },

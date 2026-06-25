@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_RAG_API_URL || "http://localhost:8080/api";
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+const getString = (value: unknown) => (typeof value === "string" ? value : "");
+
 export interface DocumentListItem {
   id: string;
   slug: string;
   title: string;
+  subject_id?: string | null;
   preview_text?: string;
   description?: string | null;
   subject_name?: string | null;
@@ -69,6 +77,7 @@ export function useSharedDocuments() {
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [subjectAccessCounts, setSubjectAccessCounts] = useState<Record<string, number>>({});
 
   // Lookups
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -77,78 +86,152 @@ export function useSharedDocuments() {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
+  const fetchSubjectAccessCounts = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    const counts: Record<string, number> = {};
+    let currentPage = 1;
+    let currentTotalPages = 1;
+
+    try {
+      do {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          pageSize: "100",
+          sortBy: "views_desc",
+        });
+
+        const response = await fetch(`${API_BASE_URL}/documents?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) break;
+
+        const data = await response.json();
+        const items = Array.isArray(data.documents) ? data.documents : [];
+
+        for (const item of items) {
+          const doc = asRecord(item);
+          const subjectId = doc.subject_id;
+          if (!subjectId) continue;
+
+          counts[String(subjectId)] =
+            (counts[String(subjectId)] || 0) + Number(doc.view_count || 0);
+        }
+
+        currentTotalPages = Number(data.total_pages || 1);
+        currentPage += 1;
+      } while (currentPage <= currentTotalPages);
+
+      setSubjectAccessCounts(counts);
+    } catch (err) {
+      console.error("Failed to fetch subject access counts:", err);
+      setSubjectAccessCounts({});
+    }
+  }, []);
+
   useEffect(() => {
     const fetchLookups = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:8080/api/documents/lookups", {
+        const res = await fetch(`${API_BASE_URL}/documents/lookups`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) return;
         const data = await res.json();
-        
-        setSubjects((data.subjects || []).map((s: any) => ({
-          id: s.id,
-          code: s.code,
-          name: s.name,
-          academicTermId: s.academic_term_id,
-        })));
-        setTerms((data.academicTerms || []).map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          year: t.year,
-          order: t.order,
-        })));
-        setDocumentTypes((data.documentTypes || []).map((dt: any) => ({ id: dt.id, name: dt.name })));
-        setLanguages((data.languages || []).map((l: any) => ({ id: l.id, name: l.name })));
-        setDocumentSources((data.documentSources || []).map((ds: any) => ({ id: ds.id, name: ds.name })));
+
+        setSubjects(
+          (Array.isArray(data.subjects) ? data.subjects : []).map((item: unknown) => {
+            const s = asRecord(item);
+
+            return {
+              id: String(s.id ?? ""),
+              code: getString(s.code),
+              name: getString(s.name),
+              academicTermId: s.academic_term_id ? String(s.academic_term_id) : undefined,
+            };
+          }),
+        );
+        setTerms(
+          (Array.isArray(data.academicTerms) ? data.academicTerms : []).map((item: unknown) => {
+            const t = asRecord(item);
+
+            return {
+              id: String(t.id ?? ""),
+              name: getString(t.name),
+              year: getString(t.year),
+              order: Number(t.order || 0),
+            };
+          }),
+        );
+        setDocumentTypes(
+          (Array.isArray(data.documentTypes) ? data.documentTypes : []).map((item: unknown) => {
+            const dt = asRecord(item);
+            return { id: String(dt.id ?? ""), name: getString(dt.name) };
+          }),
+        );
+        setLanguages(
+          (Array.isArray(data.languages) ? data.languages : []).map((item: unknown) => {
+            const l = asRecord(item);
+            return { id: String(l.id ?? ""), name: getString(l.name) };
+          }),
+        );
+        setDocumentSources(
+          (Array.isArray(data.documentSources) ? data.documentSources : []).map((item: unknown) => {
+            const ds = asRecord(item);
+            return { id: String(ds.id ?? ""), name: getString(ds.name) };
+          }),
+        );
+        await fetchSubjectAccessCounts();
       } catch (err) {
         console.error("Failed to fetch lookups:", err);
       }
     };
     fetchLookups();
-  }, []);
+  }, [fetchSubjectAccessCounts]);
 
-  const fetchDocuments = useCallback(async (signal?: AbortSignal) => {
-    // We only fetch documents if we are in "Search mode" or "Subject mode"
-    // Wait, .NET also shows documents when searching globally.
-    // Let's just always fetch, or only fetch when needed. We'll handle the condition in the component.
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-        sortBy: sortBy,
-      });
-      if (q) params.set("q", q);
-      if (subjectId) params.set("subjectId", subjectId);
-      if (termId) params.set("termId", termId);
-      if (documentTypeId) params.set("documentTypeId", documentTypeId);
-      if (languageId) params.set("languageId", languageId);
-      if (documentSourceId) params.set("documentSourceId", documentSourceId);
+  const fetchDocuments = useCallback(
+    async (signal?: AbortSignal) => {
+      // We only fetch documents if we are in "Search mode" or "Subject mode"
+      // Wait, .NET also shows documents when searching globally.
+      // Let's just always fetch, or only fetch when needed. We'll handle the condition in the component.
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          pageSize: pageSize.toString(),
+          sortBy: sortBy,
+        });
+        if (q) params.set("q", q);
+        if (subjectId) params.set("subjectId", subjectId);
+        if (termId) params.set("termId", termId);
+        if (documentTypeId) params.set("documentTypeId", documentTypeId);
+        if (languageId) params.set("languageId", languageId);
+        if (documentSourceId) params.set("documentSourceId", documentSourceId);
 
-      const response = await fetch(`http://localhost:8080/api/documents?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        signal,
-      });
+        const response = await fetch(`${API_BASE_URL}/documents?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          signal,
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setDocuments(data.documents || []);
-        setTotalDocuments(data.total_documents || 0);
-        setTotalPages(data.total_pages || 1);
-      } else {
-        setDocuments([]);
+        if (response.ok) {
+          const data = await response.json();
+          setDocuments(data.documents || []);
+          setTotalDocuments(data.total_documents || 0);
+          setTotalPages(data.total_pages || 1);
+        } else {
+          setDocuments([]);
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("Failed to fetch documents:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      console.error("Failed to fetch documents:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page]);
+    },
+    [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page],
+  );
 
   useEffect(() => {
     // Only fetch if we are NOT in root mode and NOT in term mode
@@ -199,6 +282,7 @@ export function useSharedDocuments() {
     documents,
     totalDocuments,
     totalPages,
+    subjectAccessCounts,
     page,
     q,
     subjectId,
