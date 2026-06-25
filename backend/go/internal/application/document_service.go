@@ -1052,6 +1052,24 @@ func (s *DocumentService) GetSubjects(ctx context.Context) ([]*SubjectDto, error
 	return dtos, nil
 }
 
+func (s *DocumentService) GetPublicSubjects(ctx context.Context) ([]*SubjectDto, error) {
+	subs, err := s.subjectRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var dtos []*SubjectDto
+	for _, sub := range subs {
+		dtos = append(dtos, &SubjectDto{
+			ID:             sub.ID,
+			Code:           sub.Code,
+			Name:           sub.Name,
+			AcademicTermID: sub.AcademicTermID,
+			CreatedAt:      sub.CreatedAt,
+		})
+	}
+	return dtos, nil
+}
+
 func (s *DocumentService) GetSubjectsByOwner(ctx context.Context, ownerUserID uuid.UUID) ([]*SubjectDto, error) {
 	subs, err := s.subjectRepo.FindAllByOwner(ctx, ownerUserID)
 	if err != nil {

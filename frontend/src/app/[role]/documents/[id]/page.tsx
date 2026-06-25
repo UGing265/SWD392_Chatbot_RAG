@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Loader, Modal, Textarea } from "@mantine/core";
 import {
@@ -55,9 +56,12 @@ interface DocumentDetails {
   description?: string | null;
   subject_name?: string | null;
   subject_code?: string | null;
+  subject_id?: string | null;
   academic_term_name?: string | null;
+  academic_term_id?: string | null;
   visibility: string;
   document_type_name?: string | null;
+  document_type_id?: string | null;
   language_name?: string | null;
   total_chunks: number;
   total_chapters: number;
@@ -204,6 +208,18 @@ export default function DocumentDetailPage() {
     );
   }
 
+  const isLecturer = role === "lecturer" || role === "teacher";
+  const isPrivate = document.visibility === "private";
+  const baseLibraryPath = (isLecturer && isPrivate) ? `/${role}/documents/my` : `/${role}/documents/shared`;
+
+  const termFilterPath = document.academic_term_id
+    ? `${baseLibraryPath}?termId=${document.academic_term_id}`
+    : baseLibraryPath;
+
+  const subjectFilterPath = document.subject_id
+    ? `${baseLibraryPath}?${document.academic_term_id ? `termId=${document.academic_term_id}&` : ''}subjectId=${document.subject_id}`
+    : baseLibraryPath;
+
   return (
     <div className="min-h-screen bg-white font-sans text-zinc-900 pb-20">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
@@ -212,22 +228,33 @@ export default function DocumentDetailPage() {
         <header className="pt-16 pb-12 border-b border-zinc-100 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
           <div className="max-w-3xl">
             <div className="flex items-center flex-wrap gap-3 mb-8">
-              <div className="text-[11px] font-mono font-bold tracking-[0.2em] text-zinc-400 uppercase">
+              <Link
+                href={baseLibraryPath}
+                className="text-[11px] font-mono font-bold tracking-[0.2em] text-zinc-700 hover:text-zinc-950 hover:underline transition-colors uppercase cursor-pointer"
+              >
                 KHO TÀI LIỆU
-              </div>
+              </Link>
               <div className="hidden sm:block h-3 w-px bg-zinc-300"></div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[11px] font-mono font-bold tracking-[0.1em] text-sky-600 uppercase">
-                  {document.subject_name || document.subject_code || "Môn học chung"}
-                </span>
-                <span className="text-zinc-300 text-[10px]">●</span>
-                <span className="text-[11px] font-mono font-bold tracking-[0.1em] text-amber-600 uppercase">
-                  {document.document_type_name || "Tài liệu học thuật"}
-                </span>
-                <span className="text-zinc-300 text-[10px]">●</span>
-                <span className="text-[11px] font-mono font-bold tracking-[0.1em] text-emerald-600 uppercase">
-                  {document.academic_term_name || "Học kỳ hiện tại"}
-                </span>
+
+
+                {/* Subject */}
+                {isPrivate ? (
+                  <span
+                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-zinc-400 cursor-not-allowed flex items-center gap-1 uppercase select-none"
+                    title="Liên kết không khả dụng đối với tài liệu riêng tư"
+                  >
+                    <IconLock size={12} className="shrink-0 text-zinc-400" />
+                    {document.subject_code ? `${document.subject_code} - ${document.subject_name}` : (document.subject_name || "Môn học chung")}
+                  </span>
+                ) : (
+                  <Link
+                    href={subjectFilterPath}
+                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-sky-600 hover:text-sky-800 hover:underline transition-colors uppercase cursor-pointer"
+                  >
+                    {document.subject_code ? `${document.subject_code} - ${document.subject_name}` : (document.subject_name || "Môn học chung")}
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -435,7 +462,7 @@ export default function DocumentDetailPage() {
                   <div className="flex-1">
                     <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Trạng thái</div>
                     <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                      {document.visibility === "private" ? "Cá nhân" : document.visibility === "school_wide" ? "Nội bộ" : "Công khai"}
+                      {document.visibility === "private" ? "Riêng tư" : document.visibility === "school_wide" ? "Nội bộ" : "Công khai"}
                     </div>
                   </div>
                 </div>

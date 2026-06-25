@@ -227,7 +227,7 @@ export function DocumentsView() {
                             setSelectedTerm(term);
                             setStep("subject");
                           }}
-                          className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-[24px] p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
+                          className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-2xl p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
                         >
                           <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                             <IconFolderOpen size={24} stroke={1.5} />
@@ -272,9 +272,9 @@ export function DocumentsView() {
                         setSelectedSubject(subject);
                         setStep("documents");
                       }}
-                      className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-[24px] p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
+                      className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-2xl p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
                     >
-                      <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                         <IconBook size={24} stroke={1.5} />
                       </div>
                       <div className="flex-1 w-full">
@@ -291,7 +291,7 @@ export function DocumentsView() {
 
               <div
                 onClick={() => setIsAddSubjectModalOpen(true)}
-                className="flex flex-col items-center justify-center cursor-pointer bg-zinc-50/50 border border-zinc-200 border-dashed rounded-[24px] p-6 hover:border-zinc-800 hover:bg-zinc-50 transition-all duration-300 group min-h-[180px]"
+                className="flex flex-col items-center justify-center cursor-pointer bg-zinc-50/50 border border-zinc-200 border-dashed rounded-2xl p-6 hover:border-zinc-800 hover:bg-zinc-50 transition-all duration-300 group min-h-[180px]"
               >
                 <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 mb-4 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                   <IconPlus size={24} stroke={1.5} />
@@ -306,7 +306,7 @@ export function DocumentsView() {
           /* Level 3: Documents List (Cards) */
           <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
             {filteredMaterials.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-[24px] border border-zinc-200 shadow-sm">
+              <div className="py-20 text-center bg-white rounded-2xl border border-zinc-200 shadow-sm">
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-50 border border-zinc-100 text-zinc-300">
                   <IconFileText size={40} stroke={1.5} />
                 </div>
@@ -332,11 +332,11 @@ export function DocumentsView() {
                 {filteredMaterials.map((m) => (
                   <div
                     key={m.id}
-                    className="flex flex-col bg-white border border-zinc-200 rounded-[24px] overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
+                    className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
                   >
                     <div className="flex-grow">
                       <div className="mb-6 flex justify-between items-start">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
+                        <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
                           <IconFileText size={20} stroke={1.5} />
                         </div>
                         <Badge
@@ -599,7 +599,7 @@ export function DocumentsView() {
                     alignItems: "center",
                     justifyContent: "center",
                     border: "2px dashed var(--mantine-color-gray-3)",
-                    borderRadius: "16px",
+                    borderRadius: "12px",
                     padding: "24px",
                     cursor: isUploading ? "not-allowed" : "pointer",
                     backgroundColor: selectedFile ? "var(--mantine-color-gray-0)" : "#ffffff",
@@ -665,7 +665,7 @@ export function DocumentsView() {
                       key={chIdx}
                       withBorder
                       p="md"
-                      radius="md"
+                      radius="lg"
                       bg="zinc-50/50"
                       className="space-y-3"
                     >
@@ -680,6 +680,7 @@ export function DocumentsView() {
                           }}
                           disabled={isUploading}
                           style={{ flex: 1 }}
+                          radius="lg"
                         />
                         <ActionIcon
                           variant="subtle"
@@ -709,6 +710,7 @@ export function DocumentsView() {
                               disabled={isUploading}
                               style={{ flex: 1 }}
                               size="xs"
+                              radius="lg"
                             />
                             <ActionIcon
                               variant="subtle"

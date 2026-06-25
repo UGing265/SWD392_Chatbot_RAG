@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { ragApi } from "@/api/client";
 
 export interface Subject {
   id: string;
   name: string;
+  code: string;
   academicTermId?: string;
 }
 
@@ -50,18 +52,16 @@ export function useUpload() {
   useEffect(() => {
     const fetchLookups = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:8080/api/documents/lookups", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to fetch lookups");
-        const data = await res.json();
+        const res = await ragApi.get("/documents/lookups");
+        const data = res.data;
+
 
         // 1. Get assigned subjects for the lecturer
         const apiSubjects = data.subjects || [];
         const mappedSubjects: Subject[] = apiSubjects.map((s: any) => ({
           id: s.id,
           name: `${s.code} - ${s.name}`,
+          code: s.code || "",
           academicTermId: s.academic_term_id || "",
         }));
         setSubjects(mappedSubjects);
@@ -163,29 +163,23 @@ export function useUpload() {
     formData.append("visibility", visibility);
 
     try {
-      const response = await fetch("http://localhost:8080/api/documents/upload", {
-        method: "POST",
+      const response = await ragApi.post("/documents/upload", formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
         },
-        body: formData,
       });
 
-      if (response.ok) {
-        setUploaded(true);
-        setTimeout(() => {
-          setUploaded(false);
-          resetForm();
-          const role = window.location.pathname.split("/")[1] || "lecturer";
-          window.location.href = `/${role}/documents/my`;
-        }, 2000);
-      } else {
-        const error = await response.json();
-        alert(error.error || "Upload failed");
-      }
-    } catch (error) {
+      setUploaded(true);
+      setTimeout(() => {
+        setUploaded(false);
+        resetForm();
+        const role = window.location.pathname.split("/")[1] || "lecturer";
+        window.location.href = `/${role}/documents/my`;
+      }, 2000);
+    } catch (error: any) {
       console.error("Upload error:", error);
-      alert("Upload failed");
+      const errMsg = error.response?.data?.error || "Upload failed";
+      alert(errMsg);
     } finally {
       setUploading(false);
     }

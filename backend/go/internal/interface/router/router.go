@@ -94,6 +94,9 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	{
 		// Lookups metadata (for student/lecturer)
 		protected.GET("/documents/lookups", documentHandler.GetMetadataLookups)
+		
+		// Public subjects list
+		protected.GET("/subjects/public", documentHandler.PublicSubjects)
 
 		// Lecturer specific document actions (must be BEFORE :slug wildcard)
 		protected.GET("/documents/my", middleware.RequireRoles(2), documentHandler.MyDocuments)

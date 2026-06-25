@@ -2,6 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { documentApi, AdminDocument, DocStatus } from "@/api/document";
 import { notify } from "@/lib/notifications";
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object" && "message" in err && typeof err.message === "string") {
+    return err.message;
+  }
+
+  return fallback;
+};
+
 const MOCK_DOCUMENTS: AdminDocument[] = [
   {
     id: "1",
@@ -53,10 +61,12 @@ export function useDocuments() {
         q: searchQuery || undefined,
       });
 
-      const items = (data.documents || []).map((doc: any) => ({
+      const items = (data.documents || []).map((doc: AdminDocument) => ({
         id: doc.id,
         title: doc.title,
+        subject_id: doc.subject_id || null,
         subject_name: doc.subject_name || null,
+        subject_code: doc.subject_code || null,
         owner_name: doc.owner_name || "Không rõ",
         owner_initials: (doc.owner_name || "??")
           .split(" ")
@@ -67,10 +77,11 @@ export function useDocuments() {
         created_at: doc.created_at,
         status: (doc.status as DocStatus) || "pending",
         visibility: doc.visibility || "private",
+        view_count: Number(doc.view_count || 0),
       }));
 
       setDocuments(items);
-      setTotalPages(Math.max(1, Math.ceil((data.total || items.length) / pageSize)));
+      setTotalPages(data.total_pages || 1);
     } catch (error) {
       console.warn("Failed to fetch admin documents, using mock data", error);
       setDocuments(MOCK_DOCUMENTS);
@@ -90,8 +101,8 @@ export function useDocuments() {
       await documentApi.approveDocument(docId);
       notify.success("Phê duyệt tài liệu thành công");
       fetchDocuments();
-    } catch (err: any) {
-      notify.error("Phê duyệt thất bại", err.message || "Vui lòng thử lại");
+    } catch (err: unknown) {
+      notify.error("Phê duyệt thất bại", getErrorMessage(err, "Vui lòng thử lại"));
     }
   };
 
@@ -101,8 +112,8 @@ export function useDocuments() {
       await documentApi.rejectDocument(docId);
       notify.success("Đã từ chối tài liệu");
       fetchDocuments();
-    } catch (err: any) {
-      notify.error("Từ chối thất bại", err.message || "Vui lòng thử lại");
+    } catch (err: unknown) {
+      notify.error("Từ chối thất bại", getErrorMessage(err, "Vui lòng thử lại"));
     }
   };
 
@@ -112,8 +123,8 @@ export function useDocuments() {
       await documentApi.deleteDocument(docId);
       notify.success("Đã xóa tài liệu vĩnh viễn");
       fetchDocuments();
-    } catch (err: any) {
-      notify.error("Xóa thất bại", err.message || "Vui lòng thử lại");
+    } catch (err: unknown) {
+      notify.error("Xóa thất bại", getErrorMessage(err, "Vui lòng thử lại"));
     }
   };
 

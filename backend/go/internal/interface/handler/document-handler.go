@@ -619,6 +619,22 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 	})
 }
 
+// PublicSubjects godoc
+// @Summary Get public subjects
+// @Description Get a list of subjects that are public
+// @Tags metadata
+// @Produce json
+// @Success 200 {array} application.SubjectDto
+// @Router /api/subjects/public [get]
+func (h *DocumentHandler) PublicSubjects(c *gin.Context) {
+	publicSubjects, err := h.service.GetPublicSubjects(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, publicSubjects)
+}
+
 type CompareDocumentsRequest struct {
 	DocumentIDs []string `json:"document_ids" binding:"required,min=2"`
 	Question    string   `json:"question" binding:"required"`

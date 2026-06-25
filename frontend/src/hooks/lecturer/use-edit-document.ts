@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/notifications";
+import { ragApi } from "@/api/client";
+
 
 export interface DocumentDetails {
   id: string;
@@ -41,46 +43,33 @@ export function useEditDocument(slug: string, role: string) {
   const fetchLookupsAndDocument = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-
       // Fetch Lookups
-      const lookupsRes = await fetch("http://localhost:8080/api/documents/lookups", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (lookupsRes.ok) {
-        const data = await lookupsRes.json();
-        setSubjects(data.subjects || []);
-        setTerms(data.academicTerms || []);
-        setDocumentTypes(data.documentTypes || []);
-        setLanguages(data.languages || []);
-        setDocumentSources(data.documentSources || []);
-      }
+      const lookupsRes = await ragApi.get("/documents/lookups");
+      const lookupsData = lookupsRes.data;
+      setSubjects(lookupsData.subjects || []);
+      setTerms(lookupsData.academicTerms || []);
+      setDocumentTypes(lookupsData.documentTypes || []);
+      setLanguages(lookupsData.languages || []);
+      setDocumentSources(lookupsData.documentSources || []);
 
       // Fetch Document Details
-      const docRes = await fetch(`http://localhost:8080/api/documents/${slug}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (docRes.ok) {
-        const data = await docRes.json();
-        const docInfo = data;
-        setDocument(docInfo);
-        
-        // Initialize form
-        setTitle(docInfo.title || "");
-        setDescription(docInfo.description || "");
-        setSubjectId(docInfo.subject_id || null);
-        setTermId(docInfo.academic_term_id || null);
-        setDocumentTypeId(docInfo.document_type_id || null);
-        setLanguageId(docInfo.language_id || null);
-        setDocumentSourceId(docInfo.document_source_id || null);
-        setVisibility(docInfo.visibility || "school_wide");
-      } else {
-        notify.error("Không tìm thấy tài liệu.");
-        router.push(`/${role}/documents/my`);
-      }
+      const docRes = await ragApi.get(`/documents/${slug}`);
+      const docInfo = docRes.data;
+      setDocument(docInfo);
+      
+      // Initialize form
+      setTitle(docInfo.title || "");
+      setDescription(docInfo.description || "");
+      setSubjectId(docInfo.subject_id || null);
+      setTermId(docInfo.academic_term_id || null);
+      setDocumentTypeId(docInfo.document_type_id || null);
+      setLanguageId(docInfo.language_id || null);
+      setDocumentSourceId(docInfo.document_source_id || null);
+      setVisibility(docInfo.visibility || "school_wide");
     } catch (err) {
       console.error("Failed to fetch data:", err);
-      notify.error("Đã xảy ra lỗi khi tải dữ liệu.");
+      notify.error("Không tìm thấy tài liệu hoặc lỗi tải dữ liệu.");
+      router.push(`/${role}/documents/my`);
     } finally {
       setLoading(false);
     }
@@ -101,36 +90,24 @@ export function useEditDocument(slug: string, role: string) {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/documents/${slug}/edit`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          id: document.id,
-          title: title.trim(),
-          description: description.trim() || null,
-          subject_id: subjectId,
-          document_type_id: documentTypeId,
-          academic_term_id: termId,
-          language_id: languageId,
-          document_source_id: documentSourceId,
-          visibility: visibility,
-        }),
+      await ragApi.post(`/documents/${slug}/edit`, {
+        id: document.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        subject_id: subjectId,
+        document_type_id: documentTypeId,
+        academic_term_id: termId,
+        language_id: languageId,
+        document_source_id: documentSourceId,
+        visibility: visibility,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Không thể cập nhật tài liệu.");
-      }
 
       notify.success("Cập nhật tài liệu thành công.");
       router.push(`/${role}/documents/my`);
     } catch (err: any) {
       console.error(err);
-      notify.error(err.message || "Đã xảy ra lỗi khi lưu.");
+      const errMsg = err.response?.data?.error || err.message || "Đã xảy ra lỗi khi lưu.";
+      notify.error(errMsg);
     } finally {
       setSaving(false);
     }

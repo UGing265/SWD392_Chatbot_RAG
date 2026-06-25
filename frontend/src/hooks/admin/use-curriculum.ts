@@ -1,6 +1,24 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { curriculumApi, AcademicTerm, Subject } from "@/api/curriculum";
+import { documentApi } from "@/api/document";
 import { notify } from "@/lib/notifications";
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+const getString = (value: unknown) => (typeof value === "string" ? value : "");
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  const errorRecord = asRecord(err);
+  const responseRecord = asRecord(errorRecord.response);
+  const dataRecord = asRecord(responseRecord.data);
+  const apiError = dataRecord.error;
+  const message = errorRecord.message;
+
+  if (typeof apiError === "string") return apiError;
+  if (typeof message === "string") return message;
+  return fallback;
+};
 
 export type SavingAction =
   | "create-term"
@@ -18,6 +36,7 @@ export function useCurriculum() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingAction, setSavingAction] = useState<SavingAction | null>(null);
+  const [subjectAccessCounts, setSubjectAccessCounts] = useState<Record<string, number>>({});
   const [expandedTerms, setExpandedTerms] = useState<Set<string>>(new Set());
 
   // Form states for creating/editing terms
@@ -48,19 +67,55 @@ export function useCurriculum() {
     return Math.max(...terms.map((t) => t.order)) + 1;
   }, [terms]);
 
-  const normalizeTerm = (term: any): AcademicTerm => ({
-    id: String(term.id),
-    name: term.name || "",
-    order: Number(term.order ?? term.term_order ?? 0),
-  });
+  const normalizeTerm = (term: unknown): AcademicTerm => {
+    const data = asRecord(term);
 
-  const normalizeSubject = (subject: any): Subject => ({
-    id: String(subject.id),
-    code: subject.code || "",
-    name: subject.name || "",
-    academic_term_id:
-      subject.academic_term_id ?? subject.academicTermId ?? subject.academicTermID ?? null,
-  });
+    return {
+      id: String(data.id ?? ""),
+      name: getString(data.name),
+      order: Number(data.order ?? data.term_order ?? 0),
+    };
+  };
+
+  const normalizeSubject = (subject: unknown): Subject => {
+    const data = asRecord(subject);
+    const academicTermId = data.academic_term_id ?? data.academicTermId ?? data.academicTermID;
+
+    return {
+      id: String(data.id ?? ""),
+      code: getString(data.code),
+      name: getString(data.name),
+      academic_term_id: academicTermId ? String(academicTermId) : null,
+    };
+  };
+
+  const fetchSubjectAccessCounts = useCallback(async () => {
+    const counts: Record<string, number> = {};
+    let page = 1;
+    let totalPages = 1;
+
+    try {
+      do {
+        const data = await documentApi.getDocuments({ page, pageSize: 100 });
+
+        for (const doc of data.documents || []) {
+          const subjectId = doc.subject_id;
+          if (!subjectId) continue;
+
+          counts[String(subjectId)] =
+            (counts[String(subjectId)] || 0) + Number(doc.view_count || 0);
+        }
+
+        totalPages = data.total_pages || 1;
+        page += 1;
+      } while (page <= totalPages);
+
+      setSubjectAccessCounts(counts);
+    } catch (err) {
+      console.warn("Failed to fetch subject access counts", err);
+      setSubjectAccessCounts({});
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -69,15 +124,15 @@ export function useCurriculum() {
       const data = await curriculumApi.getLookups();
       setTerms((data.academicTerms || []).map(normalizeTerm));
       setSubjects(Array.isArray(data.subjects) ? data.subjects.map(normalizeSubject) : []);
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.error || err.message || "Không thể tải dữ liệu chương trình học.";
+      await fetchSubjectAccessCounts();
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Không thể tải dữ liệu chương trình học.");
       setError(msg);
       notify.error(msg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchSubjectAccessCounts]);
 
   useEffect(() => {
     fetchData();
@@ -130,8 +185,8 @@ export function useCurriculum() {
       notify.success("Tạo học kỳ thành công");
       resetTermForm();
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Tạo học kỳ thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Tạo học kỳ thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -148,8 +203,8 @@ export function useCurriculum() {
       notify.success("Cập nhật học kỳ thành công");
       setEditingTermId(null);
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Cập nhật học kỳ thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Cập nhật học kỳ thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -170,8 +225,8 @@ export function useCurriculum() {
       await curriculumApi.deleteTerm(term.id);
       notify.success("Xóa học kỳ thành công");
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Xóa học kỳ thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Xóa học kỳ thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -210,8 +265,8 @@ export function useCurriculum() {
         setAddingStandaloneSubject(false);
       }
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Tạo môn học thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Tạo môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -220,8 +275,8 @@ export function useCurriculum() {
 
   const handleAttachSubject = async (termId: string) => {
     if (!selectedExistingSubject || savingAction) return;
-    
-    const subject = subjects.find(s => s.id === selectedExistingSubject);
+
+    const subject = subjects.find((s) => s.id === selectedExistingSubject);
     if (!subject) return;
 
     setSavingAction(`attach-subject-${termId}`);
@@ -231,8 +286,8 @@ export function useCurriculum() {
       setSelectedExistingSubject(null);
       setAddingSubjectForTerm(null);
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Gắn môn học thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Gắn môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -247,8 +302,8 @@ export function useCurriculum() {
       await curriculumApi.updateSubject(subject.id, subject.code, subject.name, null);
       notify.success("Đã gỡ môn học khỏi học kỳ");
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Gỡ môn học thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Gỡ môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -266,8 +321,8 @@ export function useCurriculum() {
       notify.success("Cập nhật môn học thành công");
       setEditingSubjectId(null);
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Cập nhật môn học thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Cập nhật môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -282,8 +337,8 @@ export function useCurriculum() {
       await curriculumApi.deleteSubject(subjectId);
       notify.success("Xóa môn học thành công");
       await fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || err.message || "Xóa môn học thất bại.";
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Xóa môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -296,6 +351,7 @@ export function useCurriculum() {
     loading,
     error,
     savingAction,
+    subjectAccessCounts,
     expandedTerms,
     sortedTerms,
     addingTerm,

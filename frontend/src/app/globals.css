@@ -256,6 +256,12 @@
   }
 }
 
+/* Mantine modal surface follows the project 2xl modal radius token. */
+.mantine-Modal-content {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
 /* Premium Mantine Notification Styling */
 .mantine-Notification-root {
   background-color: rgba(255, 255, 255, 0.9) !important;
@@ -439,4 +445,3 @@
   background-color: rgba(51, 65, 85, 0.6) !important;
   color: #f8fafc !important;
 }
-
