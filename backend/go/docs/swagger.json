@@ -793,6 +793,108 @@
                 }
             }
         },
+        "/api/admin/lecturers/{id}/subjects": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get subjects assigned to a lecturer (Admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "Get lecturer subjects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecturer user ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assign multiple subjects to one lecturer. A subject can only be assigned to one lecturer.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "Replace lecturer subject assignments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecturer user ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subject IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.LecturerSubjectAssignmentInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/admin/reports": {
             "get": {
                 "security": [
@@ -1020,6 +1122,43 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/user-subjects": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all lecturer-subject assignments (Admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "List lecturer subject assignments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1365,6 +1504,51 @@
                 }
             }
         },
+        "/api/chat/sessions/{id}/messages/stream": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Stream message (RAG pipeline)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE tokens",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/documents": {
             "get": {
                 "security": [
@@ -1435,6 +1619,63 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/application.MyDocumentsDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/documents/compare": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Compare multiple documents by extracting chunks and using LLM",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Compare documents",
+                "parameters": [
+                    {
+                        "description": "Comparison Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CompareDocumentsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/application.ComparisonResultDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
@@ -2015,6 +2256,29 @@
                     }
                 }
             }
+        },
+        "/api/subjects/public": {
+            "get": {
+                "description": "Get a list of subjects that are public",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metadata"
+                ],
+                "summary": "Get public subjects",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.SubjectDto"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2032,6 +2296,40 @@
                 },
                 "order": {
                     "type": "integer"
+                }
+            }
+        },
+        "application.ComparisonResultDto": {
+            "type": "object",
+            "properties": {
+                "commonThemes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "differences": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "document1": {
+                                "type": "string"
+                            },
+                            "document2": {
+                                "type": "string"
+                            },
+                            "explanation": {
+                                "type": "string"
+                            },
+                            "topic": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "summary": {
+                    "type": "string"
                 }
             }
         },
@@ -2275,6 +2573,9 @@
                 "language_name": {
                     "type": "string"
                 },
+                "owner_full_name": {
+                    "type": "string"
+                },
                 "owner_user_id": {
                     "type": "string"
                 },
@@ -2401,6 +2702,9 @@
                 "owner_email": {
                     "type": "string"
                 },
+                "owner_name": {
+                    "type": "string"
+                },
                 "preview_text": {
                     "type": "string"
                 },
@@ -2509,6 +2813,32 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "application.LecturerSubjectAssignmentDto": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "lecturer_email": {
+                    "type": "string"
+                },
+                "lecturer_name": {
+                    "type": "string"
+                },
+                "subject_code": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_name": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -2623,6 +2953,25 @@
                 }
             }
         },
+        "handler.CompareDocumentsRequest": {
+            "type": "object",
+            "required": [
+                "document_ids",
+                "question"
+            ],
+            "properties": {
+                "document_ids": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "question": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.DocumentSourceInput": {
             "type": "object",
             "required": [
@@ -2663,6 +3012,17 @@
                 }
             }
         },
+        "handler.LecturerSubjectAssignmentInput": {
+            "type": "object",
+            "properties": {
+                "subjectIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "handler.ReportInput": {
             "type": "object",
             "required": [
@@ -2681,7 +3041,7 @@
                 "name"
             ],
             "properties": {
-                "academicTermId": {
+                "academic_term_id": {
                     "type": "string"
                 },
                 "code": {
@@ -2700,6 +3060,12 @@
             "properties": {
                 "course_id": {
                     "type": "string"
+                },
+                "document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "title": {
                     "type": "string"
@@ -2782,6 +3148,12 @@
                 },
                 "created_at": {
                     "type": "string"
+                },
+                "document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "id": {
                     "type": "string"
