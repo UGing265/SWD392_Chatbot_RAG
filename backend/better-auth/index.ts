@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
 import { auth, pool } from "./auth.js";
-import { jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { hashPassword } from "better-auth/crypto";
 
 const app = new Hono();
@@ -188,6 +188,51 @@ app.get("/swagger.json", (c) => {
           responses: {
             "200": {
               description: "Logout successful"
+            }
+          }
+        }
+      },
+      "/api/auth/dev-token": {
+        "post": {
+          summary: "Generate Dev JWT Token",
+          description: "Generates a JWT token for testing on Swagger 8080 without full login flow. Used for development only.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["email"],
+                  properties: {
+                    email: { type: "string", format: "email", example: "admin@example.com" }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "JWT Token generated",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      token: { type: "string", example: "Bearer eyJhbGciOiJIUzI1Ni..." },
+                      user: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          role: { type: "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              description: "User not found"
             }
           }
         }
@@ -396,6 +441,58 @@ app.delete("/api/admin/users/:id", async (c) => {
   } catch (error: any) {
     console.error("Failed to delete user:", error);
     return c.json({ error: "Failed to delete user: " + error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
+// Generate Dev JWT Token
+app.post("/api/auth/dev-token", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { email } = body;
+  if (!email) {
+    return c.json({ error: "Missing email" }, 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    const res = await client.query("SELECT id, role_id FROM public.users WHERE email = $1", [email]);
+    if (res.rowCount === 0) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    const user = res.rows[0];
+    const roleId = user.role_id;
+    const role = roleId === 1 ? "admin" : roleId === 2 ? "lecturer" : "student";
+
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET
+    );
+
+    const token = await new SignJWT({
+      sub: user.id,
+      role: role,
+    })
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setExpirationTime("24h")
+      .sign(secret);
+
+    return c.json({
+      token: `Bearer ${token}`,
+      user: {
+        id: user.id,
+        role: role,
+        email: email,
+      }
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
   } finally {
     client.release();
   }

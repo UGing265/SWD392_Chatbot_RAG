@@ -128,8 +128,9 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, userID, sessionID uuid.U
 	var citations []*message.MessageCitation
 	for _, ch := range chunks {
 		excerpt := ch.Content
-		if len(excerpt) > 200 {
-			excerpt = excerpt[:200] + "..."
+		runes := []rune(excerpt)
+		if len(runes) > 200 {
+			excerpt = string(runes[:200]) + "..."
 		}
 		citations = append(citations, &message.MessageCitation{
 			ID:             uuid.New(),
