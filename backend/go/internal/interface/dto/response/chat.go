@@ -42,4 +42,3 @@ type SendMessageResponse struct {
 	UserMessage MessageResponse `json:"user_message"`
 	BotMessage  MessageResponse `json:"bot_message"`
 }
-

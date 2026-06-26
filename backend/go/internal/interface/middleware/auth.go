@@ -29,7 +29,7 @@ func AuthMiddleware(db *pgxpool.Pool) gin.HandlerFunc {
 		} else if strings.HasPrefix(authHeader, "bearer ") {
 			tokenString = strings.TrimPrefix(authHeader, "bearer ")
 		}
-		
+
 		tokenString = strings.TrimSpace(tokenString)
 
 		// Verify JWT token
@@ -79,7 +79,7 @@ func AuthMiddleware(db *pgxpool.Pool) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid role in token"})
 			return
 		}
-		
+
 		var roleID int16
 		if roleStr == "admin" {
 			roleID = 1

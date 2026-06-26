@@ -14,5 +14,5 @@ type Subject struct {
 	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
 
 	// Relation field
-	AcademicTermName *string   `json:"academic_term_name,omitempty" db:"academic_term_name"`
+	AcademicTermName *string `json:"academic_term_name,omitempty" db:"academic_term_name"`
 }

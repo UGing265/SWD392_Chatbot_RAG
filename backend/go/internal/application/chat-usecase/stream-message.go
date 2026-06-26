@@ -1,4 +1,4 @@
-package chatusecase
+package chat_usecase
 
 import (
 	"context"
@@ -76,11 +76,11 @@ func (uc *ChatUseCase) StreamMessage(ctx context.Context, userID, sessionID uuid
 		if err := uc.msgRepo.Create(ctx, botMsg); err != nil {
 			return nil, nil, fmt.Errorf("failed to save bot message: %w", err)
 		}
-		
+
 		ch := make(chan string, 1)
 		ch <- outOfScopeReply
 		close(ch)
-		
+
 		return ch, &SendMessageResult{UserMessage: userMsg, BotMessage: botMsg, Citations: nil}, nil
 	}
 

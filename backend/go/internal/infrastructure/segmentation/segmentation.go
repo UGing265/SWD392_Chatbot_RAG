@@ -139,7 +139,7 @@ func (s *GeminiChapterSegmentationService) processBatch(ctx context.Context, doc
 	for _, ch := range chunks {
 		cleanContent := strings.ReplaceAll(ch.Content, "\r", "")
 		lines := strings.Split(cleanContent, "\n")
-		
+
 		preview := cleanContent
 		if len(preview) > 500 {
 			preview = preview[:500] + "..."
@@ -222,7 +222,7 @@ Chunks:
 		}
 
 		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", s.model, apiKey)
-		
+
 		reqPayload := geminiGenerateRequest{
 			Contents: []geminiContent{
 				{
@@ -256,7 +256,7 @@ Chunks:
 			lastErr = err
 			continue
 		}
-		
+
 		bodyBytes, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
@@ -390,21 +390,21 @@ func extractJson(text string) string {
 	if end <= start {
 		return text
 	}
-	
+
 	json := text[start : end+1]
-	
+
 	// Auto close missing brackets
 	openBraces := strings.Count(json, "{")
 	closeBraces := strings.Count(json, "}")
 	openBrackets := strings.Count(json, "[")
 	closeBrackets := strings.Count(json, "]")
-	
+
 	if openBrackets > closeBrackets {
 		json += strings.Repeat("]", openBrackets-closeBrackets)
 	}
 	if openBraces > closeBraces {
 		json += strings.Repeat("}", openBraces-closeBraces)
 	}
-	
+
 	return json
 }

@@ -8,18 +8,25 @@ import (
 	"strings"
 
 	"swd392-chatbot-rag/internal/application"
+	admin_usecase "swd392-chatbot-rag/internal/application/admin-usecase"
+	document_usecase "swd392-chatbot-rag/internal/application/document-usecase"
+	lookup_usecase "swd392-chatbot-rag/internal/application/lookup-usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type DocumentHandler struct {
-	service *application.DocumentService
+	docUseCase    *document_usecase.DocumentUseCase
+	lookupUseCase *lookup_usecase.LookupUseCase
+	adminUseCase  *admin_usecase.AdminUseCase
 }
 
-func NewDocumentHandler(service *application.DocumentService) *DocumentHandler {
+func NewDocumentHandler(docUseCase *document_usecase.DocumentUseCase, lookupUseCase *lookup_usecase.LookupUseCase, adminUseCase *admin_usecase.AdminUseCase) *DocumentHandler {
 	return &DocumentHandler{
-		service: service,
+		docUseCase:    docUseCase,
+		lookupUseCase: lookupUseCase,
+		adminUseCase:  adminUseCase,
 	}
 }
 
@@ -90,7 +97,7 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		requesterIDPtr = &uid
 	}
 
-	result, err := h.service.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize, requesterIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr)
+	result, err := h.docUseCase.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize, requesterIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch documents: " + err.Error()})
 		return
@@ -165,7 +172,7 @@ func (h *DocumentHandler) MyDocuments(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "6"))
 
-	result, err := h.service.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDPtr, termIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr, page, pageSize)
+	result, err := h.docUseCase.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDPtr, termIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch my documents: " + err.Error()})
 		return
@@ -292,7 +299,7 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 	}
 
 	importLog("1. Đang tính MD5 và tạo bản ghi tài liệu trong Database...")
-	saved, err := h.service.CreateDocument(c.Request.Context(), input, file.Size, src)
+	saved, err := h.docUseCase.CreateDocument(c.Request.Context(), input, file.Size, src)
 	if err != nil {
 		importLog("LỖI khi tạo bản ghi tài liệu: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -314,18 +321,18 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
-	s3Key, _, err := h.service.UploadOriginalFileToS3(c.Request.Context(), saved.ID, freshSrc, file.Filename, contentType)
+	s3Key, _, err := h.docUseCase.UploadOriginalFileToS3(c.Request.Context(), saved.ID, freshSrc, file.Filename, contentType)
 	if err != nil {
 		importLog("LỖI khi upload lên AWS S3: %v", err)
 		// Clean up the created document if upload fails
-		_ = h.service.DeleteDocument(c.Request.Context(), saved.ID)
+		_ = h.docUseCase.DeleteDocument(c.Request.Context(), saved.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "S3 upload failed: " + err.Error()})
 		return
 	}
 	importLog("✓ Upload AWS S3 thành công. S3 Key: %s", s3Key)
 
 	importLog("3. Đang đưa tác vụ chạy ngầm (Upload Job) vào hàng đợi...")
-	err = h.service.EnqueueUploadJob(c.Request.Context(), userID, saved.ID, file.Filename, s3Key, file.Size)
+	err = h.docUseCase.EnqueueUploadJob(c.Request.Context(), userID, saved.ID, file.Filename, s3Key, file.Size)
 	if err != nil {
 		importLog("LỖI khi đưa Job chạy ngầm vào DB: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue background job: " + err.Error()})
@@ -366,7 +373,7 @@ func (h *DocumentHandler) Details(c *gin.Context) {
 		isAdmin = true
 	}
 
-	details, err := h.service.GetDocumentDetailsBySlug(c.Request.Context(), slug, requesterIDPtr, chunkPage, chunkPageSize, chunkPage == 1, isAdmin)
+	details, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, requesterIDPtr, chunkPage, chunkPageSize, chunkPage == 1, isAdmin)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
@@ -452,7 +459,7 @@ func (h *DocumentHandler) Edit(c *gin.Context) {
 		}
 	}
 
-	err = h.service.UpdateDocument(c.Request.Context(), docID, userID, input.Title, input.Description, subjectID, typeID, termID, langID, sourceID, input.Visibility)
+	err = h.docUseCase.UpdateDocument(c.Request.Context(), docID, userID, input.Title, input.Description, subjectID, typeID, termID, langID, sourceID, input.Visibility)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -477,7 +484,7 @@ func (h *DocumentHandler) Delete(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	// Verify ownership
-	details, err := h.service.GetOwnedDocumentDetailsBySlug(c.Request.Context(), slug, userID)
+	details, err := h.docUseCase.GetOwnedDocumentDetailsBySlug(c.Request.Context(), slug, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -487,7 +494,7 @@ func (h *DocumentHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteDocument(c.Request.Context(), details.ID); err != nil {
+	if err := h.docUseCase.DeleteDocument(c.Request.Context(), details.ID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete document: " + err.Error()})
 		return
 	}
@@ -510,7 +517,7 @@ func (h *DocumentHandler) DeleteViewData(c *gin.Context) {
 	slug := c.Param("slug")
 	userID := c.MustGet("user_id").(uuid.UUID)
 
-	viewData, err := h.service.GetDeleteDocumentViewDataBySlug(c.Request.Context(), slug, userID)
+	viewData, err := h.docUseCase.GetDeleteDocumentViewDataBySlug(c.Request.Context(), slug, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -547,13 +554,13 @@ func (h *DocumentHandler) Report(c *gin.Context) {
 		return
 	}
 
-	doc, err := h.service.GetDocumentDetailsBySlug(c.Request.Context(), slug, &userID, 1, 1, false, false)
+	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, &userID, 1, 1, false, false)
 	if err != nil || doc == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
 		return
 	}
 
-	report, err := h.service.ReportDocument(c.Request.Context(), doc.ID, userID, req.Reason)
+	report, err := h.adminUseCase.ReportDocument(c.Request.Context(), doc.ID, userID, req.Reason)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -574,7 +581,7 @@ func (h *DocumentHandler) Report(c *gin.Context) {
 func (h *DocumentHandler) Dashboard(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
-	summary, err := h.service.GetDashboardSummary(c.Request.Context(), userID)
+	summary, err := h.adminUseCase.GetDashboardSummary(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -595,20 +602,20 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 	var subjects interface{}
 	if roleIDVal, exists := c.Get("role_id"); exists && roleIDVal.(int16) == 2 {
 		userID := c.MustGet("user_id").(uuid.UUID)
-		assignedSubjects, err := h.service.GetAssignedSubjectsByLecturer(c.Request.Context(), userID)
+		assignedSubjects, err := h.lookupUseCase.GetAssignedSubjectsByLecturer(c.Request.Context(), userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		subjects = assignedSubjects
 	} else {
-		allSubjects, _ := h.service.GetSubjects(c.Request.Context())
+		allSubjects, _ := h.lookupUseCase.GetSubjects(c.Request.Context())
 		subjects = allSubjects
 	}
-	types, _ := h.service.GetDocumentTypes(c.Request.Context())
-	langs, _ := h.service.GetLanguages(c.Request.Context())
-	sources, _ := h.service.GetDocumentSources(c.Request.Context())
-	terms, _ := h.service.GetAcademicTerms(c.Request.Context())
+	types, _ := h.lookupUseCase.GetDocumentTypes(c.Request.Context())
+	langs, _ := h.lookupUseCase.GetLanguages(c.Request.Context())
+	sources, _ := h.lookupUseCase.GetDocumentSources(c.Request.Context())
+	terms, _ := h.lookupUseCase.GetAcademicTerms(c.Request.Context())
 
 	c.JSON(http.StatusOK, gin.H{
 		"subjects":        subjects,
@@ -627,7 +634,7 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 // @Success 200 {array} application.SubjectDto
 // @Router /api/subjects/public [get]
 func (h *DocumentHandler) PublicSubjects(c *gin.Context) {
-	publicSubjects, err := h.service.GetPublicSubjects(c.Request.Context())
+	publicSubjects, err := h.lookupUseCase.GetPublicSubjects(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -669,11 +676,136 @@ func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
 		docIDs = append(docIDs, id)
 	}
 
-	result, err := h.service.CompareDocuments(c.Request.Context(), docIDs, req.Question)
+	result, err := h.docUseCase.CompareDocuments(c.Request.Context(), docIDs, req.Question)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+// ToggleBookmark godoc
+// @Summary Toggle bookmark
+// @Description Add or remove a document from bookmarks
+// @Tags documents
+// @Security BearerAuth
+// @Produce json
+// @Param slug path string true "Document Slug"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string
+// @Router /api/documents/{slug}/bookmark [post]
+func (h *DocumentHandler) ToggleBookmark(c *gin.Context) {
+	slug := c.Param("slug")
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	// Need to find document ID by slug first
+	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, nil, 1, 1, false, false)
+	if err != nil || doc == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
+	}
+
+	bookmarked, err := h.docUseCase.ToggleBookmark(c.Request.Context(), userID, doc.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Bookmark toggled",
+		"bookmarked": bookmarked,
+	})
+}
+
+// ListBookmarks godoc
+// @Summary List bookmarked documents
+// @Description Get a list of documents bookmarked by the current user
+// @Tags documents
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} application.DocumentDetailsDto
+// @Failure 500 {object} map[string]string
+// @Router /api/documents/bookmarks [get]
+func (h *DocumentHandler) ListBookmarks(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	docs, err := h.docUseCase.ListBookmarks(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, docs)
+}
+
+// GetUploadJobs godoc
+// @Summary List upload jobs
+// @Description Get recent upload jobs for current user
+// @Tags documents
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} uploadjob.UploadJob
+// @Failure 500 {object} map[string]string
+// @Router /api/documents/upload-jobs [get]
+func (h *DocumentHandler) GetUploadJobs(c *gin.Context) {
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	jobs, err := h.docUseCase.GetRecentUploadJobs(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, jobs)
+}
+
+// ExportCompareDocuments godoc
+// @Summary Export document comparison to PDF
+// @Description Compare multiple documents and export the result as a PDF
+// @Tags documents
+// @Security BearerAuth
+// @Accept json
+// @Produce application/pdf
+// @Param body body handler.CompareDocumentsRequest true "Comparison Request"
+// @Success 200 {file} file "ComparisonResult.pdf"
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/documents/compare/export [post]
+func (h *DocumentHandler) ExportCompareDocuments(c *gin.Context) {
+	var req CompareDocumentsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(req.DocumentIDs) < 2 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "At least two documents are required for comparison"})
+		return
+	}
+
+	docIDs := make([]uuid.UUID, len(req.DocumentIDs))
+	for i, idStr := range req.DocumentIDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID format: " + idStr})
+			return
+		}
+		docIDs[i] = id
+	}
+
+	result, err := h.docUseCase.CompareDocuments(c.Request.Context(), docIDs, req.Question)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	pdfBytes, err := h.docUseCase.ExportCompareResultToPDF(c.Request.Context(), result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF: " + err.Error()})
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=ComparisonResult.pdf")
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }

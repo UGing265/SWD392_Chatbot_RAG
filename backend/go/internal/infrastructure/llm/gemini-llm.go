@@ -15,7 +15,7 @@ import (
 
 // ChatMessage represents a single turn in the conversation history.
 type ChatMessage struct {
-	Role        string           `json:"role"`    // user / bot
+	Role        string           `json:"role"` // user / bot
 	Content     string           `json:"content"`
 	Attachments []ChatAttachment `json:"attachments"`
 }
@@ -191,7 +191,7 @@ func (c *GeminiLLMClient) buildRequestBody(systemPrompt string, history []ChatMe
 		if role == "bot" || role == "assistant" {
 			role = "model"
 		}
-		
+
 		parts := []map[string]interface{}{}
 		if msg.Content != "" {
 			parts = append(parts, map[string]interface{}{"text": msg.Content})
@@ -217,7 +217,7 @@ func (c *GeminiLLMClient) buildRequestBody(systemPrompt string, history []ChatMe
 		},
 		"contents": contents,
 		"generationConfig": map[string]interface{}{
-			"temperature":    0.3,
+			"temperature":     0.3,
 			"maxOutputTokens": 8192,
 		},
 	}

@@ -17,19 +17,19 @@ import (
 
 // GeminiEmbeddingClient is a thread-safe client for Gemini Embedding API
 type GeminiEmbeddingClient struct {
-	apiKeys      []string
-	keyIndex     atomic.Uint32
-	baseURL      string
-	model        string
-	client       *http.Client
-	maxRetries   int
-	semaphore    *semaphore.Weighted
+	apiKeys       []string
+	keyIndex      atomic.Uint32
+	baseURL       string
+	model         string
+	client        *http.Client
+	maxRetries    int
+	semaphore     *semaphore.Weighted
 	maxConcurrent int
 }
 
 type embedRequest struct {
-	Model                 string `json:"model"`
-	Content               struct {
+	Model   string `json:"model"`
+	Content struct {
 		Parts []struct {
 			Text string `json:"text"`
 		} `json:"parts"`
@@ -39,8 +39,8 @@ type embedRequest struct {
 
 type embedResponse struct {
 	Embedding struct {
-		Values     []float32 `json:"values"`
-		Statistic  struct {
+		Values    []float32 `json:"values"`
+		Statistic struct {
 			TokenCount int `json:"tokenCount"`
 		} `json:"statistic"`
 	} `json:"embedding"`
@@ -91,9 +91,9 @@ func (c *GeminiEmbeddingClient) getNextKey() string {
 // NewGeminiEmbeddingClient creates a new Gemini embedding client
 func NewGeminiEmbeddingClient(apiKeysStr string) *GeminiEmbeddingClient {
 	return &GeminiEmbeddingClient{
-		apiKeys:       parseAPIKeys(apiKeysStr),
-		baseURL:       "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
-		model:         "models/gemini-embedding-2",
+		apiKeys: parseAPIKeys(apiKeysStr),
+		baseURL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
+		model:   "models/gemini-embedding-2",
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
@@ -125,9 +125,9 @@ func NewGeminiEmbeddingClientWithConfig(apiKeysStr, baseURL, model string, timeo
 	}
 
 	return &GeminiEmbeddingClient{
-		apiKeys:       parseAPIKeys(apiKeysStr),
-		baseURL:       baseURL,
-		model:         model,
+		apiKeys: parseAPIKeys(apiKeysStr),
+		baseURL: baseURL,
+		model:   model,
 		client: &http.Client{
 			Timeout: timeout,
 			Transport: &http.Transport{
@@ -148,7 +148,7 @@ func (c *GeminiEmbeddingClient) Embed(ctx context.Context, text string) ([]float
 	}
 
 	reqBody := embedRequest{
-		Model: c.model,
+		Model:                c.model,
 		OutputDimensionality: 3072,
 	}
 	reqBody.Content.Parts = []struct {
@@ -202,7 +202,7 @@ func (c *GeminiEmbeddingClient) EmbedBatch(ctx context.Context, texts []string) 
 	var reqBody batchEmbedRequest
 	for _, text := range processedTexts {
 		singleReq := embedRequest{
-			Model: c.model,
+			Model:                c.model,
 			OutputDimensionality: 3072,
 		}
 		singleReq.Content.Parts = []struct {

@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	DefaultChunkSize    = 500  // tokens
-	DefaultChunkOverlap = 100  // tokens
-	MaxChunkSize        = 800  // tokens
-	MinChunkSize        = 1  // tokens - discard smaller chunks
+	DefaultChunkSize    = 500 // tokens
+	DefaultChunkOverlap = 100 // tokens
+	MaxChunkSize        = 800 // tokens
+	MinChunkSize        = 1   // tokens - discard smaller chunks
 )
 
 var defaultSeparators = []string{"\n\n", "\n", ". ", " "}
