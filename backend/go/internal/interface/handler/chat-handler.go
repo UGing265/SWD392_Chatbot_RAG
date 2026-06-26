@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"swd392-chatbot-rag/internal/application/chatusecase"
+	chat_usecase "swd392-chatbot-rag/internal/application/chat-usecase"
 	"swd392-chatbot-rag/internal/interface/dto/request"
 	"swd392-chatbot-rag/internal/interface/dto/response"
 
@@ -14,11 +14,11 @@ import (
 
 // ChatHandler handles all chat-related HTTP endpoints.
 type ChatHandler struct {
-	useCase *chatusecase.ChatUseCase
+	useCase *chat_usecase.ChatUseCase
 }
 
 // NewChatHandler creates a new ChatHandler.
-func NewChatHandler(useCase *chatusecase.ChatUseCase) *ChatHandler {
+func NewChatHandler(useCase *chat_usecase.ChatUseCase) *ChatHandler {
 	return &ChatHandler{useCase: useCase}
 }
 
@@ -201,18 +201,18 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.SendMessageResponse{
 		UserMessage: response.MessageResponse{
-			ID:          result.UserMessage.ID,
-			Role:        result.UserMessage.Role,
-			Content:     result.UserMessage.Content,
-			CreatedAt:   result.UserMessage.CreatedAt,
+			ID:        result.UserMessage.ID,
+			Role:      result.UserMessage.Role,
+			Content:   result.UserMessage.Content,
+			CreatedAt: result.UserMessage.CreatedAt,
 		},
 		BotMessage: response.MessageResponse{
-			ID:          result.BotMessage.ID,
-			Role:        result.BotMessage.Role,
-			Content:     result.BotMessage.Content,
-			OutOfScope:  result.BotMessage.OutOfScope,
-			Citations:   botCitations,
-			CreatedAt:   result.BotMessage.CreatedAt,
+			ID:         result.BotMessage.ID,
+			Role:       result.BotMessage.Role,
+			Content:    result.BotMessage.Content,
+			OutOfScope: result.BotMessage.OutOfScope,
+			Citations:  botCitations,
+			CreatedAt:  result.BotMessage.CreatedAt,
 		},
 	})
 }

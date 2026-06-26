@@ -1,4 +1,4 @@
-package chatusecase
+package chat_usecase
 
 import (
 	"context"
@@ -204,7 +204,7 @@ func (uc *ChatUseCase) enhanceQueryAsync(ctx context.Context, originalQuery stri
 	}
 
 	systemPrompt := "You are a professional technical translator. Translate the user's computer science query from Vietnamese to English. Optimize the translation to be used for semantic vector search in English textbooks. Return ONLY the final translated English query, without any explanation, markdown, quotes or extra text."
-	
+
 	history := []llm.ChatMessage{
 		{Role: "user", Content: originalQuery},
 	}
@@ -217,7 +217,7 @@ func (uc *ChatUseCase) enhanceQueryAsync(ctx context.Context, originalQuery stri
 	cleaned := strings.TrimFunc(englishQuery, func(r rune) bool {
 		return r == '"' || r == '\'' || r == '`' || r == ' ' || r == '\n'
 	})
-	
+
 	if cleaned != "" && !strings.EqualFold(cleaned, originalQuery) {
 		return fmt.Sprintf("%s | %s", originalQuery, cleaned)
 	}

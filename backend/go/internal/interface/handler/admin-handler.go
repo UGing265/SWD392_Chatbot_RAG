@@ -4,19 +4,25 @@ import (
 	"net/http"
 	"strconv"
 
-	"swd392-chatbot-rag/internal/application"
+	admin_usecase "swd392-chatbot-rag/internal/application/admin-usecase"
+	document_usecase "swd392-chatbot-rag/internal/application/document-usecase"
+	lookup_usecase "swd392-chatbot-rag/internal/application/lookup-usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type AdminHandler struct {
-	service *application.DocumentService
+	adminUseCase  *admin_usecase.AdminUseCase
+	lookupUseCase *lookup_usecase.LookupUseCase
+	docUseCase    *document_usecase.DocumentUseCase
 }
 
-func NewAdminHandler(service *application.DocumentService) *AdminHandler {
+func NewAdminHandler(adminUseCase *admin_usecase.AdminUseCase, lookupUseCase *lookup_usecase.LookupUseCase, docUseCase *document_usecase.DocumentUseCase) *AdminHandler {
 	return &AdminHandler{
-		service: service,
+		adminUseCase:  adminUseCase,
+		lookupUseCase: lookupUseCase,
+		docUseCase:    docUseCase,
 	}
 }
 
@@ -59,7 +65,7 @@ type LecturerSubjectAssignmentInput struct {
 // @Failure 500 {object} map[string]string
 // @Router /api/admin/users [get]
 func (h *AdminHandler) Users(c *gin.Context) {
-	users, err := h.service.GetUsers(c.Request.Context())
+	users, err := h.adminUseCase.GetUsers(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users: " + err.Error()})
 		return
@@ -85,7 +91,7 @@ func (h *AdminHandler) BlockUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.BlockOrUnblockUser(c.Request.Context(), uid, true); err != nil {
+	if err := h.adminUseCase.BlockOrUnblockUser(c.Request.Context(), uid, true); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -110,7 +116,7 @@ func (h *AdminHandler) UnblockUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.BlockOrUnblockUser(c.Request.Context(), uid, false); err != nil {
+	if err := h.adminUseCase.BlockOrUnblockUser(c.Request.Context(), uid, false); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -127,7 +133,7 @@ func (h *AdminHandler) UnblockUser(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/admin/user-subjects [get]
 func (h *AdminHandler) LecturerSubjectAssignments(c *gin.Context) {
-	assignments, err := h.service.GetLecturerSubjectAssignments(c.Request.Context())
+	assignments, err := h.lookupUseCase.GetLecturerSubjectAssignments(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -152,7 +158,7 @@ func (h *AdminHandler) LecturerSubjects(c *gin.Context) {
 		return
 	}
 
-	assignments, err := h.service.GetLecturerSubjectAssignmentsByLecturer(c.Request.Context(), lecturerID)
+	assignments, err := h.lookupUseCase.GetLecturerSubjectAssignmentsByLecturer(c.Request.Context(), lecturerID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -195,7 +201,7 @@ func (h *AdminHandler) ReplaceLecturerSubjects(c *gin.Context) {
 		subjectIDs = append(subjectIDs, subjectID)
 	}
 
-	assignments, err := h.service.ReplaceLecturerSubjectAssignments(c.Request.Context(), lecturerID, subjectIDs)
+	assignments, err := h.lookupUseCase.ReplaceLecturerSubjectAssignments(c.Request.Context(), lecturerID, subjectIDs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -233,7 +239,7 @@ func (h *AdminHandler) Documents(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 
-	result, err := h.service.GetAdminDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize)
+	result, err := h.adminUseCase.GetAdminDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -259,7 +265,7 @@ func (h *AdminHandler) ApproveDocument(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.ApproveOrRejectDocument(c.Request.Context(), uid, true); err != nil {
+	if err := h.adminUseCase.ApproveOrRejectDocument(c.Request.Context(), uid, true); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -284,7 +290,7 @@ func (h *AdminHandler) RejectDocument(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.ApproveOrRejectDocument(c.Request.Context(), uid, false); err != nil {
+	if err := h.adminUseCase.ApproveOrRejectDocument(c.Request.Context(), uid, false); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -309,7 +315,7 @@ func (h *AdminHandler) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteDocument(c.Request.Context(), uid); err != nil {
+	if err := h.docUseCase.DeleteDocument(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -326,7 +332,7 @@ func (h *AdminHandler) DeleteDocument(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/admin/reports [get]
 func (h *AdminHandler) Reports(c *gin.Context) {
-	reports, err := h.service.GetPendingReports(c.Request.Context())
+	reports, err := h.adminUseCase.GetPendingReports(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -355,7 +361,7 @@ func (h *AdminHandler) ResolveReport(c *gin.Context) {
 
 	resolution := c.DefaultQuery("resolution", "ignore") // or "delete"
 
-	if err := h.service.ResolveReport(c.Request.Context(), uid, resolution); err != nil {
+	if err := h.adminUseCase.ResolveReport(c.Request.Context(), uid, resolution); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -387,7 +393,7 @@ func (h *AdminHandler) CreateSubject(c *gin.Context) {
 		}
 	}
 
-	sub, err := h.service.CreateSubject(c.Request.Context(), input.Code, input.Name, termID)
+	sub, err := h.lookupUseCase.CreateSubject(c.Request.Context(), input.Code, input.Name, termID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -428,7 +434,7 @@ func (h *AdminHandler) UpdateSubject(c *gin.Context) {
 		}
 	}
 
-	sub, err := h.service.UpdateSubject(c.Request.Context(), uid, input.Code, input.Name, termID)
+	sub, err := h.lookupUseCase.UpdateSubject(c.Request.Context(), uid, input.Code, input.Name, termID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -454,7 +460,7 @@ func (h *AdminHandler) DeleteSubject(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteSubject(c.Request.Context(), uid); err != nil {
+	if err := h.lookupUseCase.DeleteSubject(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -479,7 +485,7 @@ func (h *AdminHandler) CreateDocumentType(c *gin.Context) {
 		return
 	}
 
-	dt, err := h.service.CreateDocumentType(c.Request.Context(), input.Name, input.Description)
+	dt, err := h.lookupUseCase.CreateDocumentType(c.Request.Context(), input.Name, input.Description)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -513,7 +519,7 @@ func (h *AdminHandler) UpdateDocumentType(c *gin.Context) {
 		return
 	}
 
-	dt, err := h.service.UpdateDocumentType(c.Request.Context(), uid, input.Name, input.Description)
+	dt, err := h.lookupUseCase.UpdateDocumentType(c.Request.Context(), uid, input.Name, input.Description)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -539,7 +545,7 @@ func (h *AdminHandler) DeleteDocumentType(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteDocumentType(c.Request.Context(), uid); err != nil {
+	if err := h.lookupUseCase.DeleteDocumentType(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -564,7 +570,7 @@ func (h *AdminHandler) CreateLanguage(c *gin.Context) {
 		return
 	}
 
-	lang, err := h.service.CreateLanguage(c.Request.Context(), input.Code, input.Name)
+	lang, err := h.lookupUseCase.CreateLanguage(c.Request.Context(), input.Code, input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -598,7 +604,7 @@ func (h *AdminHandler) UpdateLanguage(c *gin.Context) {
 		return
 	}
 
-	lang, err := h.service.UpdateLanguage(c.Request.Context(), uid, input.Code, input.Name)
+	lang, err := h.lookupUseCase.UpdateLanguage(c.Request.Context(), uid, input.Code, input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -624,7 +630,7 @@ func (h *AdminHandler) DeleteLanguage(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteLanguage(c.Request.Context(), uid); err != nil {
+	if err := h.lookupUseCase.DeleteLanguage(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -649,7 +655,7 @@ func (h *AdminHandler) CreateDocumentSource(c *gin.Context) {
 		return
 	}
 
-	src, err := h.service.CreateDocumentSource(c.Request.Context(), input.Name)
+	src, err := h.lookupUseCase.CreateDocumentSource(c.Request.Context(), input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -683,7 +689,7 @@ func (h *AdminHandler) UpdateDocumentSource(c *gin.Context) {
 		return
 	}
 
-	src, err := h.service.UpdateDocumentSource(c.Request.Context(), uid, input.Name)
+	src, err := h.lookupUseCase.UpdateDocumentSource(c.Request.Context(), uid, input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -709,7 +715,7 @@ func (h *AdminHandler) DeleteDocumentSource(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteDocumentSource(c.Request.Context(), uid); err != nil {
+	if err := h.lookupUseCase.DeleteDocumentSource(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -734,7 +740,7 @@ func (h *AdminHandler) CreateAcademicTerm(c *gin.Context) {
 		return
 	}
 
-	term, err := h.service.CreateAcademicTerm(c.Request.Context(), input.Name, input.Order)
+	term, err := h.lookupUseCase.CreateAcademicTerm(c.Request.Context(), input.Name, input.Order)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -768,7 +774,7 @@ func (h *AdminHandler) UpdateAcademicTerm(c *gin.Context) {
 		return
 	}
 
-	term, err := h.service.UpdateAcademicTerm(c.Request.Context(), uid, input.Name, input.Order)
+	term, err := h.lookupUseCase.UpdateAcademicTerm(c.Request.Context(), uid, input.Name, input.Order)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -794,9 +800,69 @@ func (h *AdminHandler) DeleteAcademicTerm(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteAcademicTerm(c.Request.Context(), uid); err != nil {
+	if err := h.lookupUseCase.DeleteAcademicTerm(c.Request.Context(), uid); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Academic term deleted successfully"})
+}
+
+// ImportUsersExcel handles bulk user import from an Excel file
+func (h *AdminHandler) ImportUsersExcel(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
+		return
+	}
+
+	f, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open file"})
+		return
+	}
+	defer f.Close()
+
+	adminAuthToken := c.GetHeader("Authorization")
+
+	successCount, errorsList, err := h.adminUseCase.ImportExcelUsers(c.Request.Context(), f, adminAuthToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "Import completed",
+		"successCount": successCount,
+		"errors":       errorsList,
+	})
+}
+
+// GetAuditLogs godoc
+// @Summary Get audit logs
+// @Description Get system audit logs with pagination (Admin only)
+// @Tags admin
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page number"
+// @Param pageSize query int false "Page size"
+// @Success 200 {array} auditlog.AuditLog
+// @Failure 500 {object} map[string]string
+// @Router /api/admin/audit-logs [get]
+func (h *AdminHandler) GetAuditLogs(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("pageSize", "50")
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 50
+	}
+	logs, err := h.adminUseCase.GetAuditLogs(c.Request.Context(), page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, logs)
 }

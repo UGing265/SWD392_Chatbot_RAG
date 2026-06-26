@@ -129,7 +129,7 @@ func (r *MessageRepository) SearchSimilarChunks(
 	docFilter := ""
 	var args []interface{}
 	args = append(args, vector, courseID, topK)
-	
+
 	if len(documentIDs) > 0 {
 		docFilter = " AND d.id = ANY($4) "
 		args = append(args, documentIDs)

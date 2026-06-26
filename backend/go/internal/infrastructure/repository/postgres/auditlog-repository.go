@@ -29,13 +29,15 @@ func (r *AuditLogRepository) Create(ctx context.Context, log *auditlog.AuditLog)
 	return err
 }
 
-func (r *AuditLogRepository) FindAll(ctx context.Context) ([]*auditlog.AuditLog, error) {
+func (r *AuditLogRepository) FindAll(ctx context.Context, page, pageSize int) ([]*auditlog.AuditLog, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	offset := (page - 1) * pageSize
 	rows, err := r.pool.Query(ctx,
 		`SELECT id, user_id, action, target_table, target_id, ip_address, description, created_at
-		FROM audit_logs ORDER BY created_at DESC`,
+		FROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+		pageSize, offset,
 	)
 	if err != nil {
 		return nil, err

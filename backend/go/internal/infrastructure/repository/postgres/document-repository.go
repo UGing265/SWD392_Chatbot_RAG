@@ -31,7 +31,7 @@ func (r *DocumentRepository) Create(ctx context.Context, doc *document.Document)
 
 func (r *DocumentRepository) FindByID(ctx context.Context, id uuid.UUID) (*document.Document, error) {
 	var doc document.Document
-	
+
 	row := r.pool.QueryRow(ctx,
 		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
 		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
@@ -61,7 +61,7 @@ func (r *DocumentRepository) FindByID(ctx context.Context, id uuid.UUID) (*docum
 
 func (r *DocumentRepository) FindBySlug(ctx context.Context, slug string) (*document.Document, error) {
 	var doc document.Document
-	
+
 	row := r.pool.QueryRow(ctx,
 		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
 		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
@@ -91,7 +91,7 @@ func (r *DocumentRepository) FindBySlug(ctx context.Context, slug string) (*docu
 
 func (r *DocumentRepository) FindOwnedBySlug(ctx context.Context, slug string, ownerID uuid.UUID) (*document.Document, error) {
 	var doc document.Document
-	
+
 	row := r.pool.QueryRow(ctx,
 		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
 		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name

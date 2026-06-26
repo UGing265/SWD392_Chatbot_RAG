@@ -1,4 +1,4 @@
-package chatusecase
+package chat_usecase
 
 import (
 	"context"
