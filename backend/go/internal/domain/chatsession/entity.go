@@ -14,8 +14,9 @@ type ChatSession struct {
 	Title     string    `json:"title" db:"title"`
 	IsStarred bool      `json:"is_starred" db:"is_starred"`
 	Status    string    `json:"status" db:"status"` // active / done
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	CreatedAt   time.Time   `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at" db:"updated_at"`
+	DocumentIDs []uuid.UUID `json:"document_ids" db:"-"` // Associated documents
 }
 
 const (

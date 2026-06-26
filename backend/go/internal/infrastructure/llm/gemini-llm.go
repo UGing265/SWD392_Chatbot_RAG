@@ -15,8 +15,15 @@ import (
 
 // ChatMessage represents a single turn in the conversation history.
 type ChatMessage struct {
-	Role    string `json:"role"`    // user / bot
-	Content string `json:"content"`
+	Role        string           `json:"role"`    // user / bot
+	Content     string           `json:"content"`
+	Attachments []ChatAttachment `json:"attachments"`
+}
+
+// ChatAttachment represents an attached file's base64 data and mime type.
+type ChatAttachment struct {
+	MimeType string `json:"mimeType"`
+	Data     string `json:"data"` // base64 encoded data
 }
 
 // LLMClient defines the interface for LLM text generation.
@@ -184,9 +191,23 @@ func (c *GeminiLLMClient) buildRequestBody(systemPrompt string, history []ChatMe
 		if role == "bot" || role == "assistant" {
 			role = "model"
 		}
+		
+		parts := []map[string]interface{}{}
+		if msg.Content != "" {
+			parts = append(parts, map[string]interface{}{"text": msg.Content})
+		}
+		for _, att := range msg.Attachments {
+			parts = append(parts, map[string]interface{}{
+				"inlineData": map[string]interface{}{
+					"mimeType": att.MimeType,
+					"data":     att.Data,
+				},
+			})
+		}
+
 		contents = append(contents, map[string]interface{}{
 			"role":  role,
-			"parts": []map[string]string{{"text": msg.Content}},
+			"parts": parts,
 		})
 	}
 

@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	topKChunks         = 5
-	maxHistoryMessages = 20
+	topKChunks          = 5
+	maxHistoryMessages  = 20
 	similarityThreshold = 0.5
-	outOfScopeReply    = "Xin lỗi, thông tin này không có trong giáo trình. Vui lòng tham khảo thêm tài liệu khác hoặc hỏi giảng viên trên lớp."
+	outOfScopeReply     = "Xin lỗi, thông tin này không có trong giáo trình. Vui lòng tham khảo thêm tài liệu khác hoặc hỏi giảng viên trên lớp."
 )
 
 // SendMessageResult is the response returned after processing a message.
@@ -67,7 +67,7 @@ func (uc *ChatUseCase) SendMessage(ctx context.Context, userID, sessionID uuid.U
 	}
 
 	// 5. Semantic search — find top-K similar chunks
-	chunks, err := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, topKChunks)
+	chunks, err := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, session.DocumentIDs, topKChunks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search chunks: %w", err)
 	}
@@ -169,10 +169,11 @@ func buildGeminiHistory(messages []*message.Message) []llm.ChatMessage {
 	result := make([]llm.ChatMessage, 0, len(messages))
 	for _, m := range messages {
 		if m.Role == message.RoleUser || m.Role == message.RoleBot {
-			result = append(result, llm.ChatMessage{
+			chatMsg := llm.ChatMessage{
 				Role:    m.Role,
 				Content: m.Content,
-			})
+			}
+			result = append(result, chatMsg)
 		}
 	}
 	return result

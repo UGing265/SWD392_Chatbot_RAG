@@ -8,13 +8,14 @@ import (
 
 // SessionResponse is the API response for a chat session.
 type SessionResponse struct {
-	ID        uuid.UUID `json:"id"`
-	CourseID  uuid.UUID `json:"course_id"`
-	Title     string    `json:"title"`
-	IsStarred bool      `json:"is_starred"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          uuid.UUID   `json:"id"`
+	CourseID    uuid.UUID   `json:"course_id"`
+	Title       string      `json:"title"`
+	IsStarred   bool        `json:"is_starred"`
+	Status      string      `json:"status"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+	DocumentIDs []uuid.UUID `json:"document_ids"`
 }
 
 // MessageResponse is the API response for a chat message.
