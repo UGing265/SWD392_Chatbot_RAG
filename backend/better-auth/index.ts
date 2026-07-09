@@ -2,7 +2,9 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
-import { auth } from "./auth.js";
+import { auth, pool } from "./auth.js";
+import { jwtVerify, SignJWT } from "jose";
+import { hashPassword } from "better-auth/crypto";
 
 const app = new Hono();
 
@@ -189,6 +191,51 @@ app.get("/swagger.json", (c) => {
             }
           }
         }
+      },
+      "/api/auth/dev-token": {
+        "post": {
+          summary: "Generate Dev JWT Token",
+          description: "Generates a JWT token for testing on Swagger 8080 without full login flow. Used for development only.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["email"],
+                  properties: {
+                    email: { type: "string", format: "email", example: "admin@example.com" }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "JWT Token generated",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      token: { type: "string", example: "Bearer eyJhbGciOiJIUzI1Ni..." },
+                      user: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          role: { type: "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              description: "User not found"
+            }
+          }
+        }
       }
     }
   });
@@ -196,6 +243,260 @@ app.get("/swagger.json", (c) => {
 
 // Swagger UI Route
 app.get("/swagger", swaggerUI({ url: "/swagger.json" }));
+
+async function verifyAdmin(c: any) {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.role !== "admin") {
+      return null;
+    }
+    return payload;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Admin Create User Route
+app.post("/api/admin/users", async (c) => {
+  const adminPayload = await verifyAdmin(c);
+  if (!adminPayload) {
+    return c.json({ error: "Unauthorized: Admins only" }, 401);
+  }
+
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { email, password, name, username, roleId } = body;
+  if (!email || !password || !name || !username || !roleId) {
+    return c.json({ error: "Missing required fields: email, password, name, username, roleId" }, 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Check if email or username already exists
+    const userCheck = await client.query(
+      "SELECT id FROM public.users WHERE email = $1 OR username = $2",
+      [email, username]
+    );
+
+    if (userCheck.rowCount && userCheck.rowCount > 0) {
+      await client.query("ROLLBACK");
+      return c.json({ error: "Email or username already exists" }, 400);
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Insert user - let UUID generator handle ID
+    const userInsert = await client.query(
+      `INSERT INTO public.users (email, name, username, role_id, is_active, is_blocked) 
+       VALUES ($1, $2, $3, $4, true, false) RETURNING id`,
+      [email, name, username, parseInt(roleId)]
+    );
+
+    const userId = userInsert.rows[0].id;
+
+    // Insert account
+    await client.query(
+      `INSERT INTO public.account (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt") 
+       VALUES (gen_random_uuid(), $1, 'credential', $2, $3, NOW(), NOW())`,
+      [userId, userId, hashedPassword]
+    );
+
+    await client.query("COMMIT");
+
+    return c.json({
+      message: "User created successfully",
+      user: {
+        id: userId,
+        email,
+        name,
+        username,
+        roleId,
+      }
+    }, 201);
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    console.error("Failed to create user:", error);
+    return c.json({ error: "Failed to create user: " + error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
+// Admin Update User Route
+app.put("/api/admin/users/:id", async (c) => {
+  const adminPayload = await verifyAdmin(c);
+  if (!adminPayload) {
+    return c.json({ error: "Unauthorized: Admins only" }, 401);
+  }
+
+  const userId = c.req.param("id");
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { email, name, username, roleId } = body;
+  if (!email || !name || !username || !roleId) {
+    return c.json({ error: "Missing required fields" }, 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Check if email or username already exists for other users
+    const check = await client.query(
+      "SELECT id FROM public.users WHERE (email = $1 OR username = $2) AND id != $3",
+      [email, username, userId]
+    );
+    if (check.rowCount && check.rowCount > 0) {
+      await client.query("ROLLBACK");
+      return c.json({ error: "Email or username already exists" }, 400);
+    }
+
+    await client.query(
+      `UPDATE public.users 
+       SET email = $1, name = $2, username = $3, role_id = $4, "updatedAt" = NOW(), updated_at = NOW() 
+       WHERE id = $5`,
+      [email, name, username, parseInt(roleId), userId]
+    );
+
+    await client.query("COMMIT");
+    return c.json({ message: "User updated successfully" });
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    console.error("Failed to update user:", error);
+    return c.json({ error: "Failed to update user: " + error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
+// Admin Reset Password Route
+app.put("/api/admin/users/:id/password", async (c) => {
+  const adminPayload = await verifyAdmin(c);
+  if (!adminPayload) {
+    return c.json({ error: "Unauthorized: Admins only" }, 401);
+  }
+
+  const userId = c.req.param("id");
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { password } = body;
+  if (!password || password.length < 6) {
+    return c.json({ error: "Password must be at least 6 characters long" }, 400);
+  }
+
+  const hashedPassword = await hashPassword(password);
+  const client = await pool.connect();
+  try {
+    await client.query(
+      `UPDATE public.account 
+       SET password = $1, "updatedAt" = NOW() 
+       WHERE "userId" = $2 AND "providerId" = 'credential'`,
+      [hashedPassword, userId]
+    );
+    return c.json({ message: "Password updated successfully" });
+  } catch (error: any) {
+    console.error("Failed to update password:", error);
+    return c.json({ error: "Failed to update password: " + error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
+// Admin Delete User Route
+app.delete("/api/admin/users/:id", async (c) => {
+  const adminPayload = await verifyAdmin(c);
+  if (!adminPayload) {
+    return c.json({ error: "Unauthorized: Admins only" }, 401);
+  }
+
+  const userId = c.req.param("id");
+  const client = await pool.connect();
+  try {
+    await client.query("DELETE FROM public.users WHERE id = $1", [userId]);
+    return c.json({ message: "User deleted successfully" });
+  } catch (error: any) {
+    console.error("Failed to delete user:", error);
+    return c.json({ error: "Failed to delete user: " + error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
+
+// Generate Dev JWT Token
+app.post("/api/auth/dev-token", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const { email } = body;
+  if (!email) {
+    return c.json({ error: "Missing email" }, 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    const res = await client.query("SELECT id, role_id FROM public.users WHERE email = $1", [email]);
+    if (res.rowCount === 0) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    const user = res.rows[0];
+    const roleId = user.role_id;
+    const role = roleId === 1 ? "admin" : roleId === 2 ? "lecturer" : "student";
+
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET
+    );
+
+    const token = await new SignJWT({
+      sub: user.id,
+      role: role,
+    })
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setExpirationTime("24h")
+      .sign(secret);
+
+    return c.json({
+      token: `Bearer ${token}`,
+      user: {
+        id: user.id,
+        role: role,
+        email: email,
+      }
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  } finally {
+    client.release();
+  }
+});
 
 // Route all auth requests to better-auth raw request handler
 app.on(["GET", "POST"], "/api/auth/*", (c) => {

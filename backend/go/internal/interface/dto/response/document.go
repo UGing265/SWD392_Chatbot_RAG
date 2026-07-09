@@ -7,14 +7,14 @@ import (
 )
 
 type DocumentResponse struct {
-	ID            uuid.UUID  `json:"id"`
-	FileName      string     `json:"file_name"`
-	FileType      string     `json:"file_type"`
-	Status        string     `json:"status"`
-	ChunkCount    int        `json:"chunk_count"`
-	EmbeddingCount int       `json:"embedding_count"`
-	UploadedAt    time.Time  `json:"uploaded_at"`
-	IndexedAt     *time.Time `json:"indexed_at,omitempty"`
+	ID             uuid.UUID  `json:"id"`
+	FileName       string     `json:"file_name"`
+	FileType       string     `json:"file_type"`
+	Status         string     `json:"status"`
+	ChunkCount     int        `json:"chunk_count"`
+	EmbeddingCount int        `json:"embedding_count"`
+	UploadedAt     time.Time  `json:"uploaded_at"`
+	IndexedAt      *time.Time `json:"indexed_at,omitempty"`
 }
 
 type UploadResponse struct {

@@ -5,16 +5,17 @@ import (
 )
 
 type Config struct {
-	DATABASE_URL           string
-	JWT_SECRET             string
-	JWT_EXPIRY             string
-	GEMINI_API_KEY         string
-	UPLOAD_DIR             string
-	MAX_FILE_SIZE          int64
-	AWS_ACCESS_KEY_ID      string
-	AWS_SECRET_ACCESS_KEY  string
-	AWS_REGION             string
-	AWS_S3_BUCKET          string
+	DATABASE_URL          string
+	JWT_SECRET            string
+	JWT_EXPIRY            string
+	GEMINI_API_KEY        string
+	GEMINI_CHAT_MODEL     string
+	UPLOAD_DIR            string
+	MAX_FILE_SIZE         int64
+	AWS_ACCESS_KEY_ID     string
+	AWS_SECRET_ACCESS_KEY string
+	AWS_REGION            string
+	AWS_S3_BUCKET         string
 }
 
 func getEnv(key, defaultValue string) string {
@@ -37,9 +38,10 @@ func parseInt(s string) int64 {
 func Load() *Config {
 	return &Config{
 		DATABASE_URL:          getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/postgres"),
-		JWT_SECRET:            getEnv("JWT_SECRET", "your-secret-key-min-32-characters-long"),
+		JWT_SECRET:            getEnv("JWT_SECRET", "9d7bca84f7b60e61dbfe7e4e1a0b332d"),
 		JWT_EXPIRY:            getEnv("JWT_EXPIRY", "24h"),
 		GEMINI_API_KEY:        getEnv("GEMINI_API_KEY", ""),
+		GEMINI_CHAT_MODEL:     getEnv("GEMINI_CHAT_MODEL", "gemini-2.5-flash"),
 		UPLOAD_DIR:            getEnv("UPLOAD_DIR", "./uploads"),
 		MAX_FILE_SIZE:         parseInt(getEnv("MAX_FILE_SIZE", "52428800")),
 		AWS_ACCESS_KEY_ID:     getEnv("AWS_ACCESS_KEY_ID", ""),

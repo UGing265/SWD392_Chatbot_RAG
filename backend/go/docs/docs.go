@@ -801,6 +801,108 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/admin/lecturers/{id}/subjects": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get subjects assigned to a lecturer (Admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "Get lecturer subjects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecturer user ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assign multiple subjects to one lecturer. A subject can only be assigned to one lecturer.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "Replace lecturer subject assignments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecturer user ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subject IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.LecturerSubjectAssignmentInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/admin/reports": {
             "get": {
                 "security": [
@@ -1038,6 +1140,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/admin/user-subjects": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all lecturer-subject assignments (Admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-assignments"
+                ],
+                "summary": "List lecturer subject assignments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.LecturerSubjectAssignmentDto"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/admin/users": {
             "get": {
                 "security": [
@@ -1167,6 +1306,257 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/chat/sessions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "List user chat sessions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.SessionResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Create new chat session",
+                "parameters": [
+                    {
+                        "description": "Session info",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateSessionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.SessionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/sessions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Get session details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.SessionResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Delete a chat session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/sessions/{id}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Get chat history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.MessageResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Send message (RAG pipeline)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.SendMessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/sessions/{id}/messages/stream": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Stream message (RAG pipeline)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE tokens",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/documents": {
             "get": {
                 "security": [
@@ -1237,6 +1627,63 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/application.MyDocumentsDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/documents/compare": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Compare multiple documents by extracting chunks and using LLM",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Compare documents",
+                "parameters": [
+                    {
+                        "description": "Comparison Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CompareDocumentsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/application.ComparisonResultDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
@@ -1817,6 +2264,29 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/subjects/public": {
+            "get": {
+                "description": "Get a list of subjects that are public",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metadata"
+                ],
+                "summary": "Get public subjects",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.SubjectDto"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1834,6 +2304,40 @@ const docTemplate = `{
                 },
                 "order": {
                     "type": "integer"
+                }
+            }
+        },
+        "application.ComparisonResultDto": {
+            "type": "object",
+            "properties": {
+                "commonThemes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "differences": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "document1": {
+                                "type": "string"
+                            },
+                            "document2": {
+                                "type": "string"
+                            },
+                            "explanation": {
+                                "type": "string"
+                            },
+                            "topic": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "summary": {
+                    "type": "string"
                 }
             }
         },
@@ -2077,6 +2581,9 @@ const docTemplate = `{
                 "language_name": {
                     "type": "string"
                 },
+                "owner_full_name": {
+                    "type": "string"
+                },
                 "owner_user_id": {
                     "type": "string"
                 },
@@ -2203,6 +2710,9 @@ const docTemplate = `{
                 "owner_email": {
                     "type": "string"
                 },
+                "owner_name": {
+                    "type": "string"
+                },
                 "preview_text": {
                     "type": "string"
                 },
@@ -2311,6 +2821,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "application.LecturerSubjectAssignmentDto": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "lecturer_email": {
+                    "type": "string"
+                },
+                "lecturer_name": {
+                    "type": "string"
+                },
+                "subject_code": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_name": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -2425,6 +2961,25 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.CompareDocumentsRequest": {
+            "type": "object",
+            "required": [
+                "document_ids",
+                "question"
+            ],
+            "properties": {
+                "document_ids": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "question": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.DocumentSourceInput": {
             "type": "object",
             "required": [
@@ -2465,6 +3020,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.LecturerSubjectAssignmentInput": {
+            "type": "object",
+            "properties": {
+                "subjectIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "handler.ReportInput": {
             "type": "object",
             "required": [
@@ -2483,13 +3049,133 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "academicTermId": {
+                "academic_term_id": {
                     "type": "string"
                 },
                 "code": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateSessionRequest": {
+            "type": "object",
+            "required": [
+                "course_id"
+            ],
+            "properties": {
+                "course_id": {
+                    "type": "string"
+                },
+                "document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.SendMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.CitationResponse": {
+            "type": "object",
+            "properties": {
+                "chunk_id": {
+                    "type": "string"
+                },
+                "excerpt": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "page_label": {
+                    "type": "string"
+                },
+                "relevance_score": {
+                    "type": "number"
+                }
+            }
+        },
+        "response.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "citations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CitationResponse"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "out_of_scope": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SendMessageResponse": {
+            "type": "object",
+            "properties": {
+                "bot_message": {
+                    "$ref": "#/definitions/response.MessageResponse"
+                },
+                "user_message": {
+                    "$ref": "#/definitions/response.MessageResponse"
+                }
+            }
+        },
+        "response.SessionResponse": {
+            "type": "object",
+            "properties": {
+                "course_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_starred": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

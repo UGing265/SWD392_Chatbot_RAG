@@ -115,3 +115,31 @@ func (r *UploadJobRepository) DeleteByDocumentID(ctx context.Context, docID uuid
 	_, err := r.pool.Exec(ctx, "DELETE FROM upload_jobs WHERE document_id = $1", docID)
 	return err
 }
+
+func (r *UploadJobRepository) GetRecentJobsByUser(ctx context.Context, ownerID uuid.UUID) ([]*uploadjob.UploadJob, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, owner_user_id, document_id, file_name, file_size_bytes, status, progress_percent, message, storage_path, is_notified, created_at, updated_at
+		FROM upload_jobs 
+		WHERE owner_user_id = $1
+		ORDER BY updated_at DESC LIMIT 20`,
+		ownerID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var jobs []*uploadjob.UploadJob
+	for rows.Next() {
+		var job uploadjob.UploadJob
+		err := rows.Scan(&job.ID, &job.OwnerUserID, &job.DocumentID, &job.FileName, &job.FileSizeBytes, &job.Status, &job.ProgressPercent, &job.Message, &job.StoragePath, &job.IsNotified, &job.CreatedAt, &job.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, &job)
+	}
+	return jobs, nil
+}

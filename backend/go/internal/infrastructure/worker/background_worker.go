@@ -28,16 +28,16 @@ import (
 )
 
 type BackgroundWorker struct {
-	jobRepo      uploadjob.UploadJobRepository
-	docRepo      document.DocumentRepository
-	fileRepo     documentfile.DocumentFileRepository
-	chunkRepo    chunk.ChunkRepository
-	chapterRepo  chapter.ChapterRepository
-	storage      *filestorage.S3FileStorage
-	parser       *fileparser.ParserFactory
-	chunker      *chunker.TextChunker
-	embedder     embedding.EmbeddingClient
-	segmentator  *segmentation.GeminiChapterSegmentationService
+	jobRepo     uploadjob.UploadJobRepository
+	docRepo     document.DocumentRepository
+	fileRepo    documentfile.DocumentFileRepository
+	chunkRepo   chunk.ChunkRepository
+	chapterRepo chapter.ChapterRepository
+	storage     *filestorage.S3FileStorage
+	parser      *fileparser.ParserFactory
+	chunker     *chunker.TextChunker
+	embedder    embedding.EmbeddingClient
+	segmentator *segmentation.GeminiChapterSegmentationService
 }
 
 func NewBackgroundWorker(
@@ -170,7 +170,7 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 		cleanContent := strings.ToValidUTF8(extResult.Content, "")
 		cleanContent = strings.ReplaceAll(cleanContent, "\x00", " ") // Sanitize null bytes
 		textChunks := w.chunker.ChunkText(cleanContent, extResult.PageLabel)
-		
+
 		for _, tc := range textChunks {
 			metaMap := map[string]interface{}{
 				"sourceFileName": job.FileName,
@@ -180,11 +180,18 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 			}
 			metaBytes, _ := json.Marshal(metaMap)
 
+			chContent := strings.ToValidUTF8(tc.Content, "")
+			chContent = strings.ReplaceAll(chContent, "\x00", " ")
+			chContent = strings.TrimSpace(chContent)
+			if chContent == "" {
+				continue
+			}
+
 			ch := &chunk.Chunk{
 				ID:         uuid.New(),
 				DocumentID: *job.DocumentID,
 				ChunkOrder: chunkIndex,
-				Content:    tc.Content,
+				Content:    chContent,
 				Metadata:   string(metaBytes),
 				CreatedAt:  time.Now(),
 			}
@@ -236,7 +243,7 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 		// Cập nhật tiến độ
 		progress := 20 + int(float64(end)/float64(totalChunks)*60)
 		w.updateJobProgress(ctx, job, "processing", progress, fmt.Sprintf("Đang lưu Vector chỉ mục (%d%%)", progress))
-		
+
 		// Tránh Rate Limit Gemini Free
 		if end < totalChunks {
 			time.Sleep(2 * time.Second)
@@ -247,7 +254,7 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 	s3Bucket := ""
 	s3Key := *job.StoragePath
 	urlStr := fmt.Sprintf("s3://%s", s3Key)
-	
+
 	docFile := &documentfile.DocumentFile{
 		ID:               uuid.New(),
 		DocumentID:       *job.DocumentID,
@@ -275,7 +282,7 @@ func (w *BackgroundWorker) processNextJob(ctx context.Context) {
 	doc.ApprovedAt = &doc.CreatedAt // Tự động approved hoặc set approved_at
 	nowTime := time.Now()
 	doc.UpdatedAt = nowTime
-	
+
 	if err := w.docRepo.Update(ctx, doc); err != nil {
 		w.failJob(ctx, job, fmt.Sprintf("Lỗi cập nhật tài liệu: %v", err))
 		return

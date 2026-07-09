@@ -208,3 +208,19 @@ func TestChunk_ContentDeduplication(t *testing.T) {
 		hashes[chunk.Hash] = true
 	}
 }
+
+func TestSplitter_SmallText(t *testing.T) {
+	s := NewSplitter(500, 100)
+
+	// Small text (e.g. 5 tokens, ~20 characters) should be chunked and NOT discarded
+	text := "asv short text testing"
+	chunks := s.Split(text, "p.1")
+
+	if len(chunks) != 1 {
+		t.Errorf("expected exactly 1 chunk for small text, got %d", len(chunks))
+	} else {
+		if chunks[0].Content != text {
+			t.Errorf("expected chunk content to match original text %q, got %q", text, chunks[0].Content)
+		}
+	}
+}

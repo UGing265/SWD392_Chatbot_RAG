@@ -10,6 +10,28 @@ definitions:
       order:
         type: integer
     type: object
+  application.ComparisonResultDto:
+    properties:
+      commonThemes:
+        items:
+          type: string
+        type: array
+      differences:
+        items:
+          properties:
+            document1:
+              type: string
+            document2:
+              type: string
+            explanation:
+              type: string
+            topic:
+              type: string
+          type: object
+        type: array
+      summary:
+        type: string
+    type: object
   application.DashboardRecentDocumentDto:
     properties:
       chunk_count:
@@ -168,6 +190,8 @@ definitions:
         type: string
       language_name:
         type: string
+      owner_full_name:
+        type: string
       owner_user_id:
         type: string
       status:
@@ -251,6 +275,8 @@ definitions:
         type: string
       owner_email:
         type: string
+      owner_name:
+        type: string
       preview_text:
         type: string
       slug:
@@ -322,6 +348,23 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  application.LecturerSubjectAssignmentDto:
+    properties:
+      created_at:
+        type: string
+      lecturer_email:
+        type: string
+      lecturer_name:
+        type: string
+      subject_code:
+        type: string
+      subject_id:
+        type: string
+      subject_name:
+        type: string
+      user_id:
         type: string
     type: object
   application.MyDocumentsDto:
@@ -396,6 +439,19 @@ definitions:
     required:
     - name
     type: object
+  handler.CompareDocumentsRequest:
+    properties:
+      document_ids:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      question:
+        type: string
+    required:
+    - document_ids
+    - question
+    type: object
   handler.DocumentSourceInput:
     properties:
       name:
@@ -422,6 +478,13 @@ definitions:
     - code
     - name
     type: object
+  handler.LecturerSubjectAssignmentInput:
+    properties:
+      subjectIds:
+        items:
+          type: string
+        type: array
+    type: object
   handler.ReportInput:
     properties:
       reason:
@@ -431,7 +494,7 @@ definitions:
     type: object
   handler.SubjectInput:
     properties:
-      academicTermId:
+      academic_term_id:
         type: string
       code:
         type: string
@@ -440,6 +503,84 @@ definitions:
     required:
     - code
     - name
+    type: object
+  request.CreateSessionRequest:
+    properties:
+      course_id:
+        type: string
+      document_ids:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - course_id
+    type: object
+  request.SendMessageRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  response.CitationResponse:
+    properties:
+      chunk_id:
+        type: string
+      excerpt:
+        type: string
+      file_name:
+        type: string
+      page_label:
+        type: string
+      relevance_score:
+        type: number
+    type: object
+  response.MessageResponse:
+    properties:
+      citations:
+        items:
+          $ref: '#/definitions/response.CitationResponse'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      out_of_scope:
+        type: boolean
+      role:
+        type: string
+    type: object
+  response.SendMessageResponse:
+    properties:
+      bot_message:
+        $ref: '#/definitions/response.MessageResponse'
+      user_message:
+        $ref: '#/definitions/response.MessageResponse'
+    type: object
+  response.SessionResponse:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      document_ids:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      is_starred:
+        type: boolean
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
     type: object
   user.User:
     properties:
@@ -979,6 +1120,72 @@ paths:
       summary: Update language
       tags:
       - admin-metadata
+  /api/admin/lecturers/{id}/subjects:
+    get:
+      description: Get subjects assigned to a lecturer (Admin only)
+      parameters:
+      - description: Lecturer user ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.LecturerSubjectAssignmentDto'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get lecturer subjects
+      tags:
+      - admin-assignments
+    put:
+      consumes:
+      - application/json
+      description: Assign multiple subjects to one lecturer. A subject can only be
+        assigned to one lecturer.
+      parameters:
+      - description: Lecturer user ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subject IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LecturerSubjectAssignmentInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.LecturerSubjectAssignmentDto'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Replace lecturer subject assignments
+      tags:
+      - admin-assignments
   /api/admin/reports:
     get:
       description: Get list of all pending document reports (Admin only)
@@ -1130,6 +1337,29 @@ paths:
       summary: Update metadata subject
       tags:
       - admin-metadata
+  /api/admin/user-subjects:
+    get:
+      description: Get all lecturer-subject assignments (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.LecturerSubjectAssignmentDto'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List lecturer subject assignments
+      tags:
+      - admin-assignments
   /api/admin/users:
     get:
       description: Get a list of all users in the system (Admin only)
@@ -1211,6 +1441,160 @@ paths:
       summary: Unblock user
       tags:
       - admin-users
+  /api/chat/sessions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.SessionResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List user chat sessions
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.SessionResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new chat session
+      tags:
+      - chat
+  /api/chat/sessions/{id}:
+    delete:
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a chat session
+      tags:
+      - chat
+    get:
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SessionResponse'
+      security:
+      - BearerAuth: []
+      summary: Get session details
+      tags:
+      - chat
+  /api/chat/sessions/{id}/messages:
+    get:
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.MessageResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get chat history
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Message
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SendMessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Send message (RAG pipeline)
+      tags:
+      - chat
+  /api/chat/sessions/{id}/messages/stream:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Message
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendMessageRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE tokens
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Stream message (RAG pipeline)
+      tags:
+      - chat
   /api/documents:
     get:
       description: Get a paginated list of all public documents with optional filtering
@@ -1455,6 +1839,42 @@ paths:
       summary: Report document violation
       tags:
       - documents
+  /api/documents/compare:
+    post:
+      consumes:
+      - application/json
+      description: Compare multiple documents by extracting chunks and using LLM
+      parameters:
+      - description: Comparison Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CompareDocumentsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/application.ComparisonResultDto'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Compare documents
+      tags:
+      - documents
   /api/documents/dashboard:
     get:
       description: Get document, file, and chunk count statistics for the logged-in
@@ -1633,6 +2053,21 @@ paths:
       summary: Health check
       tags:
       - health
+  /api/subjects/public:
+    get:
+      description: Get a list of subjects that are public
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.SubjectDto'
+            type: array
+      summary: Get public subjects
+      tags:
+      - metadata
 securityDefinitions:
   BearerAuth:
     in: header

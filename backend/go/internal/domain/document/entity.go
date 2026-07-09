@@ -39,6 +39,7 @@ type Document struct {
 	AcademicTermName   *string `json:"academic_term_name,omitempty" db:"academic_term_name"`
 	DocumentSourceName *string `json:"document_source_name,omitempty" db:"document_source_name"`
 	OwnerEmail         *string `json:"owner_email,omitempty" db:"owner_email"`
+	OwnerFullName      *string `json:"owner_full_name,omitempty" db:"owner_full_name"`
 }
 
 const (

@@ -26,7 +26,7 @@ type User struct {
 	RoleID          int16     `json:"role_id" db:"role_id"`
 	IsActive        bool      `json:"is_active" db:"is_active"`
 	IsBlocked       bool      `json:"is_blocked" db:"is_blocked"`
-	
+
 	// Relation field
-	RoleName        string    `json:"role_name,omitempty" db:"role_name"`
+	RoleName string `json:"role_name,omitempty" db:"role_name"`
 }

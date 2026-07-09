@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"context"
+	"fmt"
 	"net/http"
-	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -28,55 +29,71 @@ func AuthMiddleware(db *pgxpool.Pool) gin.HandlerFunc {
 		} else if strings.HasPrefix(authHeader, "bearer ") {
 			tokenString = strings.TrimPrefix(authHeader, "bearer ")
 		}
-		
+
 		tokenString = strings.TrimSpace(tokenString)
 
-		// Unescape
-		if decoded, err := url.QueryUnescape(tokenString); err == nil {
-			tokenString = decoded
+		// Verify JWT token
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			secret = os.Getenv("BETTER_AUTH_SECRET")
+		}
+		if secret == "" {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Server configuration error"})
+			return
 		}
 
-		// split token for Better Auth
-		if parts := strings.SplitN(tokenString, ".", 2); len(parts) == 2 {
-			tokenString = parts[0]
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(secret), nil
+		})
+
+		if err != nil || !token.Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			return
 		}
 
-		// Query Better Auth session from database with roles/status
-		var userIDStr, email string
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			return
+		}
+
+		// Extract user ID (sub)
+		sub, ok := claims["sub"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing subject in token"})
+			return
+		}
+
+		userID, err := uuid.Parse(sub)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID format in token"})
+			return
+		}
+
+		// Extract role
+		roleStr, ok := claims["role"].(string)
+		if !ok || roleStr == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid role in token"})
+			return
+		}
+
 		var roleID int16
-		var isActive, isBlocked bool
-		err := db.QueryRow(context.Background(), `
-			SELECT s."userId", u.email, u.role_id, u.is_active, u.is_blocked 
-			FROM session s 
-			JOIN users u ON s."userId" = u.id 
-			WHERE s.token = $1 AND s."expiresAt" > NOW()
-		`, tokenString).Scan(&userIDStr, &email, &roleID, &isActive, &isBlocked)
-
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid or expired session token",
-			})
-			return
-		}
-
-		if isBlocked || !isActive {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Account is blocked or inactive",
-			})
-			return
-		}
-
-		userID, err := uuid.Parse(userIDStr)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid user ID format in session",
-			})
+		if roleStr == "admin" {
+			roleID = 1
+		} else if roleStr == "lecturer" {
+			roleID = 2
+		} else if roleStr == "student" {
+			roleID = 3
+		} else {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unknown role in token"})
 			return
 		}
 
 		// Store user info in context
 		c.Set("user_id", userID)
-		c.Set("email", email)
 		c.Set("role_id", roleID)
 
 		c.Next()

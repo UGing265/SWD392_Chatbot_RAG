@@ -1,224 +1,110 @@
 "use client";
 
-
-
 import Link from "next/link";
-
-import { usePathname, useParams, useRouter } from "next/navigation";
-
+import { usePathname, useParams, useSearchParams } from "next/navigation";
 import {
-
-  MessageSquareText,
-
-  FileText,
-
-  History,
-
-  Settings,
-
-  Plus,
-
-  Upload,
-
-  Command,
-
-  BookMarked,
-
-  Search,
-
-  ChevronDown,
-
-  BookOpen,
-
-  LogIn,
-
-  LogOut,
-
-} from "lucide-react";
-
+  IconBook,
+  IconFileText,
+  IconUpload,
+  IconSettings,
+  IconEdit,
+  IconChevronDown,
+  IconLayoutSidebar,
+  IconLogout,
+} from "@tabler/icons-react";
+import { Menu, Avatar, Text, UnstyledButton, Collapse } from "@mantine/core";
 import type { ReactNode } from "react";
-
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { sessionList } from "@/lib/sessions-store";
 
-
-
+type TablerIcon = typeof IconBook;
 
 const nav = [
-  { to: "/chat", label: "Trò chuyện AI", icon: MessageSquareText, badge: undefined, studentOnly: true },
-  { to: "/upload", label: "Tải lên", icon: Upload, badge: undefined, lecturerOnly: true },
-  { to: "/documents/my", label: "Tài liệu của tôi", icon: FileText, badge: "12", lecturerOnly: true },
-  { to: "/documents/shared", label: "Tài liệu", icon: FileText, badge: undefined },
-  { to: "/practice", label: "Luyện Tập", icon: BookOpen, badge: "Mới" },
-  { to: "/sessions", label: "Phiên hội thoại", icon: History, badge: "6", studentOnly: true },
-  { to: "/settings", label: "Cài đặt", icon: Settings },
+  { to: "/chat", label: "Chat Mới", icon: IconEdit, studentOnly: true },
+  { to: "/documents/shared", label: "Tài Liệu Chung", icon: IconBook },
+  { to: "/documents/my", label: "Tài Liệu Riêng", icon: IconFileText, lecturerOnly: true },
+  { to: "/upload", label: "Upload Tài Liệu", icon: IconUpload, lecturerOnly: true },
 ];
 
-
-
-function SidebarItem({
-
-  to,
-
-  label,
-
-  icon: Icon,
-
-  active,
-
-  badge,
-
-}: {
-
-  to: string;
-
-  label: string;
-
-  icon: typeof MessageSquareText;
-
-  active: boolean;
-
-  badge?: string;
-
-}) {
-
-  return (
-
-    <Link
-
-      href={to}
-
-      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ${active
-
-        ? "bg-card text-foreground shadow-soft"
-
-        : "text-muted-foreground hover:bg-card/60 hover:text-foreground"
-
-        }`}
-
-    >
-
-      {active && (
-
-        <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-
-      )}
-
-      <Icon
-
-        className={`h-[17px] w-[17px] ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
-
-        strokeWidth={1.75}
-
-      />
-
-      <span className="flex-1">{label}</span>
-
-      {badge && (
-
-        <span
-
-          className={`rounded-md px-1.5 py-0.5 text-[10px] tabular-nums font-medium ${active ? "bg-primary-soft text-primary-deep" : "bg-muted text-muted-foreground"
-
-            }`}
-
-        >
-
-          {badge}
-
-        </span>
-
-      )}
-
-    </Link>
-
-  );
-
+function getRoleLabel(role?: string) {
+  if (role === "admin") return "Admin";
+  if (role === "lecturer" || role === "teacher") return "Lecturer";
+  if (role === "student") return "Student";
+  return "User";
 }
 
+function getInitials(name?: string | null) {
+  if (!name) return "U";
 
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function SidebarItem({
+  to,
+  label,
+  icon: Icon,
+  active,
+}: {
+  to: string;
+  label: string;
+  icon: TablerIcon;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={to}
+      className={cn(
+        "group flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px] font-medium transition-colors",
+        active
+          ? "bg-slate-200 text-slate-900"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+      )}
+    >
+      <Icon
+        size={18}
+        className={cn(active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700")}
+      />
+      <span className="flex-1">{label}</span>
+    </Link>
+  );
+}
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const params = useParams();
-  // Extract role from pathname as fallback
+  const searchParams = useSearchParams();
   const pathRole = pathname.split("/")[1] || "";
   const role = (params?.role as string) || pathRole;
   const basePath = role ? `/${role}` : "";
   const { signOut, session } = useAuth();
-
-
+  const roleLabel = getRoleLabel(session?.role || role);
+  const [historyOpened, setHistoryOpened] = useState(true);
 
   return (
-
-    <div className="flex min-h-screen w-full">
-
+    <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
       {/* Sidebar */}
-
-      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar/70 backdrop-blur md:flex">
-
+      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-slate-200 bg-[#FAFAFA] md:flex">
         {/* Brand */}
-
-        <div className="px-5 pt-5 pb-4">
-
-          <div className="flex items-center gap-2.5">
-
-            <div className="relative">
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-accent to-secondary text-primary-foreground shadow-soft">
-
-                <BookMarked className="h-4 w-4" strokeWidth={2} />
-
-              </div>
-
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-secondary" />
-
-            </div>
-
-            <div className="leading-tight">
-
-              <div className="text-[15px] font-semibold tracking-tight text-foreground">
-
-                Study<span className="font-normal text-primary-deep">Mate</span>
-
-              </div>
-
-              <div className="text-[10px] tabular-nums uppercase tracking-wider text-muted-foreground">
-
-                v0.4 · RAG
-
-              </div>
-
-            </div>
-
-          </div>
-
+        <div className="flex items-center justify-between px-4 pt-5 pb-4">
+          <Link
+            href={`${basePath}/chat`}
+            className="text-[18px] font-bold tracking-tight text-slate-900 px-1"
+          >
+            StudyMate
+          </Link>
+          <UnstyledButton className="rounded-[6px] p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors">
+            <IconLayoutSidebar size={18} />
+          </UnstyledButton>
         </div>
 
-
-
-        {/* Search trigger */}
-
-        <div className="px-3 pb-3">
-
-          <button className="group flex w-full items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-card">
-
-            <Search className="h-3.5 w-3.5" />
-
-            <span className="flex-1 text-left">Tìm mọi thứ…</span>
-
-            <kbd className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 tabular-nums text-[10px]">
-
-              <Command className="h-2.5 w-2.5" />K
-
-            </kbd>
-
-          </button>
-
-        </div>
-
-
-
-        <nav className="flex flex-col gap-0.5 px-3">
+        <nav className="flex flex-col gap-1 px-3 mt-2">
           {nav
             .filter((n) => {
               if (n.studentOnly && role !== "student") return false;
@@ -233,72 +119,136 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   to={fullPath}
                   label={n.label}
                   icon={n.icon}
-                  badge={n.badge}
-                  active={pathname.startsWith(fullPath)}
+                  active={
+                    pathname === fullPath ||
+                    (fullPath !== basePath && pathname.startsWith(fullPath))
+                  }
                 />
               );
             })}
         </nav>
 
+        {/* Recent Chats Section / History */}
+        {role === "student" && (
+          <div className="mt-6 px-3">
+            <UnstyledButton
+              onClick={() => setHistoryOpened((o) => !o)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[8px] hover:bg-slate-100 transition-colors group"
+            >
+              <IconChevronDown
+                size={16}
+                className={cn(
+                  "text-slate-400 transition-transform duration-200",
+                  !historyOpened && "-rotate-90",
+                )}
+              />
+              <Text className="flex-1 text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">
+                Lịch sử
+              </Text>
+            </UnstyledButton>
 
-
-        {/* Profile card */}
-        <div className="mt-auto p-4">
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft group">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-accent to-primary text-xs font-semibold text-primary-foreground">
-                {role === "lecturer" || role === "teacher" ? "GV" : "SV"}
+            <Collapse in={historyOpened}>
+              <div className="flex flex-col gap-0.5 mt-1">
+                {sessionList.slice(0, 8).map((session) => {
+                  const isActive = searchParams?.get("session") === session.id;
+                  return (
+                    <Link
+                      key={session.id}
+                      href={`${basePath}/chat?session=${session.id}`}
+                      className={cn(
+                        "group block rounded-[8px] px-3 py-2 text-[13px] truncate transition-colors",
+                        isActive
+                          ? "bg-slate-200 text-slate-900 font-medium"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                      )}
+                    >
+                      {session.title}
+                    </Link>
+                  );
+                })}
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">
-                  {session?.user?.name || (role === "lecturer" || role === "teacher" ? "Giảng Viên" : "Sinh Viên")}
-                </div>
-                <div className="truncate text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {role === "lecturer" || role === "teacher" ? "Lecturer" : "Student"}
-                </div>
-              </div>
-              <button
-                onClick={() => signOut()}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                title="Đăng xuất"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
+            </Collapse>
           </div>
-        </div>
+        )}
 
+        {/* Profile / Bottom actions */}
+        <div className="mt-auto px-3 py-4 flex flex-col gap-3">
+          <Menu shadow="md" position="top-start" radius="lg" offset={12} withArrow>
+            <Menu.Target>
+              <UnstyledButton className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[8px] hover:bg-slate-200 transition-colors duration-150">
+                <Avatar
+                  color="blue"
+                  variant="light"
+                  radius="xl"
+                  size="sm"
+                  className="font-bold text-xs"
+                >
+                  {getInitials(session?.user?.name)}
+                </Avatar>
+                <div className="flex-1 min-w-0 leading-tight">
+                  <Text size="sm" fw={600} className="truncate text-slate-900">
+                    {session?.user?.name || "Người dùng"}
+                  </Text>
+                  <Text size="xs" className="text-slate-500 font-medium mt-0.5 capitalize">
+                    {roleLabel}
+                  </Text>
+                </div>
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown className="p-1 min-w-[200px]">
+              <Menu.Item
+                component={Link}
+                href={`/${session?.role || "student"}/change-password`}
+                className="hover:bg-slate-50 transition-colors duration-150"
+              >
+                <div className="px-1 py-1 flex items-center gap-3">
+                  <Avatar
+                    color="blue"
+                    variant="light"
+                    radius="xl"
+                    size="md"
+                    className="font-bold text-sm"
+                  >
+                    {getInitials(session?.user?.name)}
+                  </Avatar>
+                  <div className="flex flex-col min-w-0 leading-tight">
+                    <Text size="sm" fw={600} className="whitespace-nowrap text-slate-900">
+                      {session?.user?.name || "Người dùng"}
+                    </Text>
+                    <Text size="xs" className="whitespace-nowrap text-slate-500 mt-0.5">
+                      {session?.user?.email || "Email"}
+                    </Text>
+                  </div>
+                </div>
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                component={Link}
+                href={`/${session?.role || "student"}/settings`}
+                leftSection={<IconSettings size={16} className="text-slate-600" />}
+                className="text-slate-700 hover:bg-slate-50"
+              >
+                Tất cả cài đặt
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={16} />}
+                onClick={() => signOut()}
+                className="text-red-600 hover:bg-red-50"
+              >
+                Đăng xuất
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </div>
       </aside>
 
-
-
-      {/* Main */}
-
-      <div className="flex min-w-0 flex-1 flex-col">
-
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-md md:px-6">
-
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-border bg-card/80 py-1 pl-1 pr-3 text-xs sm:flex">
-              <span className="relative flex h-5 w-5 items-center justify-center">
-                <span className="pulse-ring absolute h-2 w-2 rounded-full bg-secondary" />
-                <span className="relative h-2 w-2 rounded-full bg-secondary" />
-              </span>
-              <span className="whitespace-nowrap font-medium text-foreground">Sẵn sàng</span>
-            </div>
-          </div>
-
-        </header>
-
-
-
-        <main className="min-h-0 flex-1">{children}</main>
-
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white transition-all duration-300 relative">
+        <main className="flex-1 flex flex-col bg-white overflow-y-auto">{children}</main>
       </div>
-
     </div>
-
   );
-
 }
-

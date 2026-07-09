@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AdminAssignmentsView } from "@/components/features/admin-assignments-view";
+import { AdminAssignmentsView } from "@/components/admin/assignment/admin-assignments-view";
 
 export default function Page() {
   const params = useParams();

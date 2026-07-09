@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AdminModerationView } from "@/components/features/admin-moderation-view";
+import { AdminModerationView } from "@/components/admin/moderation/admin-moderation-view";
 
 export default function Page() {
   const params = useParams();

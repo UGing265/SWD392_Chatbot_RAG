@@ -1,0 +1,272 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { AdminPageShell } from "@/components/layout/admin-page-shell";
+import { useAdminSettings } from "@/hooks/admin/use-settings";
+import {
+  Button,
+  Divider,
+  Group,
+  Paper,
+  PasswordInput,
+  SimpleGrid,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  ThemeIcon,
+} from "@mantine/core";
+import {
+  IconBell,
+  IconDatabase,
+  IconDeviceFloppy,
+  IconKey,
+  IconRefresh,
+  IconShield,
+} from "@tabler/icons-react";
+
+function SectionCard({
+  icon,
+  title,
+  description,
+  color = "gray",
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Paper
+      withBorder
+      radius={24}
+      p="xl"
+      className="bg-white shadow-sm transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+    >
+      <Group gap="md" mb="md">
+        <ThemeIcon color={color} variant="light" size={48} radius={16}>
+          {icon}
+        </ThemeIcon>
+        <div>
+          <Text fw={700} className="font-serif text-[20px] tracking-[-0.02em] text-zinc-900">
+            {title}
+          </Text>
+          <Text size="xs" className="font-medium text-zinc-500">
+            {description}
+          </Text>
+        </div>
+      </Group>
+      <Divider mb="md" />
+      {children}
+    </Paper>
+  );
+}
+
+export function AdminSettingsView() {
+  const {
+    embeddingModel,
+    setEmbeddingModel,
+    vectorDimensions,
+    setVectorDimensions,
+    chunkSize,
+    setChunkSize,
+    similarityThreshold,
+    setSimilarityThreshold,
+    toggles,
+    handleToggle,
+    geminiApiKey,
+    setGeminiApiKey,
+    vectorDbConnection,
+    setVectorDbConnection,
+    saving,
+    handleSave,
+    handleReset,
+  } = useAdminSettings();
+
+  return (
+    <AdminPageShell
+      eyebrow="THIẾT LẬP HỆ THỐNG"
+      title="Cài Đặt."
+      description="Cấu hình các tham số RAG engine, bảo mật và thông báo cho hệ thống."
+    >
+      <Stack gap="xl">
+        <SectionCard
+          icon={<IconDatabase size={20} />}
+          title="RAG Engine"
+          description="Cấu hình truy hồi và mô hình nhúng cho nền tảng tìm kiếm tài liệu."
+          color="blue"
+        >
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <TextInput
+              label="Embedding Model"
+              value={embeddingModel}
+              onChange={(e) => setEmbeddingModel(e.currentTarget.value)}
+              radius="lg"
+            />
+            <TextInput
+              label="Vector Dimensions"
+              value={vectorDimensions}
+              onChange={(e) => setVectorDimensions(e.currentTarget.value)}
+              radius="lg"
+            />
+            <TextInput
+              label="Chunk Size"
+              value={chunkSize}
+              onChange={(e) => setChunkSize(e.currentTarget.value)}
+              radius="lg"
+            />
+            <TextInput
+              label="Similarity Threshold"
+              value={similarityThreshold}
+              onChange={(e) => setSimilarityThreshold(e.currentTarget.value)}
+              radius="lg"
+            />
+          </SimpleGrid>
+        </SectionCard>
+
+        <SectionCard
+          icon={<IconShield size={20} />}
+          title="Bảo mật & Xác thực"
+          description="Quản lý chính sách bảo mật và phiên làm việc."
+          color="blue"
+        >
+          <Stack gap="md">
+            <Group justify="space-between" wrap="nowrap">
+              <div>
+                <Text size="sm" fw={600}>
+                  Yêu cầu 2FA đối với Admin
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Bắt buộc xác thực 2 lớp khi truy cập bảng điều khiển
+                </Text>
+              </div>
+              <Switch
+                checked={toggles["Security-Require 2FA for Admins"]}
+                onChange={(e) =>
+                  handleToggle("Security-Require 2FA for Admins", e.currentTarget.checked)
+                }
+              />
+            </Group>
+            <Group justify="space-between" wrap="nowrap">
+              <div>
+                <Text size="sm" fw={600}>
+                  Giới hạn phiên làm việc (1 giờ)
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Tự động đăng xuất sau 1 giờ không hoạt động
+                </Text>
+              </div>
+              <Switch
+                checked={toggles["Security-Session Timeout (1 hour)"]}
+                onChange={(e) =>
+                  handleToggle("Security-Session Timeout (1 hour)", e.currentTarget.checked)
+                }
+              />
+            </Group>
+            <Group justify="space-between" wrap="nowrap">
+              <div>
+                <Text size="sm" fw={600}>
+                  Bật danh sách IP cho phép
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Chỉ cho phép các IP trong danh sách truy cập admin
+                </Text>
+              </div>
+              <Switch
+                checked={toggles["Security-IP Allowlist"]}
+                onChange={(e) => handleToggle("Security-IP Allowlist", e.currentTarget.checked)}
+              />
+            </Group>
+          </Stack>
+        </SectionCard>
+
+        <SectionCard
+          icon={<IconBell size={20} />}
+          title="Thông báo & Cảnh báo"
+          description="Cấu hình nhận thông báo qua email và hệ thống."
+          color="orange"
+        >
+          <Stack gap="md">
+            <Group justify="space-between" wrap="nowrap">
+              <div>
+                <Text size="sm" fw={600}>
+                  Cảnh báo lỗi phân tách chỉ mục
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Thông báo khi việc tạo embedding cho tài liệu bị lỗi
+                </Text>
+              </div>
+              <Switch
+                checked={toggles["Notifications-Indexing failure alerts"]}
+                onChange={(e) =>
+                  handleToggle("Notifications-Indexing failure alerts", e.currentTarget.checked)
+                }
+              />
+            </Group>
+            <Group justify="space-between" wrap="nowrap">
+              <div>
+                <Text size="sm" fw={600}>
+                  Báo cáo sử dụng hằng ngày
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Gửi báo cáo tổng hợp thống kê hệ thống mỗi ngày
+                </Text>
+              </div>
+              <Switch
+                checked={toggles["Notifications-Daily usage report"]}
+                onChange={(e) =>
+                  handleToggle("Notifications-Daily usage report", e.currentTarget.checked)
+                }
+              />
+            </Group>
+          </Stack>
+        </SectionCard>
+
+        <SectionCard
+          icon={<IconKey size={20} />}
+          title="Thông tin kết nối & API Keys"
+          description="Quản lý thông tin kết nối cơ sở dữ liệu và Gemini API."
+          color="teal"
+        >
+          <Stack gap="md">
+            <PasswordInput
+              label="Gemini API Key"
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.currentTarget.value)}
+              radius="lg"
+            />
+            <TextInput
+              label="Vector DB Connection string"
+              value={vectorDbConnection}
+              onChange={(e) => setVectorDbConnection(e.currentTarget.value)}
+              radius="lg"
+            />
+          </Stack>
+        </SectionCard>
+
+        <Group justify="flex-end" gap="md">
+          <Button
+            variant="outline"
+            color="gray"
+            leftSection={<IconRefresh size={16} />}
+            onClick={handleReset}
+            radius="xl"
+          >
+            Đặt lại mặc định
+          </Button>
+          <Button
+            color="dark"
+            leftSection={<IconDeviceFloppy size={16} />}
+            loading={saving}
+            onClick={handleSave}
+            radius="xl"
+          >
+            Lưu cài đặt
+          </Button>
+        </Group>
+      </Stack>
+    </AdminPageShell>
+  );
+}

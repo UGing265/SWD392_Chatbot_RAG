@@ -21,18 +21,18 @@ const (
 )
 
 var (
-	ErrFileTooLarge       = errors.New("file size exceeds maximum allowed size")
-	ErrInvalidMIMEType   = errors.New("invalid mime type")
-	ErrEmptyFile          = errors.New("file is empty")
-	ErrPathTraversal      = errors.New("path traversal detected")
+	ErrFileTooLarge    = errors.New("file size exceeds maximum allowed size")
+	ErrInvalidMIMEType = errors.New("invalid mime type")
+	ErrEmptyFile       = errors.New("file is empty")
+	ErrPathTraversal   = errors.New("path traversal detected")
 )
 
 var allowedMIMETypes = map[string]string{
-	"application/pdf":                      ".pdf",
-	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+	"application/pdf": ".pdf",
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":   ".docx",
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
-	"text/plain":                           ".txt",
-	"text/markdown":                        ".md",
+	"text/plain":    ".txt",
+	"text/markdown": ".md",
 }
 
 type LocalFileStorage struct {

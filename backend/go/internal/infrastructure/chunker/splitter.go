@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	DefaultChunkSize    = 500  // tokens
-	DefaultChunkOverlap = 100  // tokens
-	MaxChunkSize        = 800  // tokens
-	MinChunkSize        = 100  // tokens - discard smaller chunks
+	DefaultChunkSize    = 500 // tokens
+	DefaultChunkOverlap = 100 // tokens
+	MaxChunkSize        = 800 // tokens
+	MinChunkSize        = 1   // tokens - discard smaller chunks
 )
 
 var defaultSeparators = []string{"\n\n", "\n", ". ", " "}
@@ -73,7 +73,7 @@ func (s *Splitter) splitWithSeparators(text string, pageLabel string, separatorI
 	var currentTokens int
 	var currentStartIdx int
 
-	for i, part := range parts {
+	for _, part := range parts {
 		if part == "" {
 			continue
 		}
@@ -120,10 +120,6 @@ func (s *Splitter) splitWithSeparators(text string, pageLabel string, separatorI
 		current.WriteString(part)
 		currentTokens = countTokens(current.String())
 
-		// Safety check for last part
-		if i == len(parts)-1 && currentTokens >= MinChunkSize {
-			result = append(result, s.makeChunk(current.String(), currentStartIdx, pageLabel))
-		}
 	}
 
 	// Handle remaining content that wasn't flushed
@@ -143,7 +139,7 @@ func (s *Splitter) chunkText(text string, pageLabel string, separator string) []
 	var currentTokens int
 	var currentStartIdx int
 
-	for i, part := range parts {
+	for _, part := range parts {
 		if part == "" {
 			continue
 		}
@@ -175,10 +171,6 @@ func (s *Splitter) chunkText(text string, pageLabel string, separator string) []
 		current.WriteString(part)
 		currentTokens = countTokens(current.String())
 
-		// Handle last part
-		if i == len(parts)-1 && currentTokens >= MinChunkSize {
-			result = append(result, s.makeChunk(current.String(), currentStartIdx, pageLabel))
-		}
 	}
 
 	// Handle any remaining content
