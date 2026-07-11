@@ -17,7 +17,6 @@ export interface Quiz {
   title: string;
   description: string;
   subject_name: string;
-  academic_term_name: string;
   duration_minutes: number;
   questions: Question[];
 }
@@ -52,15 +51,11 @@ export const historyMocks = [
   },
 ];
 
-export const terms = [
-  { id: "t1", name: "HK1 2024-2025" },
-  { id: "t2", name: "HK2 2024-2025" },
-];
 
 export const subjects = [
-  { id: "s1", name: "Lập trình Web", termId: "t1" },
-  { id: "s2", name: "Cơ sở dữ liệu", termId: "t1" },
-  { id: "s3", name: "Toán cao cấp", termId: "t2" },
+  { id: "s1", name: "Lập trình Web" },
+  { id: "s2", name: "Cơ sở dữ liệu" },
+  { id: "s3", name: "Toán cao cấp" },
 ];
 
 export function useQuiz() {
@@ -70,7 +65,7 @@ export function useQuiz() {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
-  const [selectedTerm, setSelectedTerm] = useState<{ id: string; name: string } | null>(null);
+<{ id: string; name: string } | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -82,7 +77,6 @@ export function useQuiz() {
         title: "Bài kiểm tra giữa kỳ 1",
         description: "Kiểm tra kiến thức Chương 1 và 2.",
         subject_name: "Lập trình Web",
-        academic_term_name: "HK1 2024-2025",
         duration_minutes: 15,
         questions: [
           {
@@ -112,7 +106,6 @@ export function useQuiz() {
         title: "Trắc nghiệm SQL cơ bản",
         description: "Ôn tập các câu truy vấn cơ bản (SELECT, WHERE, JOIN)",
         subject_name: "Cơ sở dữ liệu",
-        academic_term_name: "HK1 2024-2025",
         duration_minutes: 10,
         questions: [
           {
@@ -155,7 +148,6 @@ export function useQuiz() {
   };
 
   const resetSelection = () => {
-    setSelectedTerm(null);
     setSelectedSubject(null);
     setSearchQuery("");
   };
@@ -169,8 +161,6 @@ export function useQuiz() {
     score,
     showHistory,
     setShowHistory,
-    selectedTerm,
-    setSelectedTerm,
     selectedSubject,
     setSelectedSubject,
     searchQuery,
@@ -179,8 +169,8 @@ export function useQuiz() {
     handleSubmit,
     handleBackToList,
     resetSelection,
-    terms,
     subjects,
     historyMocks,
   };
 }
+

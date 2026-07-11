@@ -17,7 +17,7 @@ export interface DocumentListItem {
   description?: string | null;
   subject_name?: string | null;
   subject_code?: string | null;
-  academic_term_name?: string | null;
+
   owner_email?: string | null;
   document_type_name?: string | null;
   visibility: string;
@@ -32,13 +32,6 @@ export interface Subject {
   code: string;
   name: string;
   }
-
-export interface AcademicTerm {
-  id: string;
-  name: string;
-  year?: string;
-  order?: number;
-}
 
 export interface DocumentType {
   id: string;
@@ -80,7 +73,7 @@ export function useSharedDocuments() {
 
   // Lookups
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
+
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
@@ -162,18 +155,7 @@ export function useSharedDocuments() {
                           };
           }),
         );
-        setTerms(
-          (Array.isArray(data.academicTerms) ? data.academicTerms : []).map((item: unknown) => {
-            const t = asRecord(item);
 
-            return {
-              id: String(t.id ?? ""),
-              name: getString(t.name),
-              year: getString(t.year),
-              order: Number(t.order || 0),
-            };
-          }),
-        );
         setDocumentTypes(
           (Array.isArray(data.documentTypes) ? data.documentTypes : []).map((item: unknown) => {
             const dt = asRecord(item);
@@ -304,7 +286,7 @@ export function useSharedDocuments() {
     updateFilters,
     clearFilters,
     subjects,
-    terms,
+
     documentTypes,
     languages,
     documentSources,

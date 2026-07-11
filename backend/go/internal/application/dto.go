@@ -24,7 +24,7 @@ type DocumentCreateInput struct {
 	Description      *string    `json:"description"`
 	SubjectID        *uuid.UUID `json:"subject_id"`
 	DocumentTypeID   *uuid.UUID `json:"document_type_id"`
-	AcademicTermID   *uuid.UUID `json:"academic_term_id"`
+
 	LanguageID       *uuid.UUID `json:"language_id"`
 	Visibility       *string    `json:"visibility"`
 	DocumentSourceID *uuid.UUID `json:"document_source_id"`
@@ -36,7 +36,7 @@ type DocumentEditInput struct {
 	Description      *string    `json:"description"`
 	SubjectID        *uuid.UUID `json:"subject_id"`
 	DocumentTypeID   *uuid.UUID `json:"document_type_id"`
-	AcademicTermID   *uuid.UUID `json:"academic_term_id"`
+
 	LanguageID       *uuid.UUID `json:"language_id"`
 	Visibility       string     `json:"visibility"`
 	DocumentSourceID *uuid.UUID `json:"document_source_id"`
@@ -227,12 +227,7 @@ type DocumentSourceDto struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type AcademicTermDto struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Order     int       `json:"order"`
-	CreatedAt time.Time `json:"created_at"`
-}
+
 
 type DocumentReportDto struct {
 	ID             uuid.UUID `json:"id"`

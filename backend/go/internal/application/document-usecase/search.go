@@ -191,7 +191,7 @@ func (uc *DocumentUseCase) GetOwnedDocumentDetailsBySlug(ctx context.Context, sl
 	return uc.GetDocumentDetails(ctx, doc.ID, 1, 10, false)
 }
 
-func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.UUID, query *string, subjectID *uuid.UUID, termID *uuid.UUID, sortBy *string, typeID *uuid.UUID, langID *uuid.UUID, sourceID *uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
+func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.UUID, query *string, subjectID *uuid.UUID, sortBy *string, typeID *uuid.UUID, langID *uuid.UUID, sourceID *uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
 	if pageSize < 6 || pageSize > 12 {
 		pageSize = 6
 	}

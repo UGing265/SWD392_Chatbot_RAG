@@ -17,10 +17,6 @@ export interface Subject {
   name: string;
 }
 
-export interface AcademicTerm {
-  id: string;
-  name: string;
-}
 
 export function useCreateQuiz() {
   const [title, setTitle] = useState("");
@@ -38,7 +34,6 @@ export function useCreateQuiz() {
   ]);
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -48,10 +43,6 @@ export function useCreateQuiz() {
       { id: "s1", name: "Lập trình Web" },
       { id: "s2", name: "Cơ sở dữ liệu" },
       { id: "s3", name: "Toán cao cấp" },
-    ]);
-    setTerms([
-      { id: "t1", name: "HK1 2024-2025" },
-      { id: "t2", name: "HK2 2024-2025" },
     ]);
   }, []);
 
@@ -150,7 +141,6 @@ export function useCreateQuiz() {
         questions,
     setQuestions,
     subjects,
-    terms,
     saving,
     saved,
     setSaved,
@@ -164,3 +154,4 @@ export function useCreateQuiz() {
     handleSave,
   };
 }
+

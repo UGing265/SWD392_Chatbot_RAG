@@ -129,7 +129,7 @@ export function SharedDocumentsView() {
               variant="filled"
               radius="xl"
               value={subjectId || null}
-              onChange={(val) => updateFilters({ subjectId: val, termId: null })}
+              onChange={(val) => updateFilters({ subjectId: val })}
               placeholder="Môn học"
               data={subjects.map(s => ({ value: s.id, label: s.code }))}
               searchable
@@ -246,7 +246,7 @@ export function SharedDocumentsView() {
                   return (
                     <button
                       key={subject.id}
-                      onClick={() => updateFilters({ subjectId: subject.id, termId: null, page: "1" })}
+                      onClick={() => updateFilters({ subjectId: subject.id, page: "1" })}
                       className="group flex flex-col p-6 bg-white border border-zinc-200 rounded-2xl hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 text-left relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-zinc-100/80 to-transparent rounded-bl-[100px] -z-0 opacity-50 group-hover:from-zinc-200 transition-colors" />
@@ -400,3 +400,4 @@ export function SharedDocumentsView() {
     </div>
   );
 }
+

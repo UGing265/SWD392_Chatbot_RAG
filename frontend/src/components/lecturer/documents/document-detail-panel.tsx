@@ -75,7 +75,6 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
         description: doc.description,
         subject_id: doc.subject_id,
         document_type_id: doc.document_type_id,
-        academic_term_id: doc.academic_term_id,
         language_id: doc.language_id,
         document_source_id: doc.document_source_id,
         visibility: val
@@ -258,3 +257,4 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
     </div>
   );
 }
+

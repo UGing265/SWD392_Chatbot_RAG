@@ -107,7 +107,6 @@ export function MyDocumentsView() {
     page,
     q,
     subjectId,
-    termId,
     documentTypeId,
     languageId,
     documentSourceId,
@@ -457,3 +456,4 @@ export function MyDocumentsView() {
 }
 
 // Trigger HMR
+

@@ -24,7 +24,6 @@ export function EditDocumentView({ slug }: { slug: string }) {
     loading,
     saving,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,
@@ -195,3 +194,4 @@ export function EditDocumentView({ slug }: { slug: string }) {
     </div>
   );
 }
+

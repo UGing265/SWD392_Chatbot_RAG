@@ -57,8 +57,6 @@ interface DocumentDetails {
   subject_name?: string | null;
   subject_code?: string | null;
   subject_id?: string | null;
-  academic_term_name?: string | null;
-  academic_term_id?: string | null;
   visibility: string;
   document_type_name?: string | null;
   document_type_id?: string | null;
@@ -212,12 +210,8 @@ export default function DocumentDetailPage() {
   const isPrivate = document.visibility === "private";
   const baseLibraryPath = (isLecturer && isPrivate) ? `/${role}/documents/my` : `/${role}/documents/shared`;
 
-  const termFilterPath = document.academic_term_id
-    ? `${baseLibraryPath}?termId=${document.academic_term_id}`
-    : baseLibraryPath;
-
   const subjectFilterPath = document.subject_id
-    ? `${baseLibraryPath}?${document.academic_term_id ? `termId=${document.academic_term_id}&` : ''}subjectId=${document.subject_id}`
+    ? `${baseLibraryPath}?subjectId=${document.subject_id}`
     : baseLibraryPath;
 
   return (
@@ -673,3 +667,4 @@ export default function DocumentDetailPage() {
     </div>
   );
 }
+

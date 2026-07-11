@@ -9,7 +9,7 @@ import (
 type FilterParams struct {
 	Query            *string
 	SubjectID        *uuid.UUID
-	AcademicTermID   *uuid.UUID
+
 	DocumentTypeID   *uuid.UUID
 	LanguageID       *uuid.UUID
 	DocumentSourceID *uuid.UUID

@@ -66,7 +66,7 @@ func (uc *DocumentUseCase) DeleteDocument(ctx context.Context, docID uuid.UUID) 
 	return uc.docRepo.Delete(ctx, docID)
 }
 
-func (uc *DocumentUseCase) UpdateDocument(ctx context.Context, docID uuid.UUID, ownerUserID uuid.UUID, title string, description *string, subjectID, typeID, termID, langID, sourceID *uuid.UUID, visibility string) error {
+func (uc *DocumentUseCase) UpdateDocument(ctx context.Context, docID uuid.UUID, ownerUserID uuid.UUID, title string, description *string, subjectID, typeID, langID, sourceID *uuid.UUID, visibility string) error {
 	doc, err := uc.docRepo.FindByID(ctx, docID)
 	if err != nil {
 		return err

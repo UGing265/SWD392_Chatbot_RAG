@@ -10,7 +10,6 @@ export interface DocumentDetails {
   description: string | null;
   subject_id: string | null;
   document_type_id: string | null;
-  academic_term_id: string | null;
   language_id: string | null;
   document_source_id: string | null;
   visibility: string;
@@ -25,7 +24,6 @@ export function useEditDocument(slug: string, role: string) {
 
   // Lookups
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [terms, setTerms] = useState<any[]>([]);
   const [documentTypes, setDocumentTypes] = useState<any[]>([]);
   const [languages, setLanguages] = useState<any[]>([]);
   const [documentSources, setDocumentSources] = useState<any[]>([]);
@@ -46,7 +44,6 @@ export function useEditDocument(slug: string, role: string) {
       const lookupsRes = await ragApi.get("/documents/lookups");
       const lookupsData = lookupsRes.data;
       setSubjects(lookupsData.subjects || []);
-      setTerms(lookupsData.academicTerms || []);
       setDocumentTypes(lookupsData.documentTypes || []);
       setLanguages(lookupsData.languages || []);
       setDocumentSources(lookupsData.documentSources || []);
@@ -114,7 +111,6 @@ export function useEditDocument(slug: string, role: string) {
     loading,
     saving,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,
@@ -132,3 +128,4 @@ export function useEditDocument(slug: string, role: string) {
     role,
   };
 }
+

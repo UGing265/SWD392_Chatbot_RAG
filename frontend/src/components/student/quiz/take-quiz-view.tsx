@@ -38,8 +38,6 @@ export function TakeQuizView() {
     score,
     showHistory,
     setShowHistory,
-    selectedTerm,
-    setSelectedTerm,
     selectedSubject,
     setSelectedSubject,
     searchQuery,
@@ -48,14 +46,12 @@ export function TakeQuizView() {
     handleSubmit,
     handleBackToList,
     resetSelection,
-    terms,
     subjects,
     historyMocks,
   } = useQuiz();
 
   // -----------------------------------------------------
-  // VIEW 1: Select Term & Subject OR Quiz List
-  // -----------------------------------------------------
+  // VIEW 1: Select Subject OR Quiz List  // -----------------------------------------------------
   if (!selectedQuiz) {
     return (
       <div className="min-h-[calc(100vh-3.5rem)] bg-[#0a0a0a] py-12 px-6">
@@ -70,9 +66,7 @@ export function TakeQuizView() {
                 <div>
                   <h1 className="text-3xl font-extrabold text-teal-400">Danh sách bài kiểm tra</h1>
                   <Text size="sm" className="text-white/70">
-                    {selectedTerm && selectedSubject
-                      ? `Kỳ học: ${selectedTerm.name} • Môn học: ${selectedSubject.name}`
-                      : "Chọn kỳ học và môn học để xem bài kiểm tra"}
+                    {selectedSubject ? `M�n h?c: ${selectedSubject.name}` : "Ch?n m�n h?c d? xem b�i ki?m tra"}
                   </Text>
                 </div>
               </Group>
@@ -88,10 +82,9 @@ export function TakeQuizView() {
                   {showHistory ? "Quay lại danh sách" : "Lịch sử làm bài"}
                 </Button>
 
-                {!showHistory && (selectedTerm || selectedSubject) && (
+                {!showHistory && selectedSubject && (
                   <Button
                     onClick={() => {
-                      setSelectedTerm(null);
                       setSelectedSubject(null);
                       setSearchQuery("");
                     }}
@@ -167,7 +160,7 @@ export function TakeQuizView() {
           ) : (
             <>
               {/* Search Bar */}
-              {selectedTerm && selectedSubject && (
+              {selectedSubject && (
                 <div className="mb-6">
                   <TextInput
                     placeholder="Tìm kiếm tên bài kiểm tra..."
@@ -187,33 +180,10 @@ export function TakeQuizView() {
                 </div>
               )}
 
-              {!selectedTerm ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {terms.map((term) => (
-                    <Paper
-                      key={term.id}
-                      onClick={() => setSelectedTerm(term)}
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      className="cursor-pointer border-white/5 hover:border-teal-400 hover:shadow-md transition-all group !bg-[#0d0d0d]"
-                    >
-                      <Group gap="md" wrap="nowrap">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5 text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                          <IconCalendar size={24} />
-                        </div>
-                        <div>
-                          <Text fw={700} size="sm" className="text-white group-hover:text-teal-400 transition-colors">{term.name}</Text>
-                          <Text size="xs" className="text-white/90">Bấm để chọn kỳ học</Text>
-                        </div>
-                      </Group>
-                    </Paper>
-                  ))}
-                </div>
-              ) : !selectedSubject ? (
+              {!selectedSubject ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {subjects
-                    .filter((s) => s.termId === selectedTerm.id)
+                    
                     .map((subject) => (
                       <Paper
                         key={subject.id}
@@ -241,7 +211,6 @@ export function TakeQuizView() {
                     .filter(
                       (q) =>
                         q.subject_name === selectedSubject.name &&
-                        q.academic_term_name === selectedTerm.name &&
                         q.title.toLowerCase().includes(searchQuery.toLowerCase()),
                     )
                     .map((quiz) => (
@@ -277,9 +246,7 @@ export function TakeQuizView() {
 
                   {quizzes.filter(
                     (q) =>
-                      q.subject_name === selectedSubject.name &&
-                      q.academic_term_name === selectedTerm.name,
-                  ).length === 0 && (
+                      q.subject_name === selectedSubject.name).length === 0 && (
                     <Paper withBorder p="xl" radius="lg" className="col-span-full py-20 text-center bg-[#0d0d0d] border-white/10 shadow-sm">
                       <div className="mx-auto h-20 w-20 bg-white/5 rounded-full flex items-center justify-center mb-5 border border-white/10 text-white/20">
                         <IconClipboardList size={32} />
@@ -445,3 +412,7 @@ export function TakeQuizView() {
     </div>
   );
 }
+
+
+
+
