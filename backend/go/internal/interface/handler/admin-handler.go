@@ -29,7 +29,6 @@ func NewAdminHandler(adminUseCase *admin_usecase.AdminUseCase, lookupUseCase *lo
 type SubjectInput struct {
 	Code           string  `json:"code" binding:"required"`
 	Name           string  `json:"name" binding:"required"`
-	AcademicTermID *string `json:"academic_term_id"`
 }
 
 type DocumentTypeInput struct {
@@ -46,10 +45,6 @@ type DocumentSourceInput struct {
 	Name string `json:"name" binding:"required"`
 }
 
-type AcademicTermInput struct {
-	Name  string `json:"name" binding:"required"`
-	Order int    `json:"order"`
-}
 
 type LecturerSubjectAssignmentInput struct {
 	SubjectIDs []string `json:"subjectIds"`
@@ -386,14 +381,7 @@ func (h *AdminHandler) CreateSubject(c *gin.Context) {
 		return
 	}
 
-	var termID *uuid.UUID
-	if input.AcademicTermID != nil && *input.AcademicTermID != "" {
-		if uid, err := uuid.Parse(*input.AcademicTermID); err == nil {
-			termID = &uid
-		}
-	}
-
-	sub, err := h.lookupUseCase.CreateSubject(c.Request.Context(), input.Code, input.Name, termID)
+	sub, err := h.lookupUseCase.CreateSubject(c.Request.Context(), input.Code, input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -427,14 +415,7 @@ func (h *AdminHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 
-	var termID *uuid.UUID
-	if input.AcademicTermID != nil && *input.AcademicTermID != "" {
-		if uVal, err := uuid.Parse(*input.AcademicTermID); err == nil {
-			termID = &uVal
-		}
-	}
-
-	sub, err := h.lookupUseCase.UpdateSubject(c.Request.Context(), uid, input.Code, input.Name, termID)
+	sub, err := h.lookupUseCase.UpdateSubject(c.Request.Context(), uid, input.Code, input.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -722,90 +703,6 @@ func (h *AdminHandler) DeleteDocumentSource(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Document source deleted successfully"})
 }
 
-// CreateAcademicTerm godoc
-// @Summary Create academic term
-// @Description Add a new academic term (Admin only)
-// @Tags admin-metadata
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param body body handler.AcademicTermInput true "Term details"
-// @Success 201 {object} application.AcademicTermDto
-// @Failure 400 {object} map[string]string
-// @Router /api/admin/academic-terms [post]
-func (h *AdminHandler) CreateAcademicTerm(c *gin.Context) {
-	var input AcademicTermInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	term, err := h.lookupUseCase.CreateAcademicTerm(c.Request.Context(), input.Name, input.Order)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, term)
-}
-
-// UpdateAcademicTerm godoc
-// @Summary Update academic term
-// @Description Update academic term name/order by ID (Admin only)
-// @Tags admin-metadata
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param id path string true "Term ID (UUID)"
-// @Param body body handler.AcademicTermInput true "Term details"
-// @Success 200 {object} application.AcademicTermDto
-// @Failure 400 {object} map[string]string
-// @Router /api/admin/academic-terms/{id} [put]
-func (h *AdminHandler) UpdateAcademicTerm(c *gin.Context) {
-	idStr := c.Param("id")
-	uid, err := uuid.Parse(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid academic term ID"})
-		return
-	}
-
-	var input AcademicTermInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	term, err := h.lookupUseCase.UpdateAcademicTerm(c.Request.Context(), uid, input.Name, input.Order)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, term)
-}
-
-// DeleteAcademicTerm godoc
-// @Summary Delete academic term
-// @Description Remove academic term by ID (Admin only)
-// @Tags admin-metadata
-// @Security BearerAuth
-// @Produce json
-// @Param id path string true "Term ID (UUID)"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Router /api/admin/academic-terms/{id} [delete]
-func (h *AdminHandler) DeleteAcademicTerm(c *gin.Context) {
-	idStr := c.Param("id")
-	uid, err := uuid.Parse(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid term ID format"})
-		return
-	}
-
-	if err := h.lookupUseCase.DeleteAcademicTerm(c.Request.Context(), uid); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Academic term deleted successfully"})
-}
 
 // ImportUsersExcel handles bulk user import from an Excel file
 func (h *AdminHandler) ImportUsersExcel(c *gin.Context) {

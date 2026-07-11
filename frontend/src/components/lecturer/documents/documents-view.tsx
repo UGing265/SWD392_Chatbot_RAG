@@ -46,8 +46,6 @@ export function DocumentsView() {
   const {
     step,
     setStep,
-    selectedTerm,
-    setSelectedTerm,
     selectedSubject,
     setSelectedSubject,
     selectedMaterialId,
@@ -58,7 +56,6 @@ export function DocumentsView() {
     setSelectedItemIds,
     materials,
     subjects,
-    terms,
     isLoading,
     isUploadModalOpen,
     setIsUploadModalOpen,
@@ -76,7 +73,6 @@ export function DocumentsView() {
     setSelectedFile,
     fileInputRef,
     isUploading,
-    groupedTerms,
     filteredMaterials,
     activeMaterial,
     handleSaveSubject,
@@ -111,30 +107,16 @@ export function DocumentsView() {
                 </h1>
                 <Group gap="xs" className="text-sm font-semibold text-gray-500 mt-1">
                   <span
-                    className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedTerm ? "text-gray-900" : ""}`}
+                    className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedSubject ? "text-gray-900" : ""}`}
                     onClick={() => {
-                      setSelectedTerm(null);
                       setSelectedSubject(null);
-                      setStep("term");
+                      setStep("subject");
                     }}
                   >
-                    Tất cả năm học
+                    Tất cả môn học
                   </span>
 
-                  {selectedTerm && (
-                    <>
-                      <IconChevronRight size={14} />
-                      <span
-                        className={`cursor-pointer hover:text-gray-900 transition-colors ${!selectedSubject ? "text-gray-900" : ""}`}
-                        onClick={() => {
-                          setSelectedSubject(null);
-                          setStep("subject");
-                        }}
-                      >
-                        Năm {selectedTerm?.year} - {selectedTerm?.name}
-                      </span>
-                    </>
-                  )}
+
 
                   {selectedSubject && (
                     <>
@@ -148,25 +130,13 @@ export function DocumentsView() {
                     </>
                   )}
 
-                  {step === "chapters" && activeMaterial && (
-                    <>
-                      <IconChevronRight size={14} />
-                      <span className="text-gray-900">Cấu trúc: {activeMaterial?.resource}</span>
-                    </>
-                  )}
 
-                  {step === "viewing" && activeMaterial && (
-                    <>
-                      <IconChevronRight size={14} />
-                      <span className="text-gray-900">Xem nội dung</span>
-                    </>
-                  )}
                 </Group>
               </div>
             </Group>
 
             <Group gap="sm">
-              {(selectedTerm || selectedSubject || step === "chapters" || step === "viewing") && (
+              {selectedSubject && (
                 <Button
                   variant="outline"
                   color="gray"
@@ -179,7 +149,7 @@ export function DocumentsView() {
               {selectedSubject && step === "documents" && (
                 <Button
                   onClick={() => {
-                    setCurrentMaterial({ subjectId: selectedSubject?.id || "" });
+                    setCurrentMaterial({ subject_id: selectedSubject?.id || "" } as any);
                     setIsUploadModalOpen(true);
                   }}
                   radius="lg"
@@ -193,60 +163,8 @@ export function DocumentsView() {
           </Group>
         </div>
 
-        {/* Level 1: Select Term */}
-        {!selectedTerm ? (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            {terms.length === 0 ? (
-              <div className="py-20 text-center bg-white rounded-[24px] border border-zinc-200 shadow-sm">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-50 border border-zinc-100 text-zinc-300">
-                  <IconCalendar size={40} stroke={1.5} />
-                </div>
-                <h3 className="mb-2 text-xl font-bold text-zinc-900">Chưa có kỳ học nào</h3>
-                <p className="text-zinc-500 font-medium">Liên hệ quản trị viên để thêm kỳ học.</p>
-              </div>
-            ) : (
-              Object.entries(groupedTerms)
-                .sort((a, b) => {
-                  const yearA = parseInt(a[0]) || 0;
-                  const yearB = parseInt(b[0]) || 0;
-                  return yearB - yearA;
-                })
-                .map(([year, yearTerms]) => (
-                  <div key={year}>
-                    <div className="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
-                      <IconCalendar size={20} className="text-zinc-900" />
-                      <h2 className="text-[16px] font-bold text-zinc-900 font-sans tracking-tight uppercase">
-                        NĂM HỌC {year}
-                      </h2>
-                    </div>
-                    <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                      {yearTerms.map((term) => (
-                        <div
-                          key={term.id}
-                          onClick={() => {
-                            setSelectedTerm(term);
-                            setStep("subject");
-                          }}
-                          className="flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200 rounded-2xl p-6 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group"
-                        >
-                          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mb-6 border border-zinc-200 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
-                            <IconFolderOpen size={24} stroke={1.5} />
-                          </div>
-                          <h4 className="text-[16px] font-bold text-zinc-900 mb-2 font-serif group-hover:underline decoration-zinc-300 underline-offset-2">
-                            {term.name}
-                          </h4>
-                          <Text size="xs" className="font-mono mt-1 text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
-                            Bấm để chọn kỳ học
-                          </Text>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-            )}
-          </div>
-        ) : !selectedSubject ? (
-          /* Level 2: Select Subject */
+        {/* Select Subject */}
+        {!selectedSubject ? (
           <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
             <div className="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
               <IconBook size={20} className="text-zinc-900" />
@@ -255,16 +173,15 @@ export function DocumentsView() {
               </h2>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {subjects.filter((s) => s.termId === selectedTerm?.id).length === 0 && (
+              {subjects.length === 0 && (
                 <div className="col-span-full py-12 text-center">
                   <IconBook size={40} className="text-zinc-300 mx-auto mb-3" stroke={1.5} />
-                  <Text size="sm" className="text-zinc-500 font-medium">Chưa có môn học nào trong kỳ này.</Text>
+                  <Text size="sm" className="text-zinc-500 font-medium">Chưa có môn học nào.</Text>
                 </div>
               )}
               {subjects
-                .filter((s) => s.termId === selectedTerm?.id)
                 .map((subject) => {
-                  const docCount = materials.filter((m) => m.subjectId === subject.id).length;
+                  const docCount = materials.filter((m) => m.subject_id === subject.id).length;
                   return (
                     <div
                       key={subject.id}
@@ -316,7 +233,7 @@ export function DocumentsView() {
                 </p>
                 <Button
                   onClick={() => {
-                    setCurrentMaterial({ subjectId: selectedSubject?.id || "" });
+                    setCurrentMaterial({ subject_id: selectedSubject?.id || "" } as any);
                     setIsUploadModalOpen(true);
                   }}
                   radius="xl"
@@ -355,7 +272,7 @@ export function DocumentsView() {
                       </div>
 
                       <h3 className="text-[18px] font-bold text-zinc-900 mb-6 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300 font-serif">
-                        {m.resource}
+                        {m.document_source_name || "Chưa phân loại"}
                       </h3>
                     </div>
 
@@ -365,13 +282,13 @@ export function DocumentsView() {
                         <div>
                           <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Đăng tải</div>
                           <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                            {m.date}
+                            {new Date(m.created_at || Date.now()).toLocaleDateString("vi-VN")}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Định dạng</div>
                           <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                            {m.format}
+                            {m.document_type_name || "Tài liệu"}
                           </div>
                         </div>
                       </div>
@@ -381,7 +298,7 @@ export function DocumentsView() {
                         <button
                           onClick={() => {
                             setSelectedMaterialId(m.id);
-                            setStep("chapters");
+                            setStep("documents");
                           }}
                           className="px-4 py-2 text-[12px] font-bold text-white bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors uppercase tracking-widest"
                         >
@@ -415,162 +332,6 @@ export function DocumentsView() {
                 ))}
               </div>
             )}
-          </div>
-        ) : step === "chapters" && activeMaterial ? (
-          <div className="space-y-6">
-            <Stack gap="md">
-              {activeMaterial?.chapters.map((c) => (
-                <Paper
-                  key={c.id}
-                  withBorder
-                  radius="md"
-                  className="bg-white overflow-hidden shadow-sm"
-                >
-                  <label className="flex items-center gap-4 p-4 border-b border-gray-100 bg-zinc-50/50 hover:bg-zinc-50 cursor-pointer transition-colors">
-                    <Checkbox
-                      radius="lg"
-                      color="dark"
-                      size="sm"
-                      checked={selectedChapterIds.has(c.id)}
-                      onChange={() => {
-                        const nextChapters = new Set(selectedChapterIds);
-                        const nextItems = new Set(selectedItemIds);
-
-                        if (nextChapters.has(c.id)) {
-                          nextChapters.delete(c.id);
-                          c.items.forEach((item) => nextItems.delete(item.id));
-                        } else {
-                          nextChapters.add(c.id);
-                          c.items.forEach((item) => nextItems.add(item.id));
-                        }
-
-                        setSelectedChapterIds(nextChapters);
-                        setSelectedItemIds(nextItems);
-                      }}
-                    />
-                    <Text fw={700} className="text-gray-800 flex-1">{c.name}</Text>
-                    <IconChevronDown size={16} className="text-gray-400" />
-                  </label>
-                  <div className="p-3 space-y-1">
-                    {c.items.map((item) => (
-                      <label
-                        key={item.id}
-                        className="flex items-center gap-4 p-3 pl-12 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
-                      >
-                        <Checkbox
-                          radius="lg"
-                          color="dark"
-                          size="sm"
-                          checked={selectedItemIds.has(item.id)}
-                          onChange={() => {
-                            const next = new Set(selectedItemIds);
-                            if (next.has(item.id)) next.delete(item.id);
-                            else next.add(item.id);
-                            setSelectedItemIds(next);
-                          }}
-                        />
-                        <Text size="sm" className="text-gray-500 group-hover:text-gray-800 transition-colors">
-                          {item.name}
-                        </Text>
-                      </label>
-                    ))}
-                  </div>
-                </Paper>
-              ))}
-            </Stack>
-            <Group justify="flex-end" gap="sm" mt="lg">
-              <Button
-                variant="outline"
-                color="gray"
-                radius="lg"
-                onClick={() => setStep("documents")}
-              >
-                Hủy
-              </Button>
-              <Button
-                color="dark"
-                radius="lg"
-                onClick={() => setStep("viewing")}
-                disabled={selectedChapterIds.size === 0 && selectedItemIds.size === 0}
-              >
-                Xác nhận lựa chọn
-              </Button>
-            </Group>
-          </div>
-        ) : step === "viewing" && activeMaterial ? (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Paper withBorder radius="lg" p={{ base: "xl", md: "12" }} bg="#ffffff" className="relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 inset-x-0 h-1 bg-[#111111]" />
-              <div className="max-w-3xl mx-auto space-y-10">
-                <div className="text-center space-y-3">
-                  <Badge color="dark" size="sm" radius="lg">STUDY MATERIAL</Badge>
-                  <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-                    {activeMaterial?.resource}
-                  </h2>
-                  <Group justify="center" gap="md" className="text-gray-400 text-sm">
-                    <Group gap="xs">
-                      <IconCalendar size={16} />
-                      <Text size="sm">{activeMaterial?.date}</Text>
-                    </Group>
-                    <Text size="sm">•</Text>
-                    <Group gap="xs">
-                      <IconFile size={16} />
-                      <Text size="sm">{activeMaterial?.format}</Text>
-                    </Group>
-                  </Group>
-                </div>
-
-                <div className="space-y-12">
-                  {activeMaterial?.chapters
-                    .filter(
-                      (c) =>
-                        selectedChapterIds.has(c.id) ||
-                        c.items.some((i) => selectedItemIds.has(i.id)),
-                    )
-                    .map((c) => (
-                      <section key={c.id} className="space-y-6">
-                        <div className="border-b border-gray-100 pb-3">
-                          <h3 className="text-xl font-bold text-gray-800">{c.name}</h3>
-                          <div className="h-1 w-12 bg-[#111111] rounded-full mt-2" />
-                        </div>
-
-                        <div className="space-y-8">
-                          {c.items
-                            .filter((i) => selectedItemIds.has(i.id))
-                            .map((item) => (
-                              <div key={item.id} className="space-y-4">
-                                <h4 className="text-lg font-bold text-[#111111] flex items-center gap-2">
-                                  <IconPlus size={16} /> {item.name}
-                                </h4>
-                                <div className="text-gray-600 leading-[1.8] text-sm space-y-3">
-                                  <p>
-                                    Nội dung chi tiết cho mục{" "}
-                                    <span className="font-bold text-gray-800">"{item.name}"</span>{" "}
-                                    đang được hệ thống RAG xử lý. Đây là kiến thức quan trọng nằm
-                                    trong chương{" "}
-                                    <span className="font-semibold text-gray-800">{c.name}</span>.
-                                  </p>
-                                  <p>
-                                    Hệ thống StudyMate AI đang phân tích tài liệu để trích xuất các
-                                    ý chính, định nghĩa quan trọng và ví dụ minh họa giúp sinh viên
-                                    dễ dàng nắm bắt kiến thức một cách khoa học nhất.
-                                  </p>
-                                  <Paper withBorder radius="lg" p="md" bg="zinc-50" className="border-zinc-200">
-                                    <Text size="sm" fs="italic" fw={500} c="zinc.8">
-                                      "Kiến thức là nền tảng của sự phát triển. Việc nắm bắt các khái
-                                      niệm cơ bản trong {item.name} sẽ là chìa khóa để giải quyết các
-                                      bài tập phức tạp hơn sau này."
-                                    </Text>
-                                  </Paper>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </section>
-                    ))}
-                </div>
-              </div>
-            </Paper>
           </div>
         ) : null}
 
@@ -646,9 +407,9 @@ export function DocumentsView() {
             )}
             <TextInput
               label="Tên tài liệu"
-              value={currentMaterial?.resource || ""}
+              value={currentMaterial?.document_source_name || "" || ""}
               onChange={(e) =>
-                setCurrentMaterial((prev) => ({ ...prev, resource: e.target.value }))
+                setCurrentMaterial((prev) => prev ? ({ ...prev, title: e.target.value }) : null)
               }
               placeholder="Ví dụ: Advanced Calculus Chapter 4"
               disabled={isUploading}
@@ -656,118 +417,7 @@ export function DocumentsView() {
               styles={{ label: { fontWeight: 600, marginBottom: "4px" } }}
             />
 
-            <div>
-              <Text size="sm" fw={700} mb="xs">Cấu trúc đề mục</Text>
-              <ScrollArea style={{ height: 250 }} offsetScrollbars>
-                <Stack gap="md" p="xs">
-                  {currentMaterial?.chapters?.map((ch, chIdx) => (
-                    <Paper
-                      key={chIdx}
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      bg="zinc-50/50"
-                      className="space-y-3"
-                    >
-                      <Group gap="xs" align="center">
-                        <TextInput
-                          placeholder="Tên chương"
-                          value={ch.name}
-                          onChange={(e) => {
-                            const newChapters = [...(currentMaterial?.chapters || [])];
-                            newChapters[chIdx].name = e.target.value;
-                            setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                          }}
-                          disabled={isUploading}
-                          style={{ flex: 1 }}
-                          radius="lg"
-                        />
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() => {
-                            const newChapters = currentMaterial?.chapters?.filter(
-                              (_, i) => i !== chIdx,
-                            );
-                            setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                          }}
-                          disabled={isUploading}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                      <Stack gap="xs" style={{ paddingLeft: "16px" }}>
-                        {ch.items.map((item, itemIdx) => (
-                          <Group key={itemIdx} gap="xs">
-                            <TextInput
-                              placeholder="Tên mục nhỏ"
-                              value={item.name}
-                              onChange={(e) => {
-                                const newChapters = [...(currentMaterial?.chapters || [])];
-                                newChapters[chIdx].items[itemIdx].name = e.target.value;
-                                setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                              }}
-                              disabled={isUploading}
-                              style={{ flex: 1 }}
-                              size="xs"
-                              radius="lg"
-                            />
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="sm"
-                              onClick={() => {
-                                const newChapters = [...(currentMaterial?.chapters || [])];
-                                newChapters[chIdx].items = newChapters[chIdx].items.filter(
-                                  (_, i) => i !== itemIdx,
-                                );
-                                setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                              }}
-                              disabled={isUploading}
-                            >
-                              <IconTrash size={14} />
-                            </ActionIcon>
-                          </Group>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          radius="lg"
-                          onClick={() => {
-                            const newChapters = [...(currentMaterial?.chapters || [])];
-                            newChapters[chIdx].items.push({
-                              id: Math.random().toString(),
-                              name: "",
-                            });
-                            setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                          }}
-                          disabled={isUploading}
-                          w="fit-content"
-                        >
-                          + Thêm mục nhỏ
-                        </Button>
-                      </Stack>
-                    </Paper>
-                  ))}
-                  <Button
-                    variant="outline"
-                    radius="lg"
-                    style={{ borderStyle: "dashed" }}
-                    onClick={() => {
-                      const newChapters = [
-                        ...(currentMaterial?.chapters || []),
-                        { id: Math.random().toString(), name: "", items: [] },
-                      ];
-                      setCurrentMaterial((prev) => ({ ...prev, chapters: newChapters }));
-                    }}
-                    disabled={isUploading}
-                    fullWidth
-                  >
-                    + Thêm chương mới
-                  </Button>
-                </Stack>
-              </ScrollArea>
-            </div>
+
           </Stack>
           <Group justify="flex-end" gap="sm" mt="xl">
             <Button
@@ -811,7 +461,7 @@ export function DocumentsView() {
           <Stack gap="md" py="md">
             <Text size="sm">
               Bạn có chắc chắn muốn xóa tài liệu{" "}
-              <span className="font-bold text-gray-900">{currentMaterial?.resource}</span>? Hành
+              <span className="font-bold text-gray-900">{currentMaterial?.title}</span>? Hành
               động này không thể hoàn tác.
             </Text>
           </Stack>

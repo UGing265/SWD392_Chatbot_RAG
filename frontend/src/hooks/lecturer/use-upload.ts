@@ -5,9 +5,7 @@ export interface Subject {
   id: string;
   name: string;
   code: string;
-  
 }
-
 
 export interface DocumentType {
   id: string;
@@ -24,13 +22,13 @@ export interface DocumentSource {
   name: string;
 }
 
-export function useUpload() {
+export function useUpload({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   
   const [subjectId, setSubjectIdRaw] = useState("");
-    const [documentTypeId, setDocumentTypeId] = useState("");
+  const [documentTypeId, setDocumentTypeId] = useState("");
   const [languageId, setLanguageId] = useState("");
   const [documentSourceId, setDocumentSourceId] = useState("");
   
@@ -39,7 +37,7 @@ export function useUpload() {
   const [uploaded, setUploaded] = useState(false);
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
@@ -49,26 +47,24 @@ export function useUpload() {
         const res = await ragApi.get("/documents/lookups");
         const data = res.data;
 
-
         // 1. Get assigned subjects for the lecturer
         const apiSubjects = data.subjects || [];
         const mappedSubjects: Subject[] = apiSubjects.map((s: any) => ({
           id: s.id,
           name: `${s.code} - ${s.name}`,
           code: s.code || "",
-                  }));
+        }));
         setSubjects(mappedSubjects);
 
-        
-        // 3. Document Types
+        // 2. Document Types
         const apiDocTypes = data.documentTypes || [];
         setDocumentTypes(apiDocTypes.map((dt: any) => ({ id: dt.id, name: dt.name })));
 
-        // 4. Languages
+        // 3. Languages
         const apiLanguages = data.languages || [];
         setLanguages(apiLanguages.map((l: any) => ({ id: l.id, name: l.name })));
 
-        // 5. Document Sources
+        // 4. Document Sources
         const apiSources = data.documentSources || [];
         setDocumentSources(apiSources.map((ds: any) => ({ id: ds.id, name: ds.name })));
 
@@ -81,7 +77,6 @@ export function useUpload() {
 
   const setSubjectId = (id: string) => setSubjectIdRaw(id);
 
-  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
@@ -97,7 +92,7 @@ export function useUpload() {
     setTitle("");
     setDescription("");
     setSubjectIdRaw("");
-        setDocumentTypeId("");
+    setDocumentTypeId("");
     setLanguageId("");
     setDocumentSourceId("");
     setVisibility("private");
@@ -121,7 +116,7 @@ export function useUpload() {
     formData.append("description", description);
     
     if (subjectId) formData.append("subject_id", subjectId);
-        if (documentTypeId) formData.append("document_type_id", documentTypeId);
+    if (documentTypeId) formData.append("document_type_id", documentTypeId);
     if (languageId) formData.append("language_id", languageId);
     if (documentSourceId) formData.append("document_source_id", documentSourceId);
     formData.append("visibility", visibility);
@@ -137,8 +132,12 @@ export function useUpload() {
       setTimeout(() => {
         setUploaded(false);
         resetForm();
-        const role = window.location.pathname.split("/")[1] || "lecturer";
-        window.location.href = `/${role}/documents/my`;
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          const role = window.location.pathname.split("/")[1] || "lecturer";
+          window.location.href = `/${role}/documents/my`;
+        }
       }, 2000);
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -158,7 +157,7 @@ export function useUpload() {
     setDescription,
     subjectId,
     setSubjectId,
-            documentTypeId,
+    documentTypeId,
     setDocumentTypeId,
     languageId,
     setLanguageId,
@@ -169,7 +168,7 @@ export function useUpload() {
     uploading,
     uploaded,
     subjects,
-        documentTypes,
+    documentTypes,
     languages,
     documentSources,
     handleFileChange,

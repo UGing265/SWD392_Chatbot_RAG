@@ -58,7 +58,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	chunkRepo := postgres.NewChunkRepository(db)
 	chapterRepo := postgres.NewChapterRepository(db)
 	subjectRepo := postgres.NewSubjectRepository(db)
-	termRepo := postgres.NewAcademicTermRepository(db)
+
 	typeRepo := postgres.NewDocumentTypeRepository(db)
 	langRepo := postgres.NewLanguageRepository(db)
 	sourceRepo := postgres.NewDocumentSourceRepository(db)
@@ -77,7 +77,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		docRepo, fileRepo, chunkRepo, chapterRepo, jobRepo, bookmarkRepo, s3Storage, llmClient, reportRepo, subjectRepo, assignRepo,
 	)
 	lookupUseCase := lookup_usecase.NewLookupUseCase(
-		subjectRepo, termRepo, typeRepo, langRepo, sourceRepo, assignRepo, userRepo,
+		subjectRepo, typeRepo, langRepo, sourceRepo, assignRepo, userRepo,
 	)
 	adminUseCase := admin_usecase.NewAdminUseCase(
 		docRepo, reportRepo, userRepo, auditRepo, jobRepo, chunkRepo, fileRepo, docUseCase,
@@ -185,10 +185,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 			admin.PUT("/document-sources/:id", adminHandler.UpdateDocumentSource)
 			admin.DELETE("/document-sources/:id", adminHandler.DeleteDocumentSource)
 
-			// Metadata Academic Terms CRUD
-			admin.POST("/academic-terms", adminHandler.CreateAcademicTerm)
-			admin.PUT("/academic-terms/:id", adminHandler.UpdateAcademicTerm)
-			admin.DELETE("/academic-terms/:id", adminHandler.DeleteAcademicTerm)
+
 		}
 
 		// Audit Logs

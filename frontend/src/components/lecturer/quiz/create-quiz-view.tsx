@@ -41,10 +41,6 @@ interface Subject {
   name: string;
 }
 
-interface AcademicTerm {
-  id: string;
-  name: string;
-}
 
 import { useCreateQuiz } from "@/hooks/lecturer/use-create-quiz";
 
@@ -56,11 +52,8 @@ export function CreateQuizView() {
     setDescription,
     subjectId,
     setSubjectId,
-    termId,
-    setTermId,
     questions,
     subjects,
-    terms,
     saving,
     saved,
     addQuestion,
@@ -129,19 +122,7 @@ export function CreateQuizView() {
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-              <Select
-                label={
-                  <Group gap={4} align="center">
-                    <IconCalendar size={14} className="text-zinc-500" />
-                    <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">Kỳ học</Text>
-                  </Group>
-                }
-                placeholder="Chọn kỳ học"
-                value={termId}
-                onChange={setTermId}
-                data={terms.map((t) => ({ value: t.id, label: t.name }))}
-                radius="lg"
-              />
+              
 
               <Select
                 label={
@@ -261,7 +242,7 @@ export function CreateQuizView() {
 
           <Button
             onClick={handleSave}
-            disabled={saving || !title || !termId || !subjectId}
+            disabled={saving || !title || !subjectId}
             color="dark"
             leftSection={<IconDeviceFloppy size={16} />}
             radius="lg"

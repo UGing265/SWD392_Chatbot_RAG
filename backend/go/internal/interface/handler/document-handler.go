@@ -254,12 +254,6 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		}
 	}
 
-	var termID *uuid.UUID
-	if termIDStr := c.PostForm("academic_term_id"); termIDStr != "" {
-		if uid, err := uuid.Parse(termIDStr); err == nil {
-			termID = &uid
-		}
-	}
 
 	var langID *uuid.UUID
 	if langIDStr := c.PostForm("language_id"); langIDStr != "" {
@@ -614,7 +608,6 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 	types, _ := h.lookupUseCase.GetDocumentTypes(c.Request.Context())
 	langs, _ := h.lookupUseCase.GetLanguages(c.Request.Context())
 	sources, _ := h.lookupUseCase.GetDocumentSources(c.Request.Context())
-	terms, _ := h.lookupUseCase.GetAcademicTerms(c.Request.Context())
 
 	c.JSON(http.StatusOK, gin.H{
 		"subjects":        subjects,

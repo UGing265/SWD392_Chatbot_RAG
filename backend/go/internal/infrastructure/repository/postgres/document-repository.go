@@ -405,6 +405,11 @@ func (r *DocumentRepository) FindAllAdmin(ctx context.Context, params document.F
 	}
 	defer rows.Close()
 
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
 	var docs []*document.Document
 	for rows.Next() {
 		var doc document.Document
@@ -419,32 +424,6 @@ func (r *DocumentRepository) FindAllAdmin(ctx context.Context, params document.F
 	}
 
 	return docs, total, nil
-}
-
-func (r *DocumentRepository) ExistsByMd5(ctx context.Context, md5 string) (bool, error) {
-	var exists bool
-	err := r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM documents WHERE md5_hash = $1)", md5).Scan(&exists)
-	return exists, err
-}
-
-func (r *DocumentRepository) Update(ctx context.Context, doc *document.Document) error {
-	_, err := r.pool.Exec(ctx,
-		`UPDATE documents SET owner_user_id = $2, title = $3, description = $4, subject_id = $5, status = $6, visibility = $7, page_count = $8, total_chunks = $9, total_chapters = $10, view_count = $11, download_count = $12, search_text = $13, updated_at = $14, approved_at = $15, slug = $16, document_type_id = $17, language_id = $18, md5_hash = $19, academic_term_id = $20, document_source_id = $21
-		WHERE id = $1`,
-		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.DocumentSourceID,
-	)
-	return err
-}
-
-func (r *DocumentRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := r.pool.Exec(ctx, "DELETE FROM documents WHERE id = $1", id)
-	return err
-}
-
-func (r *DocumentRepository) CountByStatus(ctx context.Context, ownerID uuid.UUID, status string) (int, error) {
-	var total int
-	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM documents WHERE owner_user_id = $1 AND status = $2", ownerID, status).Scan(&total)
-	return total, err
 }
 
 func (r *DocumentRepository) CountFilesByOwner(ctx context.Context, ownerID uuid.UUID) (int, error) {
@@ -469,4 +448,30 @@ func (r *DocumentRepository) CountChunksByDocument(ctx context.Context, docID uu
 	var total int
 	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM document_chunks WHERE document_id = $1", docID).Scan(&total)
 	return total, err
+}
+
+func (r *DocumentRepository) ExistsByMd5(ctx context.Context, md5 string) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM documents WHERE md5_hash = $1)", md5).Scan(&exists)
+	return exists, err
+}
+
+func (r *DocumentRepository) CountByStatus(ctx context.Context, ownerID uuid.UUID, status string) (int, error) {
+	var total int
+	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM documents WHERE owner_user_id = $1 AND status = $2", ownerID, status).Scan(&total)
+	return total, err
+}
+
+func (r *DocumentRepository) Update(ctx context.Context, doc *document.Document) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE documents SET owner_user_id = $2, title = $3, description = $4, subject_id = $5, status = $6, visibility = $7, page_count = $8, total_chunks = $9, total_chapters = $10, view_count = $11, download_count = $12, search_text = $13, updated_at = $14, approved_at = $15, slug = $16, document_type_id = $17, language_id = $18, md5_hash = $19, document_source_id = $20
+		WHERE id = $1`,
+		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.DocumentSourceID,
+	)
+	return err
+}
+
+func (r *DocumentRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, "DELETE FROM documents WHERE id = $1", id)
+	return err
 }

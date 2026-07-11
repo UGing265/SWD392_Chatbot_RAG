@@ -49,7 +49,7 @@ const navGroups = [
   },
 ];
 
-export function Sidebar({ session, signOut, children }: { session?: any, signOut?: any, children?: React.ReactNode }) {
+export function Sidebar({ session, signOut, children, basePath, navItems, collapsed, onToggleCollapse, showCollapseButton }: { session?: any, signOut?: any, children?: React.ReactNode, basePath?: string, navItems?: any[], collapsed?: boolean, onToggleCollapse?: () => void, showCollapseButton?: boolean }) {
   const pathname = usePathname();
   const user = session?.user;
   const userName = user?.name || "Người dùng";

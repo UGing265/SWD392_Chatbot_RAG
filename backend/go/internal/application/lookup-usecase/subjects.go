@@ -181,7 +181,7 @@ func (uc *LookupUseCase) ReplaceLecturerSubjectAssignments(ctx context.Context, 
 	return uc.GetLecturerSubjectAssignmentsByLecturer(ctx, lecturerID)
 }
 
-func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string, termID *uuid.UUID) (*application.SubjectDto, error) {
+func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string) (*application.SubjectDto, error) {
 	if code == "" || name == "" {
 		return nil, errors.New("Mã môn học và tên môn học không được để trống")
 	}
@@ -214,7 +214,7 @@ func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string, t
 	}, nil
 }
 
-func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, name string, termID *uuid.UUID) (*application.SubjectDto, error) {
+func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, name string) (*application.SubjectDto, error) {
 	if code == "" || name == "" {
 		return nil, errors.New("Mã môn học và tên môn học không được để trống")
 	}

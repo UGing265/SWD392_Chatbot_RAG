@@ -24,9 +24,9 @@ func (r *SubjectRepository) Create(ctx context.Context, sub *subject.Subject) er
 	defer cancel()
 
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO subjects (id, code, name, academic_term_id, created_at)
-		VALUES ($1, $2, $3, $4, $5)`,
-		sub.ID, sub.Code, sub.Name, sub.AcademicTermID, sub.CreatedAt,
+		`INSERT INTO subjects (id, code, name, created_at)
+		VALUES ($1, $2, $3, $4)`,
+		sub.ID, sub.Code, sub.Name, sub.CreatedAt,
 	)
 	return err
 }
@@ -37,11 +37,10 @@ func (r *SubjectRepository) FindByID(ctx context.Context, id uuid.UUID) (*subjec
 
 	var sub subject.Subject
 	err := r.pool.QueryRow(ctx,
-		`SELECT s.id, s.code, s.name, s.academic_term_id, s.created_at, at.name as academic_term_name
-		FROM subjects s
-		LEFT JOIN academic_terms at ON s.academic_term_id = at.id
-		WHERE s.id = $1`, id,
-	).Scan(&sub.ID, &sub.Code, &sub.Name, &sub.AcademicTermID, &sub.CreatedAt, &sub.AcademicTermName)
+		`SELECT id, code, name, created_at
+		FROM subjects
+		WHERE id = $1`, id,
+	).Scan(&sub.ID, &sub.Code, &sub.Name, &sub.CreatedAt)
 
 	if err == pgx.ErrNoRows {
 		return nil, nil
@@ -57,10 +56,9 @@ func (r *SubjectRepository) FindAll(ctx context.Context) ([]*subject.Subject, er
 	defer cancel()
 
 	rows, err := r.pool.Query(ctx,
-		`SELECT s.id, s.code, s.name, s.academic_term_id, s.created_at, at.name as academic_term_name
-		FROM subjects s
-		LEFT JOIN academic_terms at ON s.academic_term_id = at.id
-		ORDER BY s.code ASC`,
+		`SELECT id, code, name, created_at
+		FROM subjects
+		ORDER BY code ASC`,
 	)
 	if err != nil {
 		return nil, err
@@ -70,7 +68,7 @@ func (r *SubjectRepository) FindAll(ctx context.Context) ([]*subject.Subject, er
 	var subs []*subject.Subject
 	for rows.Next() {
 		var sub subject.Subject
-		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.AcademicTermID, &sub.CreatedAt, &sub.AcademicTermName)
+		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -84,11 +82,10 @@ func (r *SubjectRepository) FindAllPublic(ctx context.Context) ([]*subject.Subje
 	defer cancel()
 
 	rows, err := r.pool.Query(ctx,
-		`SELECT s.id, s.code, s.name, s.academic_term_id, s.created_at, at.name as academic_term_name
-		FROM subjects s
-		LEFT JOIN academic_terms at ON s.academic_term_id = at.id
-		WHERE s.status = 'public'
-		ORDER BY s.code ASC`,
+		`SELECT id, code, name, created_at
+		FROM subjects
+		WHERE status = 'public'
+		ORDER BY code ASC`,
 	)
 	if err != nil {
 		return nil, err
@@ -98,7 +95,7 @@ func (r *SubjectRepository) FindAllPublic(ctx context.Context) ([]*subject.Subje
 	var subs []*subject.Subject
 	for rows.Next() {
 		var sub subject.Subject
-		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.AcademicTermID, &sub.CreatedAt, &sub.AcademicTermName)
+		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -112,9 +109,8 @@ func (r *SubjectRepository) FindAllByOwner(ctx context.Context, ownerID uuid.UUI
 	defer cancel()
 
 	rows, err := r.pool.Query(ctx,
-		`SELECT DISTINCT s.id, s.code, s.name, s.academic_term_id, s.created_at, at.name as academic_term_name
+		`SELECT DISTINCT s.id, s.code, s.name, s.created_at
 		FROM subjects s
-		LEFT JOIN academic_terms at ON s.academic_term_id = at.id
 		JOIN documents d ON d.subject_id = s.id
 		WHERE d.owner_user_id = $1
 		ORDER BY s.code ASC`,
@@ -128,7 +124,7 @@ func (r *SubjectRepository) FindAllByOwner(ctx context.Context, ownerID uuid.UUI
 	var subs []*subject.Subject
 	for rows.Next() {
 		var sub subject.Subject
-		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.AcademicTermID, &sub.CreatedAt, &sub.AcademicTermName)
+		err := rows.Scan(&sub.ID, &sub.Code, &sub.Name, &sub.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -142,9 +138,9 @@ func (r *SubjectRepository) Update(ctx context.Context, sub *subject.Subject) er
 	defer cancel()
 
 	_, err := r.pool.Exec(ctx,
-		`UPDATE subjects SET code = $2, name = $3, academic_term_id = $4
+		`UPDATE subjects SET code = $2, name = $3
 		WHERE id = $1`,
-		sub.ID, sub.Code, sub.Name, sub.AcademicTermID,
+		sub.ID, sub.Code, sub.Name,
 	)
 	return err
 }

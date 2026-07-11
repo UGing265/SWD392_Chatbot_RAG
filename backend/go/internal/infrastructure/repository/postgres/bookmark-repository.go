@@ -41,15 +41,14 @@ func (r *BookmarkRepository) ToggleBookmark(ctx context.Context, userID uuid.UUI
 
 func (r *BookmarkRepository) GetBookmarkedDocuments(ctx context.Context, userID uuid.UUID) ([]*document.Document, error) {
 	query := `
-		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		JOIN user_bookmarks b ON d.id = b.document_id
 		JOIN users u ON d.owner_user_id = u.id
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		WHERE b.user_id = $1
 		ORDER BY b.created_at DESC
