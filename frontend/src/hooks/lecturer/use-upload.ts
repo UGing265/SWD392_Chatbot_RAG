@@ -136,7 +136,7 @@ export function useUpload({ onSuccess }: { onSuccess?: () => void } = {}) {
           onSuccess();
         } else {
           const role = window.location.pathname.split("/")[1] || "lecturer";
-          window.location.href = `/${role}/documents/my`;
+          window.location.href = `/${role}/progress`;
         }
       }, 2000);
     } catch (error: any) {

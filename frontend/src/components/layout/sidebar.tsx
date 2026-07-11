@@ -44,7 +44,7 @@ const navGroups = [
     label: "Quản Lý",
     items: [
       { label: "Tài Liệu Của Tôi", icon: IconFolder, href: "/lecturer/documents/my" },
-      { label: "Tiến Trình", icon: IconDatabaseImport, href: "/lecturer/upload-jobs" },
+      { label: "Tiến Trình", icon: IconDatabaseImport, href: "/lecturer/progress" },
     ],
   },
 ];

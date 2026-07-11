@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	admin_usecase "swd392-chatbot-rag/internal/application/admin-usecase"
 	document_usecase "swd392-chatbot-rag/internal/application/document-usecase"
@@ -224,17 +225,20 @@ func (h *AdminHandler) Documents(c *gin.Context) {
 		queryPtr = &q
 	}
 
-	var subjectIDPtr *uuid.UUID
+		subjectIDs := []uuid.UUID{}
 	if subIDStr := c.Query("subjectId"); subIDStr != "" {
-		if subID, err := uuid.Parse(subIDStr); err == nil {
-			subjectIDPtr = &subID
+		parts := strings.Split(subIDStr, ",")
+		for _, p := range parts {
+			if uid, err := uuid.Parse(strings.TrimSpace(p)); err == nil {
+				subjectIDs = append(subjectIDs, uid)
+			}
 		}
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 
-	result, err := h.adminUseCase.GetAdminDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize)
+	result, err := h.adminUseCase.GetAdminDocuments(c.Request.Context(), queryPtr, subjectIDs, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -97,17 +97,20 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
     }
   };
 
-  const selectStyles = {
-    input: { backgroundColor: '#F4F4F5', border: '1px solid #E4E4E7', height: '38px', minHeight: '38px', fontSize: '13px', color: '#18181B', fontWeight: 600, cursor: 'pointer' },
-    section: { color: '#71717A' }
+  const sharedInputClasses = "!bg-white focus:!bg-white !border-black/10 hover:!border-black/20 focus:!border-black/20 focus:!shadow-sm !rounded-lg transition-all duration-300 !text-[13px] !font-medium";
+  const inputClasses = { 
+    input: `${sharedInputClasses} !h-10 !px-4`,
+    label: "!text-[10px] !font-bold !capitalize !text-zinc-500 !mb-1.5"
   };
-
-  const textInputStyles = {
-    input: { backgroundColor: '#F4F4F5', border: '1px solid #E4E4E7', height: '42px', fontSize: '14px', color: '#18181B', fontWeight: 600 }
+  const selectClasses = { 
+    input: `${sharedInputClasses} !h-10 !px-4`,
+    label: "!text-[10px] !font-bold !capitalize !text-zinc-500 !mb-1.5",
+    dropdown: "!rounded-xl !border-0 !ring-1 !ring-black/5 !shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] !p-2 !bg-white/95 !backdrop-blur-2xl",
+    option: "!rounded-lg data-[hovered]:!bg-zinc-100/80 data-[selected]:!bg-zinc-100 data-[selected]:!text-zinc-900 !text-[13px] !font-semibold transition-all duration-200 !px-4 !py-2 !mb-0.5 last:!mb-0"
   };
-
-  const textareaStyles = {
-    input: { backgroundColor: '#F4F4F5', border: '1px solid #E4E4E7', fontSize: '14px', color: '#18181B', fontWeight: 500, padding: '12px 16px' }
+  const textareaClasses = { 
+    input: `${sharedInputClasses} !py-3 !px-4`,
+    label: "!text-[10px] !font-bold !capitalize !text-zinc-500 !mb-1.5"
   };
 
   return (
@@ -123,16 +126,19 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
       radius="xl"
       padding={0}
       withCloseButton={false}
-      centered
+      yOffset="10vh"
       overlayProps={{
         backgroundOpacity: 0.55,
-        blur: 4,
+      }}
+      transitionProps={{ transition: 'fade', duration: 200 }}
+      classNames={{
+        content: "!bg-white !transform-none",
       }}
     >
       <div className="flex flex-col relative font-sans overflow-hidden">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-white">
           <div>
             <h2 className="text-[20px] font-bold text-zinc-900 tracking-tight">Tải lên tài liệu</h2>
             <p className="text-[13px] text-zinc-500 font-medium mt-1">
@@ -169,10 +175,10 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
           <div className="flex flex-col max-h-[80vh] overflow-y-auto">
             <form id="upload-modal-form" onSubmit={handleUpload}>
               
-              <div className="p-8">
+              <div className="p-6">
                 {/* File Upload Section */}
-                <div className="mb-8">
-                  <h3 className="text-[14px] font-bold tracking-tight text-zinc-900 mb-3">Tệp Đính Kèm</h3>
+                <div className="mb-6">
+                  <h3 className="text-[14px] font-bold tracking-tight text-zinc-900 mb-2">Tệp Đính Kèm</h3>
                   <input
                     type="file"
                     id="modal-file"
@@ -190,12 +196,12 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
                       onDragLeave={handleDrag}
                       onDrop={handleDrop}
                       className={`
-                        w-full h-[140px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2
+                        w-full h-[90px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-1.5
                         transition-all cursor-pointer group
                         ${dragActive ? 'bg-zinc-100 border-zinc-400' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300'}
                       `}
                     >
-                      <IconCloudUpload size={28} className="text-zinc-400 group-hover:text-zinc-600 transition-colors" stroke={1.5} />
+                      <IconCloudUpload size={24} className="text-zinc-400 group-hover:text-zinc-600 transition-colors" stroke={1.5} />
                       <div className="text-center px-4">
                         <p className="text-[13px] font-bold text-zinc-700 mb-1">
                           Nhấn để chọn file <span className="font-medium text-zinc-500">hoặc kéo thả vào đây</span>
@@ -241,101 +247,110 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left Column: Core Info */}
                   <div>
-                    <h3 className="text-[14px] font-bold tracking-tight text-zinc-900 mb-4">Thông Tin Chung</h3>
-                    <div className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-3">
                       <TextInput
                         id="modal-title"
-                        placeholder="Tiêu đề tài liệu..."
+                        label="Tiêu đề tài liệu"
+                        placeholder="Nhập tiêu đề tài liệu..."
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
                         disabled={uploading}
-                        variant="filled"
-                        radius="xl"
-                        styles={textInputStyles}
+                        classNames={inputClasses}
                       />
 
                       <Textarea
                         id="modal-description"
+                        label="Mô tả chi tiết"
                         placeholder="Mô tả chi tiết nội dung hoặc ghi chú thêm..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        rows={6}
+                        rows={4}
                         disabled={uploading}
-                        variant="filled"
-                        radius="xl"
-                        styles={textareaStyles}
+                        classNames={textareaClasses}
                       />
                     </div>
                   </div>
 
                   {/* Right Column: Classification */}
                   <div>
-                    <h3 className="text-[14px] font-bold tracking-tight text-zinc-900 mb-4">Phân Loại Nâng Cao</h3>
-                    <div className="flex flex-col gap-4">
-                      <Select
-                        id="modal-subject"
-                        placeholder="Môn học"
-                        data={subjects.map((s) => ({ value: s.id, label: s.code || (s.name ? s.name.split(" - ")[0] : "") }))}
-                        value={subjectId}
-                        onChange={(val) => setSubjectId(val || "")}
-                        disabled={uploading}
-                        searchable
-                        clearable
-                        variant="filled"
-                        radius="xl"
-                        leftSection={<IconBooks size={16} className="text-zinc-500" stroke={1.5} />}
-                        styles={selectStyles}
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <Select
+                          id="modal-subject"
+                          label="Môn học"
+                          placeholder="Chọn môn học..."
+                          data={subjects.map(s => {
+                            const label = s.name || s.code || "";
+                            return { value: s.id, label };
+                          })}
+                          value={subjectId}
+                          onChange={(val) => setSubjectId(val || "")}
+                          disabled={uploading}
+                          searchable
+                          clearable
+                          classNames={selectClasses}
+                          comboboxProps={{ width: 'max-content', position: 'bottom-start' }}
+                          renderOption={({ option }) => {
+                            const parts = option.label.split(' - ');
+                            if (parts.length >= 2) {
+                              const code = parts[0];
+                              const name = parts.slice(1).join(' - ');
+                              return (
+                                <div className="flex flex-col gap-0.5 py-0.5">
+                                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.15em]">{code}</span>
+                                  <span className="text-[13px] font-semibold whitespace-nowrap">{name}</span>
+                                </div>
+                              );
+                            }
+                            return <span className="whitespace-nowrap">{option.label}</span>;
+                          }}
+                        />
+                      </div>
                       
                       <Select
                         id="modal-documentType"
-                        placeholder="Học liệu"
+                        label="Loại tài liệu"
+                        placeholder="Chọn loại tài liệu..."
                         data={documentTypes.map((dt) => ({ value: dt.id, label: dt.name }))}
                         value={documentTypeId}
                         onChange={(val) => setDocumentTypeId(val || "")}
                         disabled={uploading}
                         clearable
-                        variant="filled"
-                        radius="xl"
-                        leftSection={<IconFileCertificate size={16} className="text-zinc-500" stroke={1.5} />}
-                        styles={selectStyles}
+                        classNames={selectClasses}
                       />
 
                       <Select
                         id="modal-language"
-                        placeholder="Ngôn ngữ"
+                        label="Ngôn ngữ"
+                        placeholder="Chọn ngôn ngữ..."
                         data={languages.map((l) => ({ value: l.id, label: l.name }))}
                         value={languageId}
                         onChange={(val) => setLanguageId(val || "")}
                         disabled={uploading}
                         clearable
-                        variant="filled"
-                        radius="xl"
-                        leftSection={<IconLanguage size={16} className="text-zinc-500" stroke={1.5} />}
-                        styles={selectStyles}
+                        classNames={selectClasses}
                       />
                       
                       <Select
                         id="modal-documentSource"
-                        placeholder="Nguồn gốc"
+                        label="Nguồn gốc"
+                        placeholder="Chọn nguồn gốc..."
                         data={documentSources.map((ds) => ({ value: ds.id, label: ds.name }))}
                         value={documentSourceId}
                         onChange={(val) => setDocumentSourceId(val || "")}
                         disabled={uploading}
                         clearable
-                        variant="filled"
-                        radius="xl"
-                        leftSection={<IconWorld size={16} className="text-zinc-500" stroke={1.5} />}
-                        styles={selectStyles}
+                        classNames={selectClasses}
                       />
 
                       <Select
                         id="modal-visibility"
-                        placeholder="Quyền truy cập"
+                        label="Quyền truy cập"
+                        placeholder="Chọn quyền truy cập..."
                         data={[
                           { value: "private", label: "Riêng tư (Chỉ mình tôi)" },
                           { value: "school_wide", label: "Nội bộ trường" },
@@ -344,10 +359,7 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
                         value={visibility}
                         onChange={(val) => setVisibility(val || "private")}
                         disabled={uploading}
-                        variant="filled"
-                        radius="xl"
-                        leftSection={<IconLock size={16} className="text-zinc-500" stroke={1.5} />}
-                        styles={selectStyles}
+                        classNames={selectClasses}
                       />
                     </div>
                   </div>
@@ -355,12 +367,10 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
               </div>
 
               {/* Actions Footer */}
-              <div className="px-8 py-5 border-t border-zinc-100 bg-zinc-50 flex justify-end gap-3 sticky bottom-0 z-10">
+              <div className="px-6 py-4 border-t border-zinc-100 bg-white flex justify-end gap-3 sticky bottom-0 z-10">
                 <Button
                   variant="default"
-                  radius="xl"
-                  size="md"
-                  className="font-bold border-zinc-200 text-zinc-600 hover:bg-zinc-100"
+                  className="!h-10 !rounded-lg !text-[13px] !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 !shadow-sm transition-colors"
                   onClick={() => onClose()}
                   disabled={uploading}
                 >
@@ -370,9 +380,7 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
                   type="submit"
                   disabled={!file || !title.trim() || uploading}
                   loading={uploading}
-                  size="md"
-                  radius="xl"
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-colors"
+                  className="!h-10 !rounded-lg !text-[13px] !font-semibold !bg-zinc-900 hover:!bg-zinc-800 !text-white !shadow-sm !border-0 transition-colors"
                   rightSection={<IconArrowRight size={16} />}
                 >
                   Xác nhận tải lên

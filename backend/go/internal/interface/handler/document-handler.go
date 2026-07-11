@@ -16,6 +16,20 @@ import (
 	"github.com/google/uuid"
 )
 
+func parseUUIDs(param string) []uuid.UUID {
+	if param == "" {
+		return nil
+	}
+	parts := strings.Split(param, ",")
+	var uuids []uuid.UUID
+	for _, p := range parts {
+		if uid, err := uuid.Parse(strings.TrimSpace(p)); err == nil {
+			uuids = append(uuids, uid)
+		}
+	}
+	return uuids
+}
+
 type DocumentHandler struct {
 	docUseCase    *document_usecase.DocumentUseCase
 	lookupUseCase *lookup_usecase.LookupUseCase
@@ -58,33 +72,10 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		queryPtr = &q
 	}
 
-	var subjectIDPtr *uuid.UUID
-	if subIDStr := c.Query("subjectId"); subIDStr != "" {
-		if subID, err := uuid.Parse(subIDStr); err == nil {
-			subjectIDPtr = &subID
-		}
-	}
-
-	var typeIDPtr *uuid.UUID
-	if typeIDStr := c.Query("documentTypeId"); typeIDStr != "" {
-		if typeID, err := uuid.Parse(typeIDStr); err == nil {
-			typeIDPtr = &typeID
-		}
-	}
-
-	var langIDPtr *uuid.UUID
-	if langIDStr := c.Query("languageId"); langIDStr != "" {
-		if langID, err := uuid.Parse(langIDStr); err == nil {
-			langIDPtr = &langID
-		}
-	}
-
-	var sourceIDPtr *uuid.UUID
-	if sourceIDStr := c.Query("documentSourceId"); sourceIDStr != "" {
-		if sourceID, err := uuid.Parse(sourceIDStr); err == nil {
-			sourceIDPtr = &sourceID
-		}
-	}
+		subjectIDs := parseUUIDs(c.Query("subjectId"))
+	typeIDs := parseUUIDs(c.Query("documentTypeId"))
+	langIDs := parseUUIDs(c.Query("languageId"))
+	sourceIDs := parseUUIDs(c.Query("documentSourceId"))
 
 	sortBy := c.DefaultQuery("sortBy", "date_desc")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -97,7 +88,7 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		requesterIDPtr = &uid
 	}
 
-	result, err := h.docUseCase.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize, requesterIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr)
+	result, err := h.docUseCase.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDs, page, pageSize, requesterIDPtr, &sortBy, typeIDs, langIDs, sourceIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch documents: " + err.Error()})
 		return
@@ -133,40 +124,16 @@ func (h *DocumentHandler) MyDocuments(c *gin.Context) {
 		queryPtr = &q
 	}
 
-	var subjectIDPtr *uuid.UUID
-	if subIDStr := c.Query("subjectId"); subIDStr != "" {
-		if subID, err := uuid.Parse(subIDStr); err == nil {
-			subjectIDPtr = &subID
-		}
-	}
-
-
-	var typeIDPtr *uuid.UUID
-	if typeIDStr := c.Query("documentTypeId"); typeIDStr != "" {
-		if typeID, err := uuid.Parse(typeIDStr); err == nil {
-			typeIDPtr = &typeID
-		}
-	}
-
-	var langIDPtr *uuid.UUID
-	if langIDStr := c.Query("languageId"); langIDStr != "" {
-		if langID, err := uuid.Parse(langIDStr); err == nil {
-			langIDPtr = &langID
-		}
-	}
-
-	var sourceIDPtr *uuid.UUID
-	if sourceIDStr := c.Query("documentSourceId"); sourceIDStr != "" {
-		if sourceID, err := uuid.Parse(sourceIDStr); err == nil {
-			sourceIDPtr = &sourceID
-		}
-	}
+		subjectIDs := parseUUIDs(c.Query("subjectId"))
+	typeIDs := parseUUIDs(c.Query("documentTypeId"))
+	langIDs := parseUUIDs(c.Query("languageId"))
+	sourceIDs := parseUUIDs(c.Query("documentSourceId"))
 
 	sortBy := c.DefaultQuery("sortBy", "date_desc")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "6"))
 
-	result, err := h.docUseCase.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr, page, pageSize)
+	result, err := h.docUseCase.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDs, &sortBy, typeIDs, langIDs, sourceIDs, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch my documents: " + err.Error()})
 		return

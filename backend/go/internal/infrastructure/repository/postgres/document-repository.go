@@ -23,7 +23,7 @@ func NewDocumentRepository(pool *pgxpool.Pool) *DocumentRepository {
 func (r *DocumentRepository) Create(ctx context.Context, doc *document.Document) error {
 	_, err := r.pool.Exec(ctx,
 		`INSERT INTO documents (id, owner_user_id, title, description, subject_id, status, visibility, page_count, total_chunks, total_chapters, view_count, download_count, search_text, created_at, updated_at, approved_at, slug, document_type_id, language_id, md5_hash, document_source_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
 		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.CreatedAt, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.DocumentSourceID,
 	)
 	return err
@@ -140,29 +140,29 @@ func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.
 		argIndex++
 	}
 
-	if params.SubjectID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = $%d", argIndex))
-		args = append(args, *params.SubjectID)
+	if len(params.SubjectIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = ANY($%d)", argIndex))
+		args = append(args, params.SubjectIDs)
 		argIndex++
 	}
 
 	
 
-	if params.DocumentTypeID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = $%d", argIndex))
-		args = append(args, *params.DocumentTypeID)
+	if len(params.DocumentTypeIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = ANY($%d)", argIndex))
+		args = append(args, params.DocumentTypeIDs)
 		argIndex++
 	}
 
-	if params.LanguageID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.language_id = $%d", argIndex))
-		args = append(args, *params.LanguageID)
+	if len(params.LanguageIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.language_id = ANY($%d)", argIndex))
+		args = append(args, params.LanguageIDs)
 		argIndex++
 	}
 
-	if params.DocumentSourceID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_source_id = $%d", argIndex))
-		args = append(args, *params.DocumentSourceID)
+	if len(params.DocumentSourceIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_source_id = ANY($%d)", argIndex))
+		args = append(args, params.DocumentSourceIDs)
 		argIndex++
 	}
 
@@ -255,29 +255,29 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 		argIndex++
 	}
 
-	if params.SubjectID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = $%d", argIndex))
-		args = append(args, *params.SubjectID)
+	if len(params.SubjectIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = ANY($%d)", argIndex))
+		args = append(args, params.SubjectIDs)
 		argIndex++
 	}
 
 	
 
-	if params.DocumentTypeID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = $%d", argIndex))
-		args = append(args, *params.DocumentTypeID)
+	if len(params.DocumentTypeIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = ANY($%d)", argIndex))
+		args = append(args, params.DocumentTypeIDs)
 		argIndex++
 	}
 
-	if params.LanguageID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.language_id = $%d", argIndex))
-		args = append(args, *params.LanguageID)
+	if len(params.LanguageIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.language_id = ANY($%d)", argIndex))
+		args = append(args, params.LanguageIDs)
 		argIndex++
 	}
 
-	if params.DocumentSourceID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_source_id = $%d", argIndex))
-		args = append(args, *params.DocumentSourceID)
+	if len(params.DocumentSourceIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_source_id = ANY($%d)", argIndex))
+		args = append(args, params.DocumentSourceIDs)
 		argIndex++
 	}
 
@@ -370,9 +370,9 @@ func (r *DocumentRepository) FindAllAdmin(ctx context.Context, params document.F
 		argIndex++
 	}
 
-	if params.SubjectID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = $%d", argIndex))
-		args = append(args, *params.SubjectID)
+	if len(params.SubjectIDs) > 0 {
+		queryBuilder.WriteString(fmt.Sprintf(" AND d.subject_id = ANY($%d)", argIndex))
+		args = append(args, params.SubjectIDs)
 		argIndex++
 	}
 

@@ -1,99 +1,59 @@
 "use client";
 
 import { useMyDocuments } from "@/hooks/lecturer/use-my-documents";
-import { ActionIcon, Button, Group, Pagination, Table, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Loader,
+  Modal,
+  Pagination,
+  Table,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import {
   IconDatabaseImport,
+  IconEdit,
+  IconEye,
   IconFileText,
   IconListSearch,
-  IconSettings,
+  IconSortAscending,
+  IconSortDescending,
   IconUsers,
+  IconTrash,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { DocumentFilters } from "../../common/documents/document-filters";
 import { DocumentDetailPanel } from "./document-detail-panel";
+import { InlineDocumentEdit } from "./inline-document-edit";
 import { UploadModal } from "./upload-modal";
 
-const getStatusDot = (index: number) => {
-  // 0, 1, 2 = Pending
-  // 3, 4, 5, 6, 7 = Active
-  // 8+ = Ended
-  if (index < 3)
+const getStatusDot = (status: string) => {
+  if (status === "pending")
     return (
       <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-600 text-xs bg-zinc-100 px-2.5 py-1 rounded-md whitespace-nowrap">
-        <div className="rounded-full bg-zinc-500 w-1.5 h-1.5" /> Pending
+        <div className="rounded-full bg-zinc-500 w-1.5 h-1.5" /> Chờ xử lý
       </span>
     );
-  if (index >= 3 && index < 8)
+  if (status === "active" || status === "ready" || status === "completed")
     return (
       <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 text-xs bg-emerald-50 px-2.5 py-1 rounded-md whitespace-nowrap">
-        <div className="rounded-full bg-emerald-500 w-1.5 h-1.5" /> Active
+        <div className="rounded-full bg-emerald-500 w-1.5 h-1.5" /> Hoàn tất
+      </span>
+    );
+  if (status === "processing")
+    return (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600 text-xs bg-blue-50 px-2.5 py-1 rounded-md whitespace-nowrap">
+        <div className="rounded-full bg-blue-500 w-1.5 h-1.5" /> Đang xử lý
       </span>
     );
   return (
     <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 text-xs bg-red-50 px-2.5 py-1 rounded-md whitespace-nowrap">
-      <div className="rounded-full bg-red-500 w-1.5 h-1.5" /> Ended
+      <div className="rounded-full bg-red-500 w-1.5 h-1.5" /> Lỗi
     </span>
   );
 };
-
-const getAvatarGradient = (title: string, index: number) => {
-  const gradients = [
-    "from-rose-500 to-amber-400",
-    "from-indigo-400 to-amber-300",
-    "from-pink-500 to-violet-500",
-    "from-blue-500 to-purple-400",
-    "from-emerald-400 to-cyan-500",
-    "from-fuchsia-400 to-rose-400",
-    "from-violet-500 to-blue-400",
-    "from-rose-400 to-orange-400",
-    "from-cyan-400 to-blue-500",
-    "from-amber-400 to-red-500",
-    "from-blue-600 to-violet-600",
-    "from-orange-400 to-pink-400",
-    "from-purple-500 to-rose-400",
-    "from-indigo-500 to-purple-500",
-  ];
-  return gradients[index % gradients.length];
-};
-
-// --- MOCK DATA ---
-const MOCK_AMOUNTS = [
-  "38,200 USD", "90,000 USD", "88,400 USD", "124,340 USD",
-  "77,900 USD", "88,340 USD", "56,560 USD", "99,000 USD",
-  "66,000 USD", "79,000 USD", "188,000 USD", "22,000 USD",
-  "44,000 USD", "120,000 USD",
-];
-const MOCK_CONTACTS = [
-  "Emma Johnson", "Michael Wilson", "Olivia Davis", "David Miller",
-  "James Martinez", "Emily Garcia", "Chris Anderson", "Sophia Martinez",
-  "Daniel Taylor", "Isabella Hernandez", "Ethan White", "Sarah Brown",
-  "Ava Martinez", "Liam Robinson",
-];
-const MOCK_DOMAINS = [
-  "neuratech", "cloudnova", "syncfusion", "quantumleap",
-  "bytewave", "nexusiot", "zendata", "hypernet",
-  "stellartech", "opticode", "fusioncore", "apexai",
-  "terralink", "nanologic",
-];
-const MOCK_PHONES = [
-  "(415) 555-0123", "(206) 555-0145", "(617) 555-0137", "(212) 555-0198",
-  "(312) 555-0172", "(206) 555-0145", "(617) 555-0137", "(213) 555-0164",
-  "(305) 555-0182", "(512) 555-0191", "(404) 555-0157", "(602) 555-0178",
-  "(702) 555-0189", "(215) 555-0148",
-];
-const MOCK_ADDRESSES = [
-  "34 Market Str", "13 Lake Union", "56 Cambridge", "9 Sunset Boul",
-  "101 Ocean Dri", "2 Congress Av", "83 Peachtree", "48 Central Av",
-  "988 Market St", "746 Colfax Av", "98 Riverwalk", "19 Congress A",
-  "10 Main Street", "111 Paradise R",
-];
-const MOCK_COMPANY_NAMES = [
-  "Neura Tech", "CloudNova", "SyncFusion", "Quantum Leap",
-  "ByteWave", "Nexuslo", "ZenData", "HyperNet",
-  "StellarTech", "OptiCode", "FusionCore", "ApexAI Systems",
-  "TerraLink", "NanoLogic",
-];
 
 export function MyDocumentsView() {
   const {
@@ -117,11 +77,18 @@ export function MyDocumentsView() {
     documentTypes,
     languages,
     documentSources,
+    handleDelete,
   } = useMyDocuments();
 
   const [activeTab, setActiveTab] = useState<"overview" | "detail">("overview");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "sidebar">("list");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [selectedDocumentSlug, setSelectedDocumentSlug] = useState<string | null>(null);
   const [uploadModalOpened, setUploadModalOpened] = useState(false);
+
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [deletingDocument, setDeletingDocument] = useState<{ id: string; slug: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const displayDocuments = documents.filter(
     (item) => item.status !== "processing" && item.status !== "pending",
@@ -139,53 +106,77 @@ export function MyDocumentsView() {
     updateFilters({ q: formData.get("q") as string, page: "1" });
   };
 
+  const handleSort = (field: string) => {
+    const isAsc = sortBy === `${field}_asc`;
+    updateFilters({ sortBy: isAsc ? `${field}_desc` : `${field}_asc` });
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortBy === `${field}_asc`)
+      return <IconSortAscending size={14} className="ml-1 text-zinc-600 inline" />;
+    if (sortBy === `${field}_desc`)
+      return <IconSortDescending size={14} className="ml-1 text-zinc-600 inline" />;
+    return <span className="text-zinc-300 ml-1 inline text-[10px]">▼</span>;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader size="sm" color="gray" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 shrink-0">
-            <IconUsers size={20} className="text-zinc-900" stroke={1.5} />
-            <h1 className="font-bold text-zinc-900 tracking-tight text-lg">Customers</h1>
+            {activeTab === "detail" ? (
+              <button
+                onClick={() => setActiveTab("overview")}
+                className="font-bold text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1.5 text-[15px]"
+              >
+                ← Quay lại danh sách
+              </button>
+            ) : (
+              <>
+                <IconUsers size={20} className="text-zinc-900" stroke={1.5} />
+                <h1 className="font-bold text-zinc-900 tracking-tight text-lg">Tài Liệu Của Tôi</h1>
+              </>
+            )}
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto py-1 w-full min-w-0 sm:w-auto sm:justify-end" style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}>
+          <div
+            className={`flex items-center gap-2 overflow-x-auto py-1 w-full min-w-0 sm:w-auto sm:justify-end ${activeTab === "detail" ? "hidden" : ""}`}
+            style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+          >
             <Button
               variant="default"
+              onClick={() => {
+                clearFilters();
+                setViewMode("list");
+              }}
               className="!h-8 !px-4 !rounded-lg !text-[12px] !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 !shadow-sm shrink-0 transition-colors"
             >
-              Edit view
-            </Button>
-            <Button
-              variant="default"
-              className="!h-8 !px-4 !rounded-lg !text-[12px] !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 !shadow-sm shrink-0 transition-colors"
-            >
-              Import data
+              Reset Filter Layout
             </Button>
             <Button
               variant="filled"
               className="!h-8 !px-4 !rounded-lg !text-[12px] !font-semibold !bg-zinc-900 hover:!bg-zinc-800 !text-white !shadow-sm shrink-0 transition-colors !border-0"
               onClick={() => setUploadModalOpened(true)}
             >
-              Add Customer
+              Thêm Tài Liệu
             </Button>
           </div>
         </div>
       </div>
 
       <div className="w-full p-4 sm:p-6 lg:p-10 flex-1">
-
         {activeTab === "detail" && (
           <div className="mb-6">
-            <div className="mb-4">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className="font-bold text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1 text-sm"
-              >
-                ← Quay lại danh sách
-              </button>
-            </div>
             {selectedDocumentId ? (
-              <DocumentDetailPanel documentId={selectedDocumentId} role={role} />
+              <DocumentDetailPanel documentId={selectedDocumentSlug!} role={role} />
             ) : (
               <div className="text-center py-20 bg-white border border-zinc-200 rounded-2xl shadow-sm animate-in fade-in">
                 <IconFileText size={48} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
@@ -200,62 +191,12 @@ export function MyDocumentsView() {
 
         {activeTab === "overview" && (
           <>
-            {/* Active Upload Jobs Integration Panel */}
-            {activeUploadJobs.length > 0 && (
-              <div className="bg-zinc-900 text-white p-6 rounded-2xl border-none mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-100"></span>
-                  </span>
-                  <Text
-                    size="xs"
-                    fw={700}
-                    className="text-zinc-400 tracking-widest uppercase font-mono text-xs"
-                  >
-                    Processing Island ({activeUploadJobs.length})
-                  </Text>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {activeUploadJobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="p-4 rounded-xl border border-white/10 bg-white/5 flex flex-col gap-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-white shrink-0">
-                            <IconDatabaseImport size={16} stroke={1.5} className="animate-pulse" />
-                          </div>
-                          <div className="min-w-0">
-                            <Text className="font-bold text-white truncate text-sm" fw={600}>
-                              {job.file_name}
-                            </Text>
-                            <Text className="text-zinc-400 truncate text-xs">
-                              {job.message || "Đang xử lý..."}
-                            </Text>
-                          </div>
-                        </div>
-                        <Text className="font-bold font-mono text-zinc-300 shrink-0 text-xs">
-                          {job.progress_percent}%
-                        </Text>
-                      </div>
-
-                      <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-zinc-500 to-zinc-100 rounded-full transition-all duration-500 ease-out"
-                          style={{ width: `${job.progress_percent}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Refined Modern Search & Filter Form */}
             <div className="animate-in fade-in duration-700 mb-6">
               <DocumentFilters
+                viewMode={viewMode}
+                setViewMode={setViewMode}
                 q={q}
                 subjectId={subjectId}
                 documentTypeId={documentTypeId}
@@ -276,7 +217,6 @@ export function MyDocumentsView() {
             <div
               className={`bg-white border border-zinc-200/60 rounded-2xl overflow-hidden transition-all duration-700 shadow-[0_2px_12px_rgba(0,0,0,0.03)] ${loading ? "opacity-50 blur-sm pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-8`}
             >
-
               {displayDocuments.length === 0 && !loading ? (
                 <div className="text-center py-24">
                   {q || subjectId ? (
@@ -319,110 +259,290 @@ export function MyDocumentsView() {
                   className="overflow-x-auto"
                   style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
                 >
-                  <Table
-                    verticalSpacing="md"
-                    horizontalSpacing="xl"
-                    className="w-full border-collapse"
-                    style={{ minWidth: 1000 }}
-                  >
-                    <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
-                      <Table.Tr>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[22%] py-3 text-xs whitespace-nowrap rounded-tl-xl">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 shrink-0"></div>
-                            <span>Customer <span className="text-zinc-300 ml-1">▼</span></span>
-                          </div>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap">
-                          Amount <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[10%] py-3 text-xs whitespace-nowrap">
-                          Status <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[14%] py-3 text-xs whitespace-nowrap">
-                          Contact <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[16%] py-3 text-xs whitespace-nowrap">
-                          Email <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap">
-                          Phone number <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[13%] py-3 text-xs whitespace-nowrap">
-                          Address <span className="text-zinc-300 ml-1">▼</span>
-                        </Table.Th>
-                        <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[1%] py-3 text-xs text-left whitespace-nowrap rounded-tr-xl"></Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {displayDocuments.map((item, index) => {
-                        const safeIndex = index % 14;
+                  {viewMode === "list" && (
+                    <Table
+                      verticalSpacing="md"
+                      horizontalSpacing="xl"
+                      className="w-full border-collapse"
+                      style={{ minWidth: 1000 }}
+                    >
+                      <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
+                        <Table.Tr>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[22%] py-3 text-xs whitespace-nowrap rounded-tl-xl cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("title")}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 shrink-0"></div>
+                              <span>Tên tài liệu {renderSortIcon("title")}</span>
+                            </div>
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap">
+                            Môn Học
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[10%] py-3 text-xs whitespace-nowrap">
+                            Trạng thái
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[14%] py-3 text-xs whitespace-nowrap">
+                            Phân quyền
+                          </Table.Th>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[16%] py-3 text-xs whitespace-nowrap cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("date")}
+                          >
+                            Ngày tạo {renderSortIcon("date")}
+                          </Table.Th>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("views")}
+                          >
+                            Lượt xem {renderSortIcon("views")}
+                          </Table.Th>
 
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[1%] py-3 text-xs text-left whitespace-nowrap rounded-tr-xl"></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {displayDocuments.map((item, index) => {
+                          return (
+                            <Table.Tr
+                              key={item.id}
+                              onClick={() => {
+                                setSelectedDocumentId(item.id);
+                                setSelectedDocumentSlug(item.slug || item.id);
+                                setActiveTab("detail");
+                              }}
+                              className="group/row cursor-pointer hover:bg-zinc-50/50 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] border-b border-zinc-100 last:border-0"
+                            >
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <div className="flex items-center gap-4">
+                                  <div className="min-w-0 flex items-center">
+                                    <span
+                                      className="block font-semibold text-zinc-900 group-hover:text-zinc-700 transition-colors truncate text-sm"
+                                      title={item.title}
+                                    >
+                                      {item.title || "Tài liệu không tên"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap min-w-[200px]">
+                                <div className="flex flex-col">
+                                  <span className="text-zinc-900 font-bold text-sm">
+                                    {item.subject_code || "Dùng chung"}
+                                  </span>
+                                  {item.subject_name && (
+                                    <span
+                                      className="text-zinc-500 font-medium text-xs truncate max-w-[200px]"
+                                      title={item.subject_name}
+                                    >
+                                      {item.subject_name}
+                                    </span>
+                                  )}
+                                </div>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                {getStatusDot(item.status)}
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-500 font-medium text-xs">
+                                  {item.visibility === "public"
+                                    ? "Công khai"
+                                    : item.visibility === "school_wide"
+                                      ? "Nội bộ trường"
+                                      : "Riêng tư"}
+                                </span>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-500 font-medium text-xs">
+                                  {new Date(item.created_at).toLocaleDateString("vi-VN")}
+                                </span>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-400 font-medium text-xs">
+                                  {item.view_count || 0} lượt
+                                </span>
+                              </Table.Td>
+
+                              <Table.Td className="border-0 whitespace-nowrap !pl-0">
+                                <div className="flex items-center justify-start gap-1">
+                                  <ActionIcon
+                                    variant="subtle"
+                                    size="sm"
+                                    radius="md"
+                                    className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors opacity-0 group-hover/row:opacity-100 w-7 h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingRowId(item.id);
+                                    }}
+                                  >
+                                    <IconEdit size={16} stroke={1.5} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    size="sm"
+                                    radius="md"
+                                    className="text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover/row:opacity-100 w-7 h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                    }}
+                                  >
+                                    <IconTrash size={16} stroke={1.5} />
+                                  </ActionIcon>
+                                </div>
+                              </Table.Td>
+                            </Table.Tr>
+                          );
+                        })}
+                      </Table.Tbody>
+                    </Table>
+                  )}
+
+                  {viewMode === "grid" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 p-6">
+                      {displayDocuments.map((item, index) => {
                         return (
-                          <Table.Tr
+                          <div
                             key={item.id}
                             onClick={() => {
                               setSelectedDocumentId(item.id);
+                              setSelectedDocumentSlug(item.slug || item.id);
                               setActiveTab("detail");
                             }}
-                            className="group cursor-pointer hover:bg-zinc-50/50 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] border-b border-zinc-100 last:border-0"
+                            className="group relative bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-0.5"
                           >
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <div className="flex items-center gap-4">
-                                <div
-                                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(item.title, safeIndex)} shadow-sm shrink-0`}
-                                />
-                                <div className="min-w-0 flex items-center">
-                                  <span className="block font-semibold text-zinc-900 group-hover:text-zinc-700 transition-colors truncate text-sm">
-                                    {MOCK_COMPANY_NAMES[safeIndex]}
-                                  </span>
+                            <div className="w-full px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+                              <div className="bg-zinc-100 px-2 py-0.5 rounded text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
+                                {item.subject_code || "CHUNG"}
+                              </div>
+                              <div className="scale-90 origin-top-right shrink-0">
+                                {getStatusDot(item.status)}
+                              </div>
+                            </div>
+                            <div className="p-4 flex-1 flex flex-col">
+                              <h3
+                                className="font-semibold text-zinc-900 text-[13px] line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors"
+                                title={item.title}
+                              >
+                                {item.title || "Tài liệu không tên"}
+                              </h3>
+                              {item.subject_name && (
+                                <p
+                                  className="text-zinc-500 text-xs line-clamp-1 mb-3"
+                                  title={item.subject_name}
+                                >
+                                  {item.subject_name}
+                                </p>
+                              )}
+                              <div className="mt-auto pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400 font-medium">
+                                <span>{new Date(item.created_at).toLocaleDateString("vi-VN")}</span>
+                                <div className="flex items-center gap-1">
+                                  <IconEye size={14} />
+                                  <span>{item.view_count || 0}</span>
                                 </div>
                               </div>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <span className="text-zinc-500 font-medium font-sans text-xs">
-                                {MOCK_AMOUNTS[safeIndex]}
-                              </span>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">{getStatusDot(safeIndex)}</Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <span className="text-zinc-500 font-medium text-xs">
-                                {MOCK_CONTACTS[safeIndex]}
-                              </span>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <span className="text-zinc-500 font-medium lowercase text-xs">
-                                {MOCK_CONTACTS[safeIndex].split(" ")[0]}@{MOCK_DOMAINS[safeIndex]}.com
-                              </span>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <span className="text-zinc-400 font-medium text-xs">
-                                {MOCK_PHONES[safeIndex]}
-                              </span>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap">
-                              <span className="text-zinc-400 font-medium text-xs">
-                                {MOCK_ADDRESSES[safeIndex]}
-                              </span>
-                            </Table.Td>
-                            <Table.Td className="border-0 whitespace-nowrap !pl-0">
-                              <div className="flex items-center justify-start">
-                                <ActionIcon
-                                  variant="default"
-                                  size="sm"
-                                  radius="md"
-                                  className="border-zinc-200 text-zinc-500 hover:text-zinc-900 shadow-sm w-6 h-6"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <IconSettings size={13} stroke={1.5} />
-                                </ActionIcon>
-                              </div>
-                            </Table.Td>
-                          </Table.Tr>
+                            </div>
+
+                            <div className="absolute top-16 -mt-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                              <UnstyledButton
+                                className="bg-white hover:bg-zinc-50 text-zinc-700 p-1.5 rounded-lg shadow-sm border border-zinc-200/50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRowId(item.id);
+                                }}
+                              >
+                                <IconEdit size={14} stroke={1.5} />
+                              </UnstyledButton>
+                              <UnstyledButton
+                                className="bg-white hover:bg-red-50 text-zinc-700 hover:text-red-600 p-1.5 rounded-lg shadow-sm border border-zinc-200/50 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                }}
+                              >
+                                <IconTrash size={14} stroke={1.5} />
+                              </UnstyledButton>
+                            </div>
+                          </div>
                         );
                       })}
-                    </Table.Tbody>
-                  </Table>
+                    </div>
+                  )}
+
+                  {viewMode === "sidebar" && (
+                    <div className="flex flex-col lg:flex-row gap-6 items-start p-6">
+                      <div
+                        className="w-full lg:w-[35%] xl:w-[30%] shrink-0 flex flex-col gap-2 max-h-[80vh] overflow-y-auto pr-2"
+                        style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+                      >
+                        {displayDocuments.map((item, index) => {
+                          const safeIndex = index % 14;
+                          const isSelected = selectedDocumentId === item.id;
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                setSelectedDocumentId(item.id);
+                                setSelectedDocumentSlug(item.slug || item.id);
+                              }}
+                              className={`group/sidebar-item relative flex gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer ${isSelected ? "bg-zinc-900 border-zinc-900 shadow-md" : "bg-white border-zinc-100 hover:border-zinc-200 hover:bg-zinc-50/50"}`}
+                            >
+                              <div className="min-w-0 flex-1 pr-8">
+                                <h4
+                                  className={`text-[13px] font-semibold truncate mb-0.5 ${isSelected ? "text-white" : "text-zinc-900"}`}
+                                >
+                                  {item.title || "Tài liệu không tên"}
+                                </h4>
+                                <p
+                                  className={`text-[11px] truncate uppercase tracking-wide font-medium ${isSelected ? "text-zinc-400" : "text-zinc-500"}`}
+                                >
+                                  {item.subject_code || "CHUNG"} •{" "}
+                                  <span className="normal-case tracking-normal">
+                                    {new Date(item.created_at).toLocaleDateString("vi-VN")}
+                                  </span>
+                                </p>
+                              </div>
+
+                              <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity flex items-center gap-1">
+                                <UnstyledButton
+                                  className="bg-white hover:bg-zinc-50 text-zinc-700 p-1.5 rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] border border-zinc-200/80"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingRowId(item.id);
+                                  }}
+                                >
+                                  <IconEdit size={14} stroke={1.5} />
+                                </UnstyledButton>
+                                <UnstyledButton
+                                  className="bg-white hover:bg-red-50 text-zinc-700 hover:text-red-600 p-1.5 rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] border border-zinc-200/80 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                  }}
+                                >
+                                  <IconTrash size={14} stroke={1.5} />
+                                </UnstyledButton>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="w-full lg:w-[65%] xl:w-[70%] bg-white rounded-2xl border border-zinc-200 shadow-sm min-h-[500px] overflow-hidden sticky top-6">
+                        {selectedDocumentId ? (
+                          <DocumentDetailPanel documentId={selectedDocumentSlug!} role={role} />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-zinc-400">
+                            <IconFileText size={48} className="mb-4 text-zinc-200" stroke={1.5} />
+                            <p className="font-medium text-[13px]">
+                              Chọn một tài liệu để xem chi tiết
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -448,12 +568,88 @@ export function MyDocumentsView() {
           onClose={() => setUploadModalOpened(false)}
           onSuccess={() => {
             updateFilters({ page: "1" });
+            router.push(`/${role}/progress`);
           }}
         />
+
+        <Modal
+          opened={!!editingRowId}
+          onClose={() => setEditingRowId(null)}
+          withCloseButton={false}
+          yOffset="10vh"
+          size="50rem"
+          radius="0"
+          padding={0}
+          classNames={{
+            content: "!bg-transparent !shadow-none !border-0",
+            inner: "!p-4 sm:!p-6",
+          }}
+          transitionProps={{
+            transition: "fade",
+            duration: 200,
+          }}
+        >
+          {editingRowId && (
+            <InlineDocumentEdit
+              slug={documents.find((d) => d.id === editingRowId)?.slug || editingRowId}
+              docId={editingRowId}
+              subjects={subjects}
+              documentTypes={documentTypes}
+              languages={languages}
+              documentSources={documentSources}
+              onCancel={() => setEditingRowId(null)}
+              onSave={() => {
+                setEditingRowId(null);
+                updateFilters({ page: page.toString() });
+              }}
+            />
+          )}
+        </Modal>
+
+        <Modal
+          opened={!!deletingDocument}
+          onClose={() => !isDeleting && setDeletingDocument(null)}
+          title={<span className="font-bold text-zinc-900 text-lg">Xác nhận xoá tài liệu</span>}
+          yOffset="10vh"
+          padding="lg"
+          size="md"
+          transitionProps={{ transition: "fade", duration: 200 }}
+          classNames={{
+            content: "!rounded-2xl !bg-white !transform-none",
+            header: "!mb-2",
+          }}
+        >
+          <Text size="sm" className="text-zinc-600" mb="xl">
+            Bạn có chắc chắn muốn xoá tài liệu <span className="font-semibold text-zinc-900">"{deletingDocument?.title}"</span> không? Hành động này không thể hoàn tác.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="default"
+              onClick={() => setDeletingDocument(null)}
+              disabled={isDeleting}
+              className="!rounded-lg !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 transition-colors"
+            >
+              Hủy
+            </Button>
+            <Button
+              color="red"
+              onClick={async () => {
+                if (!deletingDocument) return;
+                setIsDeleting(true);
+                await handleDelete(deletingDocument.slug || deletingDocument.id);
+                setIsDeleting(false);
+                setDeletingDocument(null);
+              }}
+              loading={isDeleting}
+              className="!rounded-lg !font-semibold !bg-red-600 hover:!bg-red-700 !text-white transition-colors"
+            >
+              Xoá tài liệu
+            </Button>
+          </Group>
+        </Modal>
       </div>
     </div>
   );
 }
 
 // Trigger HMR
-

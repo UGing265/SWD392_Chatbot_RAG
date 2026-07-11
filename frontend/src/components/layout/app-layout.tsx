@@ -7,6 +7,7 @@ import {
   IconUpload,
   IconEdit,
   IconChevronDown,
+  IconActivity,
 } from "@tabler/icons-react";
 import { Collapse, Text, UnstyledButton } from "@mantine/core";
 import type { ReactNode } from "react";
@@ -22,6 +23,7 @@ const nav = [
   { to: "/documents/shared", label: "Tài Liệu Chung", icon: IconBook },
   { to: "/documents/my", label: "Tài Liệu Riêng", icon: IconFileText, lecturerOnly: true },
   { to: "/upload", label: "Upload Tài Liệu", icon: IconUpload, lecturerOnly: true },
+  { to: "/progress", label: "Tiến trình", icon: IconActivity, lecturerOnly: true },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {

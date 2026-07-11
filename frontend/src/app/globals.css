@@ -427,3 +427,7 @@
   background-color: rgba(51, 65, 85, 0.6) !important;
   color: #f8fafc !important;
 }
+
+/* Force hide pills inside MultiSelect inputs since we render them externally */
+.mantine-MultiSelect-root .mantine-Pill-root { display: none !important; }
+

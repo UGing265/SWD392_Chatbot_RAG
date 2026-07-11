@@ -12,7 +12,7 @@ import (
 	"swd392-chatbot-rag/internal/domain/document"
 )
 
-func (uc *AdminUseCase) GetAdminDocuments(ctx context.Context, query *string, subjectID *uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
+func (uc *AdminUseCase) GetAdminDocuments(ctx context.Context, query *string, subjectIDs []uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
 	if pageSize < 5 || pageSize > 100 {
 		pageSize = 10
 	}
@@ -22,7 +22,7 @@ func (uc *AdminUseCase) GetAdminDocuments(ctx context.Context, query *string, su
 
 	params := document.FilterParams{
 		Query:     query,
-		SubjectID: subjectID,
+		SubjectIDs:        subjectIDs,
 		Page:      page,
 		PageSize:  pageSize,
 	}

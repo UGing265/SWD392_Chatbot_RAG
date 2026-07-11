@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ragApi } from "@/api/client";
+import { notify } from "@/lib/notifications";
 
 export interface Document {
   id: string;
@@ -9,6 +10,7 @@ export interface Document {
   preview_text?: string | null;
   subject_name: string | null;
   subject_code?: string | null;
+  subject_id?: string | null;
   visibility: string;
   status: string;
   created_at: string;
@@ -166,17 +168,16 @@ export function useMyDocuments() {
     router.push(`/${role}/documents/my`);
   };
 
-  const handleDelete = async (e: React.MouseEvent, docSlug: string | undefined) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = async (docSlug: string) => {
     if (!docSlug) return;
-    if (!confirm("Bạn có chắc chắn muốn xoá tài liệu này không?")) return;
 
     try {
       await ragApi.post(`/documents/${docSlug}/delete`);
+      notify.success("Thành công", "Đã xoá tài liệu thành công");
       fetchDocuments();
     } catch (error) {
       console.error("Delete error:", error);
+      notify.error("Lỗi", "Không thể xoá tài liệu. Vui lòng thử lại sau.");
     }
   };
 
@@ -204,6 +205,7 @@ export function useMyDocuments() {
     handleDelete,
   };
 }
+
 
 
 

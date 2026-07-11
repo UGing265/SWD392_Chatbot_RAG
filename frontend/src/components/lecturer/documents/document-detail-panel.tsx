@@ -17,19 +17,27 @@ import {
   IconTrash,
   IconSparkles,
   IconCircleCheck,
+  IconListDetails,
 } from "@tabler/icons-react";
-import { ActionIcon, Badge, Loader, Text, Button, Select } from "@mantine/core";
+import { ActionIcon, Badge, Loader, Text, Button, Select, Accordion, Pagination, Group } from "@mantine/core";
 import { notify } from "@/lib/notifications";
 
 export function DocumentDetailPanel({ documentId, role }: { documentId: string, role: string }) {
   const [doc, setDoc] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Chapter pagination state
+  const [chapterPage, setChapterPage] = useState(1);
+  const chaptersPerPage = 4;
 
   useEffect(() => {
     if (!documentId) return;
     setLoading(true);
     ragApi.get(`/documents/${documentId}`)
-      .then(res => setDoc(res.data))
+      .then(res => {
+        setDoc(res.data);
+        setChapterPage(1); // Reset page on new doc
+      })
       .catch(err => console.error("Error fetching document details", err))
       .finally(() => setLoading(false));
   }, [documentId]);
@@ -62,30 +70,10 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
   };
 
   const getVisibilityColor = (vis: string) => {
-    if (vis === "private") return "red";
-    if (vis === "school_wide") return "blue";
-    return "green";
-  };
-
-  const handleVisibilityChange = async (val: string) => {
-    try {
-      const payload = {
-        id: doc.id,
-        title: doc.title,
-        description: doc.description,
-        subject_id: doc.subject_id,
-        document_type_id: doc.document_type_id,
-        language_id: doc.language_id,
-        document_source_id: doc.document_source_id,
-        visibility: val
-      };
-      
-      await ragApi.post(`/documents/${doc.slug || doc.id}/edit`, payload);
-      setDoc((prev: any) => ({ ...prev, visibility: val }));
-      notify.success("Thành công", "Đã cập nhật quyền truy cập tài liệu.");
-    } catch (error) {
-      console.error(error);
-      notify.error("Lỗi", "Không thể cập nhật quyền truy cập.");
+    switch (vis) {
+      case "public": return "green";
+      case "school_wide": return "blue";
+      default: return "red";
     }
   };
 
@@ -95,27 +83,14 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
       <div className="px-8 py-6 border-b border-zinc-100 bg-zinc-50/50 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <Select
-              data={[
-                { value: "private", label: "Riêng tư" },
-                { value: "school_wide", label: "Nội bộ" },
-                { value: "public", label: "Công khai" },
-              ]}
-              value={doc.visibility}
-              onChange={(val: string | null) => handleVisibilityChange(val || "private")}
-              size="xs"
+            <Badge 
+              color={getVisibilityColor(doc.visibility)} 
+              variant="light" 
+              size="sm" 
               radius="sm"
-              variant="filled"
-              styles={{
-                input: {
-                  backgroundColor: getVisibilityColor(doc.visibility) === "red" ? "#fee2e2" : getVisibilityColor(doc.visibility) === "blue" ? "#dbeafe" : "#d1fae5",
-                  color: getVisibilityColor(doc.visibility) === "red" ? "#991b1b" : getVisibilityColor(doc.visibility) === "blue" ? "#1e40af" : "#065f46",
-                  fontWeight: 700,
-                  border: "none",
-                  width: "110px",
-                }
-              }}
-            />
+            >
+              {doc.visibility === "public" ? "Công khai" : doc.visibility === "school_wide" ? "Nội bộ" : "Riêng tư"}
+            </Badge>
             <Text size="xs" className="font-mono text-zinc-500 tracking-widest uppercase">
               {doc.document_type_id ? "Tài Liệu Học Tập" : "Tài liệu"}
             </Text>
@@ -136,9 +111,6 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
           >
             Mở toàn màn hình
           </Button>
-          <ActionIcon component={Link} href={`/${role}/documents/edit/${doc.slug || doc.id}`} variant="default" size="lg" radius="md" className="border-zinc-200">
-            <IconEdit size={18} className="text-zinc-600" />
-          </ActionIcon>
         </div>
       </div>
 
@@ -216,23 +188,11 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
             </h3>
           </div>
 
-          <div className="flex-grow bg-zinc-50 border border-zinc-200 rounded-xl p-6 relative overflow-hidden">
+          <div className="flex-grow bg-white border border-zinc-200 rounded-xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[100px] pointer-events-none" />
-            
-            <h4 className="text-[13px] font-bold text-zinc-900 mb-2">Tóm tắt nội dung</h4>
-            <div className="text-[14px] text-zinc-600 leading-relaxed font-serif whitespace-pre-wrap">
-              {doc.description || doc.preview_text ? (
-                <>
-                  {doc.description && <p className="mb-4">{doc.description}</p>}
-                  {doc.preview_text && <p className="italic text-zinc-500 border-l-2 border-emerald-200 pl-4">"{doc.preview_text}"</p>}
-                </>
-              ) : (
-                <p className="text-zinc-400 italic">Tài liệu này chưa có nội dung tóm tắt.</p>
-              )}
-            </div>
 
             {/* Simulated Chunks Stats */}
-            <div className="mt-8 pt-6 border-t border-zinc-200">
+            <div>
               <h4 className="text-[12px] font-bold tracking-widest text-zinc-400 uppercase font-mono mb-4">
                 Trạng thái lập chỉ mục (Vector DB)
               </h4>
@@ -251,6 +211,60 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
                 </div>
               </div>
             </div>
+            
+            {/* Chapters / Sơ lược các chương */}
+            {doc.chapters && doc.chapters.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-zinc-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <IconListDetails size={18} className="text-zinc-400" />
+                  <h4 className="text-[12px] font-bold tracking-widest text-zinc-400 uppercase font-mono mb-0">
+                    Sơ lược các chương
+                  </h4>
+                </div>
+                
+                <div className="min-h-[260px]">
+                  <Accordion variant="separated" radius="md" classNames={{
+                    item: "!bg-white border-zinc-200 mb-2 shadow-sm",
+                    control: "hover:bg-zinc-50/50 py-3",
+                    label: "text-[14px] font-bold text-zinc-800",
+                    content: "text-[13.5px] text-zinc-600 leading-relaxed font-serif pb-4 pt-1"
+                  }}>
+                    {doc.chapters.slice((chapterPage - 1) * chaptersPerPage, chapterPage * chaptersPerPage).map((chapter: any) => (
+                      <Accordion.Item key={chapter.id} value={chapter.id}>
+                        <Accordion.Control>
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="line-clamp-1">{chapter.title}</span>
+                            {(chapter.start_page || chapter.end_page) && (
+                              <Badge variant="light" color="gray" size="sm" radius="sm" className="shrink-0">
+                                Trang {chapter.start_page} {chapter.end_page && chapter.end_page !== chapter.start_page ? `- ${chapter.end_page}` : ''}
+                              </Badge>
+                            )}
+                          </div>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          {chapter.summary || "Chưa có nội dung tóm tắt cho chương này."}
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    ))}
+                  </Accordion>
+                </div>
+                
+                {doc.chapters.length > chaptersPerPage && (
+                  <Group justify="center" mt={16}>
+                    <Pagination
+                      value={chapterPage}
+                      onChange={setChapterPage}
+                      total={Math.ceil(doc.chapters.length / chaptersPerPage)}
+                      size="sm"
+                      radius="md"
+                      color="dark"
+                      withEdges
+                    />
+                  </Group>
+                )}
+              </div>
+            )}
+
           </div>
         </div>
       </div>
