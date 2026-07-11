@@ -14,7 +14,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { sessionList } from "@/lib/sessions-store";
-import { Sidebar, type NavItem } from "./sidebar";
+import { Sidebar } from "./sidebar";
 import Link from "next/link";
 
 const nav = [
@@ -42,13 +42,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
-      <Sidebar
-        basePath={basePath}
-        navItems={filteredNav}
-        session={session}
-        signOut={signOut}
-        showCollapseButton={false}
-      >
+      <Sidebar>
         {role === "student" && (
           <div className="mt-6 px-3">
             <UnstyledButton

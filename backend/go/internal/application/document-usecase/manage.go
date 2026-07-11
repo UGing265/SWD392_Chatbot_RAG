@@ -90,8 +90,7 @@ func (uc *DocumentUseCase) UpdateDocument(ctx context.Context, docID uuid.UUID, 
 	doc.Description = description
 	doc.SubjectID = subjectID
 	doc.DocumentTypeID = typeID
-	doc.AcademicTermID = termID
-	doc.LanguageID = langID
+		doc.LanguageID = langID
 	doc.DocumentSourceID = sourceID
 	doc.Visibility = visibility
 	doc.UpdatedAt = time.Now()

@@ -80,7 +80,7 @@ export function useLecturerDocuments() {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
 
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [subjects, setSubjects] = useState<{ id: string; name: string; termId: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string; }[]>([]);
   const [terms, setTerms] = useState<{ id: string; name: string; year: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -125,8 +125,7 @@ export function useLecturerDocuments() {
       const mappedSubjects = apiSubjects.map((s) => ({
         id: s.id,
         name: `${s.code} - ${s.name}`,
-        termId: s.academic_term_id || "",
-      }));
+              }));
       setSubjects(mappedSubjects);
     } catch (err) {
       console.error("Failed to fetch lookups:", err);
@@ -268,10 +267,7 @@ export function useLecturerDocuments() {
         formData.append("subject_id", selectedSubject.id);
       }
 
-      const term = subjects.find((s) => s.id === selectedSubject?.id)?.termId;
-      if (term) {
-        formData.append("academic_term_id", term);
-      }
+            
 
       const res = await ragApi.post("/documents/upload", formData, {
         headers: {

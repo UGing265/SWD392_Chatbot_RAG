@@ -31,8 +31,7 @@ export interface Subject {
   id: string;
   code: string;
   name: string;
-  academicTermId?: string;
-}
+  }
 
 export interface AcademicTerm {
   id: string;
@@ -65,8 +64,7 @@ export function useSharedDocuments() {
   // URL state
   const q = searchParams.get("q") || "";
   const subjectId = searchParams.get("subjectId") || "";
-  const termId = searchParams.get("termId") || "";
-  const documentTypeId = searchParams.get("documentTypeId") || "";
+    const documentTypeId = searchParams.get("documentTypeId") || "";
   const languageId = searchParams.get("languageId") || "";
   const documentSourceId = searchParams.get("documentSourceId") || "";
   const sortBy = searchParams.get("sortBy") || "date_desc";
@@ -161,8 +159,7 @@ export function useSharedDocuments() {
               id: String(s.id ?? ""),
               code: getString(s.code),
               name: getString(s.name),
-              academicTermId: s.academic_term_id ? String(s.academic_term_id) : undefined,
-            };
+                          };
           }),
         );
         setTerms(
@@ -217,8 +214,7 @@ export function useSharedDocuments() {
         });
         if (q) params.set("q", q);
         if (subjectId) params.set("subjectId", subjectId);
-        if (termId) params.set("termId", termId);
-        if (documentTypeId) params.set("documentTypeId", documentTypeId);
+                if (documentTypeId) params.set("documentTypeId", documentTypeId);
         if (languageId) params.set("languageId", languageId);
         if (documentSourceId) params.set("documentSourceId", documentSourceId);
 
@@ -244,7 +240,7 @@ export function useSharedDocuments() {
         setLoading(false);
       }
     },
-    [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page],
+    [q, subjectId, documentTypeId, languageId, documentSourceId, sortBy, page],
   );
 
   useEffect(() => {
@@ -267,7 +263,7 @@ export function useSharedDocuments() {
       setTotalDocuments(0);
       setTotalPages(1);
     }
-  }, [fetchDocuments, q, subjectId, termId, documentTypeId, languageId, documentSourceId]);
+  }, [fetchDocuments, q, subjectId, documentTypeId, languageId, documentSourceId]);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -301,8 +297,7 @@ export function useSharedDocuments() {
     page,
     q,
     subjectId,
-    termId,
-    documentTypeId,
+        documentTypeId,
     languageId,
     documentSourceId,
     sortBy,

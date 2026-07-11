@@ -22,9 +22,9 @@ func NewDocumentRepository(pool *pgxpool.Pool) *DocumentRepository {
 
 func (r *DocumentRepository) Create(ctx context.Context, doc *document.Document) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO documents (id, owner_user_id, title, description, subject_id, status, visibility, page_count, total_chunks, total_chapters, view_count, download_count, search_text, created_at, updated_at, approved_at, slug, document_type_id, language_id, md5_hash, academic_term_id, document_source_id)
+		`INSERT INTO documents (id, owner_user_id, title, description, subject_id, status, visibility, page_count, total_chunks, total_chapters, view_count, download_count, search_text, created_at, updated_at, approved_at, slug, document_type_id, language_id, md5_hash, document_source_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
-		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.CreatedAt, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.AcademicTermID, doc.DocumentSourceID,
+		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.CreatedAt, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.DocumentSourceID,
 	)
 	return err
 }
@@ -33,21 +33,20 @@ func (r *DocumentRepository) FindByID(ctx context.Context, id uuid.UUID) (*docum
 	var doc document.Document
 
 	row := r.pool.QueryRow(ctx,
-		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		LEFT JOIN users u ON d.owner_user_id = u.id
 		WHERE d.id = $1`, id,
 	)
 
 	err := row.Scan(
-		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -63,21 +62,20 @@ func (r *DocumentRepository) FindBySlug(ctx context.Context, slug string) (*docu
 	var doc document.Document
 
 	row := r.pool.QueryRow(ctx,
-		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		LEFT JOIN users u ON d.owner_user_id = u.id
 		WHERE d.slug = $1`, slug,
 	)
 
 	err := row.Scan(
-		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -93,21 +91,20 @@ func (r *DocumentRepository) FindOwnedBySlug(ctx context.Context, slug string, o
 	var doc document.Document
 
 	row := r.pool.QueryRow(ctx,
-		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		`SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		        s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		LEFT JOIN users u ON d.owner_user_id = u.id
 		WHERE d.slug = $1 AND d.owner_user_id = $2`, slug, ownerID,
 	)
 
 	err := row.Scan(
-		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+		&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+		&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -122,14 +119,13 @@ func (r *DocumentRepository) FindOwnedBySlug(ctx context.Context, slug string, o
 func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.FilterParams, requesterID *uuid.UUID) ([]*document.Document, int, error) {
 	queryBuilder := strings.Builder{}
 	queryBuilder.WriteString(`
-		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		JOIN users u ON d.owner_user_id = u.id
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		WHERE d.status IN ('completed', 'approved') AND (u.role_id = 1 OR u.role_id = 2) AND d.visibility <> 'private'
 	`)
@@ -150,11 +146,7 @@ func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.
 		argIndex++
 	}
 
-	if params.AcademicTermID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.academic_term_id = $%d", argIndex))
-		args = append(args, *params.AcademicTermID)
-		argIndex++
-	}
+	
 
 	if params.DocumentTypeID != nil {
 		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = $%d", argIndex))
@@ -227,8 +219,8 @@ func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.
 	for rows.Next() {
 		var doc document.Document
 		err := rows.Scan(
-			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -242,14 +234,13 @@ func (r *DocumentRepository) FindAllPublic(ctx context.Context, params document.
 func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID, params document.FilterParams) ([]*document.Document, int, error) {
 	queryBuilder := strings.Builder{}
 	queryBuilder.WriteString(`
-		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		JOIN users u ON d.owner_user_id = u.id
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		WHERE d.owner_user_id = $1
 	`)
@@ -270,11 +261,7 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 		argIndex++
 	}
 
-	if params.AcademicTermID != nil {
-		queryBuilder.WriteString(fmt.Sprintf(" AND d.academic_term_id = $%d", argIndex))
-		args = append(args, *params.AcademicTermID)
-		argIndex++
-	}
+	
 
 	if params.DocumentTypeID != nil {
 		queryBuilder.WriteString(fmt.Sprintf(" AND d.document_type_id = $%d", argIndex))
@@ -347,8 +334,8 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 	for rows.Next() {
 		var doc document.Document
 		err := rows.Scan(
-			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -362,14 +349,13 @@ func (r *DocumentRepository) FindAllOwned(ctx context.Context, ownerID uuid.UUID
 func (r *DocumentRepository) FindAllAdmin(ctx context.Context, params document.FilterParams) ([]*document.Document, int, error) {
 	queryBuilder := strings.Builder{}
 	queryBuilder.WriteString(`
-		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.academic_term_id, d.document_source_id,
-		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, at.name as academic_term_name, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
+		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
+		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
 		JOIN users u ON d.owner_user_id = u.id
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
 		LEFT JOIN languages l ON d.language_id = l.id
-		LEFT JOIN academic_terms at ON d.academic_term_id = at.id
 		LEFT JOIN document_sources ds ON d.document_source_id = ds.id
 		WHERE 1 = 1
 	`)
@@ -423,8 +409,8 @@ func (r *DocumentRepository) FindAllAdmin(ctx context.Context, params document.F
 	for rows.Next() {
 		var doc document.Document
 		err := rows.Scan(
-			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -445,7 +431,7 @@ func (r *DocumentRepository) Update(ctx context.Context, doc *document.Document)
 	_, err := r.pool.Exec(ctx,
 		`UPDATE documents SET owner_user_id = $2, title = $3, description = $4, subject_id = $5, status = $6, visibility = $7, page_count = $8, total_chunks = $9, total_chapters = $10, view_count = $11, download_count = $12, search_text = $13, updated_at = $14, approved_at = $15, slug = $16, document_type_id = $17, language_id = $18, md5_hash = $19, academic_term_id = $20, document_source_id = $21
 		WHERE id = $1`,
-		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.AcademicTermID, doc.DocumentSourceID,
+		doc.ID, doc.OwnerUserID, doc.Title, doc.Description, doc.SubjectID, doc.Status, doc.Visibility, doc.PageCount, doc.TotalChunks, doc.TotalChapters, doc.ViewCount, doc.DownloadCount, doc.SearchText, doc.UpdatedAt, doc.ApprovedAt, doc.Slug, doc.DocumentTypeID, doc.LanguageID, doc.Md5Hash, doc.DocumentSourceID,
 	)
 	return err
 }

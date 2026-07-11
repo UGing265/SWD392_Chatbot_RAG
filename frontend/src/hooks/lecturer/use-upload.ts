@@ -5,13 +5,9 @@ export interface Subject {
   id: string;
   name: string;
   code: string;
-  academicTermId?: string;
+  
 }
 
-export interface AcademicTerm {
-  id: string;
-  name: string;
-}
 
 export interface DocumentType {
   id: string;
@@ -34,8 +30,7 @@ export function useUpload() {
   const [description, setDescription] = useState("");
   
   const [subjectId, setSubjectIdRaw] = useState("");
-  const [termId, setTermIdRaw] = useState("");
-  const [documentTypeId, setDocumentTypeId] = useState("");
+    const [documentTypeId, setDocumentTypeId] = useState("");
   const [languageId, setLanguageId] = useState("");
   const [documentSourceId, setDocumentSourceId] = useState("");
   
@@ -44,8 +39,7 @@ export function useUpload() {
   const [uploaded, setUploaded] = useState(false);
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+    const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
 
@@ -62,21 +56,10 @@ export function useUpload() {
           id: s.id,
           name: `${s.code} - ${s.name}`,
           code: s.code || "",
-          academicTermId: s.academic_term_id || "",
-        }));
+                  }));
         setSubjects(mappedSubjects);
 
-        // 2. Filter terms: only include terms associated with the assigned subjects
-        const assignedTermIds = new Set(apiSubjects.map((s: any) => s.academic_term_id).filter(Boolean));
-        const apiTerms = data.academicTerms || [];
-        const mappedTerms: AcademicTerm[] = apiTerms
-          .filter((t: any) => assignedTermIds.has(t.id))
-          .map((t: any) => ({
-            id: t.id,
-            name: t.name,
-          }));
-        setTerms(mappedTerms);
-
+        
         // 3. Document Types
         const apiDocTypes = data.documentTypes || [];
         setDocumentTypes(apiDocTypes.map((dt: any) => ({ id: dt.id, name: dt.name })));
@@ -96,26 +79,9 @@ export function useUpload() {
     fetchLookups();
   }, []);
 
-  const setSubjectId = (id: string) => {
-    setSubjectIdRaw(id);
-    if (id) {
-      const sub = subjects.find((s) => s.id === id);
-      if (sub && sub.academicTermId) {
-        setTermIdRaw(sub.academicTermId);
-      }
-    }
-  };
+  const setSubjectId = (id: string) => setSubjectIdRaw(id);
 
-  const setTermId = (id: string) => {
-    setTermIdRaw(id);
-    if (id && subjectId) {
-      const sub = subjects.find((s) => s.id === subjectId);
-      if (sub && sub.academicTermId !== id) {
-        setSubjectIdRaw("");
-      }
-    }
-  };
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
@@ -131,8 +97,7 @@ export function useUpload() {
     setTitle("");
     setDescription("");
     setSubjectIdRaw("");
-    setTermIdRaw("");
-    setDocumentTypeId("");
+        setDocumentTypeId("");
     setLanguageId("");
     setDocumentSourceId("");
     setVisibility("private");
@@ -156,8 +121,7 @@ export function useUpload() {
     formData.append("description", description);
     
     if (subjectId) formData.append("subject_id", subjectId);
-    if (termId) formData.append("academic_term_id", termId);
-    if (documentTypeId) formData.append("document_type_id", documentTypeId);
+        if (documentTypeId) formData.append("document_type_id", documentTypeId);
     if (languageId) formData.append("language_id", languageId);
     if (documentSourceId) formData.append("document_source_id", documentSourceId);
     formData.append("visibility", visibility);
@@ -194,9 +158,7 @@ export function useUpload() {
     setDescription,
     subjectId,
     setSubjectId,
-    termId,
-    setTermId,
-    documentTypeId,
+            documentTypeId,
     setDocumentTypeId,
     languageId,
     setLanguageId,
@@ -207,8 +169,7 @@ export function useUpload() {
     uploading,
     uploaded,
     subjects,
-    terms,
-    documentTypes,
+        documentTypes,
     languages,
     documentSources,
     handleFileChange,

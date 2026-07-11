@@ -291,8 +291,7 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		Description:      descPtr,
 		SubjectID:        subjectID,
 		DocumentTypeID:   typeID,
-		AcademicTermID:   termID,
-		LanguageID:       langID,
+				LanguageID:       langID,
 		Visibility:       &visibility,
 		DocumentSourceID: sourceID,
 		OwnerUserID:      userID,
@@ -622,8 +621,7 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 		"documentTypes":   types,
 		"languages":       langs,
 		"documentSources": sources,
-		"academicTerms":   terms,
-	})
+			})
 }
 
 // PublicSubjects godoc

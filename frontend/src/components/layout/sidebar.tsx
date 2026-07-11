@@ -3,237 +3,180 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  IconLayoutSidebar,
+  IconWorld,
+  IconBookmark,
+  IconMessageChatbot,
+  IconHistory,
+  IconScale,
+  IconListCheck,
+  IconFolder,
+  IconDatabaseImport,
+  IconUser,
   IconLogout,
+  IconBrain,
+  IconPlus,
+  IconSquarePlus,
+  IconDiscountCheckFilled,
+  IconDots,
   IconSettings,
 } from "@tabler/icons-react";
-import { Avatar, Menu, Text, Tooltip, UnstyledButton } from "@mantine/core";
-import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Button, Menu } from "@mantine/core";
 
-export function getRoleLabel(role?: string) {
-  if (role === "admin") return "Admin";
-  if (role === "lecturer" || role === "teacher") return "Lecturer";
-  if (role === "student") return "Student";
-  return "User";
-}
+const navGroups = [
+  {
+    label: "Khám Phá",
+    items: [
+      { label: "Thư Viện", icon: IconWorld, href: "/lecturer/explore" },
+      { label: "Đã Lưu", icon: IconBookmark, href: "/lecturer/bookmarks" },
+    ],
+  },
+  {
+    label: "Không Gian AI",
+    items: [
+      { label: "Chatbot AI", icon: IconMessageChatbot, href: "/lecturer/chat" },
+      { label: "Lịch Sử Chat", icon: IconHistory, href: "/lecturer/chat/sessions" },
+      { label: "So Sánh", icon: IconScale, href: "/lecturer/compare" },
+      { label: "Tạo Quiz", icon: IconListCheck, href: "/lecturer/quiz-builder" },
+    ],
+  },
+  {
+    label: "Quản Lý",
+    items: [
+      { label: "Tài Liệu Của Tôi", icon: IconFolder, href: "/lecturer/documents/my" },
+      { label: "Tiến Trình", icon: IconDatabaseImport, href: "/lecturer/upload-jobs" },
+    ],
+  },
+];
 
-export function getInitials(name?: string | null) {
-  if (!name) return "U";
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-export interface NavItem {
-  to: string;
-  label: string;
-  icon: any; // TablerIcon
-  end?: boolean;
-}
-
-interface SidebarProps {
-  basePath: string;
-  navItems: NavItem[];
-  session: any;
-  signOut: () => void;
-  collapsed?: boolean;
-  onToggleCollapse?: () => void;
-  showCollapseButton?: boolean;
-  children?: ReactNode; // For extra sections like Recent Chats
-}
-
-function SidebarItem({
-  to,
-  label,
-  icon: Icon,
-  active,
-  collapsed,
-}: {
-  to: string;
-  label: string;
-  icon: any;
-  active: boolean;
-  collapsed: boolean;
-}) {
-  const item = (
-    <Link
-      href={to}
-      aria-label={collapsed ? label : undefined}
-      className={cn(
-        "group flex items-center rounded-[8px] py-2.5 text-[14px] font-medium transition-colors duration-150",
-        collapsed ? "justify-center px-2" : "gap-3 px-3",
-        active
-          ? "bg-slate-200 text-slate-900"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-      )}
-    >
-      <Icon
-        size={18}
-        className={cn(active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700")}
-      />
-      {!collapsed && <span className="flex-1">{label}</span>}
-    </Link>
-  );
-
-  if (!collapsed) return item;
-
-  return (
-    <Tooltip label={label} position="right" withArrow>
-      {item}
-    </Tooltip>
-  );
-}
-
-export function Sidebar({
-  basePath,
-  navItems,
-  session,
-  signOut,
-  collapsed = false,
-  onToggleCollapse,
-  showCollapseButton = false,
-  children,
-}: SidebarProps) {
+export function Sidebar({ session, signOut, children }: { session?: any, signOut?: any, children?: React.ReactNode }) {
   const pathname = usePathname();
-  const displayName = session?.user?.name || "Người dùng";
-  const roleLabel = getRoleLabel(session?.role);
-  const initials = getInitials(displayName);
-
-  const isActive = (to: string, end?: boolean) => {
-    const full = to === "/" ? basePath : `${basePath}${to}`;
-    if (end) return pathname === full || pathname === `${full}/`;
-    return pathname === full || (full !== basePath && pathname.startsWith(full));
-  };
+  const user = session?.user;
+  const userName = user?.name || "Người dùng";
+  const userEmail = user?.email || "Chưa cập nhật email";
+  
+  const roleId = Number(user?.roleId || user?.role_id);
+  const userRole = roleId === 1 ? "Quản Trị Viên" : roleId === 2 ? "Giảng Viên" : roleId === 3 ? "Sinh Viên" : "Thành Viên";
 
   return (
-    <aside
-      className={cn(
-        "hidden shrink-0 flex-col border-r border-slate-200 bg-[#FAFAFA] transition-[width] duration-300 md:flex",
-        collapsed ? "w-[76px]" : "w-[260px]",
-      )}
-    >
-      <div
-        className={cn(
-          "flex items-center pb-4 pt-5",
-          collapsed ? "justify-center px-3" : "justify-between px-4",
-        )}
-      >
-        {!collapsed && (
-          <Link
-            href={basePath === "" ? "/chat" : basePath}
-            className="px-1 text-[18px] font-bold tracking-tight text-slate-900"
-          >
-            StudyMate
-          </Link>
-        )}
-        {showCollapseButton && onToggleCollapse && (
-          <Tooltip
-            label={collapsed ? "Mở sidebar" : "Đóng sidebar"}
-            position="right"
-            withArrow
-          >
-            <UnstyledButton
-              aria-label={collapsed ? "Mở sidebar" : "Đóng sidebar"}
-              onClick={onToggleCollapse}
-              className="rounded-[6px] p-1.5 text-slate-500 transition-colors duration-150 hover:bg-slate-200 hover:text-slate-900"
-            >
-              <IconLayoutSidebar size={18} />
-            </UnstyledButton>
-          </Tooltip>
-        )}
-        {!showCollapseButton && (
-          <UnstyledButton className="rounded-[6px] p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors">
-            <IconLayoutSidebar size={18} />
-          </UnstyledButton>
-        )}
+    <aside className="shrink-0 flex-col bg-white border-r border-zinc-200 hidden md:flex h-full w-[220px]">
+      {/* ── Brand ── */}
+      <div className="flex items-center gap-2 px-4 border-b border-zinc-100 h-[52px] shrink-0">
+        <div className="bg-zinc-900 text-white rounded-md flex items-center justify-center w-7 h-7">
+          <IconBrain size={18} stroke={2} />
+        </div>
+        <span className="font-bold text-zinc-900 tracking-tight text-[15px]">
+          EduRAG
+        </span>
       </div>
 
-      <nav className="mt-2 flex flex-col gap-1 px-3">
-        {navItems.map((item) => (
-          <SidebarItem
-            key={item.to}
-            to={item.to === "/" ? basePath : `${basePath}${item.to}`}
-            label={item.label}
-            icon={item.icon}
-            active={isActive(item.to, item.end)}
-            collapsed={collapsed}
-          />
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <h3 className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">
+              {group.label}
+            </h3>
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
+                      isActive
+                        ? "bg-zinc-100/80 text-zinc-900 font-medium"
+                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
+                    )}
+                  >
+                    <item.icon
+                      size={16}
+                      stroke={isActive ? 2 : 1.6}
+                      className={isActive ? "text-zinc-900" : "text-zinc-400"}
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         ))}
+
+        {/* Divider */}
+        <div className="bg-zinc-100 h-px my-2" />
+
+        {/* New Document */}
+        <Link
+          href="/lecturer/documents/new"
+          className="w-full flex items-center rounded-md border border-zinc-200 text-zinc-700 hover:bg-zinc-50 transition-colors h-9 px-3 gap-2.5 text-sm font-medium shadow-sm bg-white mt-3"
+        >
+          <IconSquarePlus size={18} stroke={1.6} className="text-zinc-500" />
+          <span>Tài Liệu Mới</span>
+        </Link>
       </nav>
 
+      {/* Render children (like chat history) if passed */}
       {children}
 
-      <div className="mt-auto flex flex-col gap-3 px-3 py-4">
-        <Menu shadow="md" position="top-start" radius="lg" offset={12} withArrow>
+      {/* ── Profile Dropdown ── */}
+      <div className="mt-auto p-3 shrink-0">
+        <Menu shadow="sm" width={204} position="top-start" offset={4} withArrow={false}>
           <Menu.Target>
-            <UnstyledButton
-              aria-label={collapsed ? "Tài khoản" : undefined}
-              className={cn(
-                "flex w-full items-center rounded-[8px] transition-colors duration-150 hover:bg-slate-200",
-                collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+            <button className="w-full flex items-center p-1.5 gap-2.5 bg-white border border-zinc-200/80 rounded-lg shadow-sm hover:bg-zinc-50 transition-colors text-left">
+              {/* Avatar */}
+              {user?.image ? (
+                <img src={user.image} alt={userName} className="rounded-md w-6 h-6 object-cover shrink-0" />
+              ) : (
+                <div className="rounded-md bg-gradient-to-tr from-cyan-400 via-pink-500 to-amber-400 w-6 h-6 shrink-0" />
               )}
-            >
-              <Avatar color="blue" variant="light" radius="xl" size="sm" className="text-xs font-bold">
-                {initials}
-              </Avatar>
-              {!collapsed && (
-                <div className="min-w-0 flex-1 leading-tight">
-                  <Text size="sm" fw={600} className="truncate text-slate-900">
-                    {displayName}
-                  </Text>
-                  <Text size="xs" className="mt-0.5 font-medium capitalize text-slate-500">
-                    {roleLabel}
-                  </Text>
-                </div>
-              )}
-            </UnstyledButton>
+
+              {/* Info */}
+              <div className="flex flex-col flex-1 overflow-hidden text-left">
+                <span className="text-zinc-900 text-[13px] font-medium leading-tight truncate">
+                  {userName}
+                </span>
+                <span className="text-zinc-500 text-[11px] font-medium leading-none truncate mt-0.5">
+                  {userRole}
+                </span>
+              </div>
+
+              {/* Dots */}
+              <IconDots size={16} stroke={2} className="text-zinc-400 shrink-0 mr-0.5" />
+            </button>
           </Menu.Target>
 
-          <Menu.Dropdown className="min-w-[200px] p-1">
-            <Menu.Item
-              component={Link}
-              href={`${basePath === "" ? `/${session?.role || "student"}` : basePath}/change-password`}
-              className="transition-colors duration-150 hover:bg-slate-50"
+          <Menu.Dropdown className="!rounded-xl !border-zinc-200 !shadow-md !p-1.5">
+            <div className="px-2 py-1.5 mb-1 border-b border-zinc-100 flex flex-col gap-0.5">
+              <span className="block text-zinc-900 text-[13px] font-semibold truncate">{userName}</span>
+              <span className="block text-zinc-500 text-[11px] truncate">{userEmail}</span>
+            </div>
+            
+            <Menu.Item 
+              component={Link} 
+              href="/lecturer/profile" 
+              leftSection={<IconUser size={15} stroke={1.6} />}
+              className="!text-[13px] !font-medium !text-zinc-700 hover:!bg-zinc-50 !rounded-md"
             >
-              <div className="flex items-center gap-3 px-1 py-1">
-                <Avatar color="blue" variant="light" radius="xl" size="md" className="text-sm font-bold">
-                  {initials}
-                </Avatar>
-                <div className="flex min-w-0 flex-col leading-tight">
-                  <Text size="sm" fw={600} className="whitespace-nowrap text-slate-900">
-                    {displayName}
-                  </Text>
-                  <Text size="xs" className="mt-0.5 whitespace-nowrap text-slate-500">
-                    {session?.user?.email || "Email"}
-                  </Text>
-                </div>
-              </div>
+              Tài Khoản
             </Menu.Item>
-            <Menu.Divider />
-            {!collapsed && session?.role !== "admin" && (
-              <>
-                <Menu.Item
-                  component={Link}
-                  href={`/${session?.role || "student"}/settings`}
-                  leftSection={<IconSettings size={16} className="text-slate-600" />}
-                  className="text-slate-700 hover:bg-slate-50"
-                >
-                  Tất cả cài đặt
-                </Menu.Item>
-                <Menu.Divider />
-              </>
-            )}
-            <Menu.Item
-              color="red"
-              leftSection={<IconLogout size={16} />}
-              onClick={() => signOut()}
-              className="text-red-600 hover:bg-red-50"
+            <Menu.Item 
+              component={Link} 
+              href="/lecturer/settings" 
+              leftSection={<IconSettings size={15} stroke={1.6} />}
+              className="!text-[13px] !font-medium !text-zinc-700 hover:!bg-zinc-50 !rounded-md"
             >
-              Đăng xuất
+              Cài Đặt
+            </Menu.Item>
+            <Menu.Divider className="!border-zinc-100 !my-1" />
+            <Menu.Item 
+              color="red" 
+              onClick={signOut} 
+              leftSection={<IconLogout size={15} stroke={1.6} />}
+              className="!text-[13px] !font-medium hover:!bg-rose-50 !rounded-md"
+            >
+              Đăng Xuất
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

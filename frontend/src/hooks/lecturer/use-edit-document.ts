@@ -34,8 +34,7 @@ export function useEditDocument(slug: string, role: string) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subjectId, setSubjectId] = useState<string | null>(null);
-  const [termId, setTermId] = useState<string | null>(null);
-  const [documentTypeId, setDocumentTypeId] = useState<string | null>(null);
+    const [documentTypeId, setDocumentTypeId] = useState<string | null>(null);
   const [languageId, setLanguageId] = useState<string | null>(null);
   const [documentSourceId, setDocumentSourceId] = useState<string | null>(null);
   const [visibility, setVisibility] = useState("school_wide");
@@ -61,8 +60,7 @@ export function useEditDocument(slug: string, role: string) {
       setTitle(docInfo.title || "");
       setDescription(docInfo.description || "");
       setSubjectId(docInfo.subject_id || null);
-      setTermId(docInfo.academic_term_id || null);
-      setDocumentTypeId(docInfo.document_type_id || null);
+            setDocumentTypeId(docInfo.document_type_id || null);
       setLanguageId(docInfo.language_id || null);
       setDocumentSourceId(docInfo.document_source_id || null);
       setVisibility(docInfo.visibility || "school_wide");
@@ -96,8 +94,7 @@ export function useEditDocument(slug: string, role: string) {
         description: description.trim() || null,
         subject_id: subjectId,
         document_type_id: documentTypeId,
-        academic_term_id: termId,
-        language_id: languageId,
+                language_id: languageId,
         document_source_id: documentSourceId,
         visibility: visibility,
       });
@@ -125,8 +122,7 @@ export function useEditDocument(slug: string, role: string) {
     title, setTitle,
     description, setDescription,
     subjectId, setSubjectId,
-    termId, setTermId,
-    documentTypeId, setDocumentTypeId,
+        documentTypeId, setDocumentTypeId,
     languageId, setLanguageId,
     documentSourceId, setDocumentSourceId,
     visibility, setVisibility,

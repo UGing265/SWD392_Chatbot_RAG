@@ -26,8 +26,7 @@ export function useCreateQuiz() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subjectId, setSubjectId] = useState<string | null>(null);
-  const [termId, setTermId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([
+    const [questions, setQuestions] = useState<Question[]>([
     {
       id: "q1",
       text: "",
@@ -148,9 +147,7 @@ export function useCreateQuiz() {
     setDescription,
     subjectId,
     setSubjectId,
-    termId,
-    setTermId,
-    questions,
+        questions,
     setQuestions,
     subjects,
     terms,

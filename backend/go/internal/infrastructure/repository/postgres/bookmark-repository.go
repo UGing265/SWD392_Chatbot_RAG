@@ -64,8 +64,8 @@ func (r *BookmarkRepository) GetBookmarkedDocuments(ctx context.Context, userID 
 	for rows.Next() {
 		var doc document.Document
 		err := rows.Scan(
-			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.AcademicTermID, &doc.DocumentSourceID,
-			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.AcademicTermName, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
+			&doc.ID, &doc.OwnerUserID, &doc.Title, &doc.Description, &doc.SubjectID, &doc.Status, &doc.Visibility, &doc.PageCount, &doc.TotalChunks, &doc.TotalChapters, &doc.ViewCount, &doc.DownloadCount, &doc.SearchText, &doc.CreatedAt, &doc.UpdatedAt, &doc.ApprovedAt, &doc.Slug, &doc.DocumentTypeID, &doc.LanguageID, &doc.Md5Hash, &doc.DocumentSourceID,
+			&doc.SubjectName, &doc.SubjectCode, &doc.DocumentTypeName, &doc.LanguageName, &doc.LanguageCode, &doc.DocumentSourceName, &doc.OwnerEmail, &doc.OwnerFullName,
 		)
 		if err != nil {
 			return nil, err
