@@ -78,6 +78,7 @@ export function useSharedDocuments() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [subjectAccessCounts, setSubjectAccessCounts] = useState<Record<string, number>>({});
+  const [subjectDocumentCounts, setSubjectDocumentCounts] = useState<Record<string, number>>({});
 
   // Lookups
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -89,6 +90,7 @@ export function useSharedDocuments() {
   const fetchSubjectAccessCounts = useCallback(async () => {
     const token = localStorage.getItem("token");
     const counts: Record<string, number> = {};
+    const docCounts: Record<string, number> = {};
     let currentPage = 1;
     let currentTotalPages = 1;
 
@@ -116,6 +118,9 @@ export function useSharedDocuments() {
 
           counts[String(subjectId)] =
             (counts[String(subjectId)] || 0) + Number(doc.view_count || 0);
+            
+          docCounts[String(subjectId)] =
+            (docCounts[String(subjectId)] || 0) + 1;
         }
 
         currentTotalPages = Number(data.total_pages || 1);
@@ -123,9 +128,11 @@ export function useSharedDocuments() {
       } while (currentPage <= currentTotalPages);
 
       setSubjectAccessCounts(counts);
+      setSubjectDocumentCounts(docCounts);
     } catch (err) {
       console.error("Failed to fetch subject access counts:", err);
       setSubjectAccessCounts({});
+      setSubjectDocumentCounts({});
     }
   }, []);
 
@@ -290,6 +297,7 @@ export function useSharedDocuments() {
     totalDocuments,
     totalPages,
     subjectAccessCounts,
+    subjectDocumentCounts,
     page,
     q,
     subjectId,
