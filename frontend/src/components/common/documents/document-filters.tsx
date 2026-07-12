@@ -75,7 +75,7 @@ export function DocumentFilters({
 
   const inputClasses = {
     input: "!bg-white focus:!bg-white !border-black/10 hover:!border-black/20 focus:!border-black/20 focus:!shadow-sm !rounded-lg transition-all duration-300 !h-10 !pl-4 !flex !items-center !text-[13px] !font-medium",
-    label: "!text-[10px] !font-bold !capitalize !text-zinc-500 !mb-1.5",
+    label: "!font-semibold !text-zinc-400 !capitalize !tracking-wide !font-sans !text-xs !mb-1.5",
     dropdown: "!rounded-xl !border-0 !ring-1 !ring-black/5 !shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] !p-2 !bg-white/95 !backdrop-blur-2xl",
     option: "!rounded-lg data-[hovered]:!bg-zinc-100/80 data-[selected]:!bg-zinc-100 data-[selected]:!text-zinc-900 !text-[13px] !font-semibold transition-all duration-200 !px-4 !py-2 !mb-0.5 last:!mb-0",
     pill: "!hidden",
@@ -103,37 +103,66 @@ export function DocumentFilters({
       {/* Right: Actions & Tags */}
       <div className="flex items-center gap-3 overflow-x-auto py-1 w-full min-w-0 xl:w-auto xl:justify-end" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
         
-        {/* View Toggle Icons */}
-        <div className="flex items-center gap-1.5 text-zinc-400 hidden lg:flex">
-          <UnstyledButton 
-            onClick={() => setViewMode && setViewMode("list")}
-            className={`p-1 transition-colors rounded ${viewMode === "list" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
-          >
-            <IconList size={16} stroke={1.5} />
-          </UnstyledButton>
-          <UnstyledButton 
-            onClick={() => setViewMode && setViewMode("grid")}
-            className={`p-1 transition-colors rounded ${viewMode === "grid" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
-          >
-            <IconGridDots size={16} stroke={1.5} />
-          </UnstyledButton>
-          <UnstyledButton 
-            onClick={() => setViewMode && setViewMode("sidebar")}
-            className={`p-1 transition-colors rounded ${viewMode === "sidebar" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
-          >
-            <IconLayoutSidebar size={16} stroke={1.5} />
-          </UnstyledButton>
-        </div>
+        {/* View Toggle Icons - only shown when setViewMode is provided */}
+        {setViewMode && (
+          <>
+            <div className="flex items-center gap-1.5 text-zinc-400 hidden lg:flex">
+              <UnstyledButton 
+                onClick={() => setViewMode("list")}
+                className={`p-1 transition-colors rounded ${viewMode === "list" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
+              >
+                <IconList size={16} stroke={1.5} />
+              </UnstyledButton>
+              <UnstyledButton 
+                onClick={() => setViewMode("grid")}
+                className={`p-1 transition-colors rounded ${viewMode === "grid" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
+              >
+                <IconGridDots size={16} stroke={1.5} />
+              </UnstyledButton>
+              <UnstyledButton 
+                onClick={() => setViewMode("sidebar")}
+                className={`p-1 transition-colors rounded ${viewMode === "sidebar" ? "text-zinc-900 bg-zinc-100 border border-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-700 border border-transparent"}`}
+              >
+                <IconLayoutSidebar size={16} stroke={1.5} />
+              </UnstyledButton>
+            </div>
+            <div className="w-px h-4 bg-zinc-200 mx-1 hidden lg:block"></div>
+          </>
+        )}
 
-        <div className="w-px h-4 bg-zinc-200 mx-1 hidden lg:block"></div>
+        {/* Sort Dropdown */}
+        <Select
+          value={sortBy || "date_desc"}
+          onChange={(val) => updateFilters({ sortBy: val })}
+          data={[
+            { value: "date_desc", label: "Mới nhất" },
+            { value: "date_asc", label: "Cũ nhất" },
+            { value: "title_asc", label: "Tên A - Z" },
+            { value: "title_desc", label: "Tên Z - A" },
+            { value: "views_desc", label: "Nhiều view" },
+          ]}
+          allowDeselect={false}
+          leftSection={<IconSortDescending size={14} className="text-zinc-400" stroke={1.5} />}
+          classNames={{
+            input: "!bg-white !border-zinc-200/60 hover:!border-zinc-300 focus:!border-zinc-400 !rounded-lg !h-8 !min-h-[32px] !text-[12px] !font-sans !font-semibold !text-zinc-800 !shadow-sm !transition-colors",
+            dropdown: "!bg-white/95 !backdrop-blur-xl !border !border-zinc-200 !rounded-xl !shadow-xl !py-1.5",
+            option: "!rounded-lg data-[hovered]:!bg-zinc-50 data-[selected]:!bg-zinc-100 data-[selected]:!text-zinc-900 !text-[12px] !font-sans !font-semibold !px-3 !py-2"
+          }}
+          styles={{ root: { width: 135, flexShrink: 0 } }}
+        />
 
         {/* Filters Button */}
         <UnstyledButton
           onClick={() => setIsFilterDrawerOpen(true)}
-          className="flex items-center gap-1.5 !h-8 !text-[12px] !px-4 !py-0 !rounded-lg !font-semibold !text-zinc-600 hover:!bg-zinc-100 hover:!text-zinc-900 transition-colors !border !border-zinc-200/60 !shadow-sm"
+          className="flex items-center gap-1.5 !h-8 !text-[12px] !px-4 !py-0 !rounded-lg !font-semibold !text-zinc-600 hover:!bg-zinc-100 hover:!text-zinc-900 transition-colors !border !border-zinc-200/60 !shadow-sm relative"
         >
           <IconAdjustmentsHorizontal size={14} stroke={1.5} />
-          Bộ Lọc {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          Bộ Lọc
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
+              {activeFiltersCount}
+            </span>
+          )}
         </UnstyledButton>
       </div>
 

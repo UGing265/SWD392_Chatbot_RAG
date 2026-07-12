@@ -67,4 +67,26 @@ export const documentApi = {
     });
     return response.data;
   },
+
+  getPublicDocuments: async (params?: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    subjectId?: string;
+    sortBy?: string;
+  }): Promise<{ documents: any[]; total: number }> => {
+    const response = await ragApi.get("/documents", { params });
+    return response.data;
+  },
+
+  getBookmarks: async (): Promise<{ documents: any[] }> => {
+    const response = await ragApi.get("/documents/bookmarks");
+    const docs = Array.isArray(response.data) ? response.data : (response.data?.documents || []);
+    return { documents: docs };
+  },
+
+  toggleBookmark: async (slugOrId: string): Promise<{ bookmarked: boolean }> => {
+    const response = await ragApi.post(`/documents/${slugOrId}/bookmark`);
+    return response.data;
+  },
 };

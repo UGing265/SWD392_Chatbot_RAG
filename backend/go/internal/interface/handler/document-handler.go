@@ -647,7 +647,7 @@ func (h *DocumentHandler) ToggleBookmark(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	// Need to find document ID by slug first
-	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, nil, 1, 1, false, false)
+	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, &userID, 1, 1, false, false)
 	if err != nil || doc == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
 		return

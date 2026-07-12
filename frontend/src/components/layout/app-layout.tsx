@@ -8,6 +8,7 @@ import {
   IconEdit,
   IconChevronDown,
   IconActivity,
+  IconMessage,
 } from "@tabler/icons-react";
 import { Collapse, Text, UnstyledButton } from "@mantine/core";
 import type { ReactNode } from "react";
@@ -44,23 +45,23 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
-      <Sidebar>
+      <Sidebar session={session} signOut={signOut} basePath={basePath}>
         {role === "student" && (
-          <div className="mt-6 px-3">
+          <div>
             <UnstyledButton
               onClick={() => setHistoryOpened((o) => !o)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[8px] hover:bg-slate-100 transition-colors group"
+              className="w-full flex items-center justify-between group px-2 mb-1"
             >
+              <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
+                Lịch sử
+              </h3>
               <IconChevronDown
-                size={16}
+                size={14}
                 className={cn(
-                  "text-slate-400 transition-transform duration-200",
+                  "text-zinc-400 transition-transform duration-200",
                   !historyOpened && "-rotate-90",
                 )}
               />
-              <Text className="flex-1 text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">
-                Lịch sử
-              </Text>
             </UnstyledButton>
 
             <Collapse in={historyOpened}>
@@ -72,13 +73,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       key={sessionItem.id}
                       href={`${basePath}/chat?session=${sessionItem.id}`}
                       className={cn(
-                        "group block rounded-[8px] px-3 py-2 text-[13px] truncate transition-colors",
+                        "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
                         isActive
-                          ? "bg-slate-200 text-slate-900 font-medium"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                          ? "bg-zinc-100/80 text-zinc-900 font-medium"
+                          : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
                       )}
                     >
-                      {sessionItem.title}
+                      <IconMessage
+                        size={16}
+                        stroke={isActive ? 2 : 1.6}
+                        className={cn("shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")}
+                      />
+                      <span className="truncate">{sessionItem.title}</span>
                     </Link>
                   );
                 })}

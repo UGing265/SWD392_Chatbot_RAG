@@ -23,33 +23,39 @@ import {
 import { cn } from "@/lib/utils";
 import { Button, Menu } from "@mantine/core";
 
-const navGroups = [
-  {
-    label: "Khám Phá",
-    items: [
-      { label: "Thư Viện", icon: IconWorld, href: "/lecturer/explore" },
-      { label: "Đã Lưu", icon: IconBookmark, href: "/lecturer/bookmarks" },
-    ],
-  },
-  {
-    label: "Không Gian AI",
-    items: [
-      { label: "Chatbot AI", icon: IconMessageChatbot, href: "/lecturer/chat" },
-      { label: "Lịch Sử Chat", icon: IconHistory, href: "/lecturer/chat/sessions" },
-      { label: "So Sánh", icon: IconScale, href: "/lecturer/compare" },
-      { label: "Tạo Quiz", icon: IconListCheck, href: "/lecturer/quiz-builder" },
-    ],
-  },
-  {
-    label: "Quản Lý",
-    items: [
-      { label: "Tài Liệu Của Tôi", icon: IconFolder, href: "/lecturer/documents/my" },
-      { label: "Tiến Trình", icon: IconDatabaseImport, href: "/lecturer/progress" },
-    ],
-  },
-];
+const getNavGroups = (basePath: string, role: string) => {
+  const isStudent = role === "student";
 
-export function Sidebar({ session, signOut, children, basePath, navItems, collapsed, onToggleCollapse, showCollapseButton }: { session?: any, signOut?: any, children?: React.ReactNode, basePath?: string, navItems?: any[], collapsed?: boolean, onToggleCollapse?: () => void, showCollapseButton?: boolean }) {
+  const groups = [
+    {
+      label: "Khám Phá",
+      items: [
+        { label: "Thư Viện", icon: IconWorld, href: `${basePath}/explore` },
+        { label: "Đã Lưu", icon: IconBookmark, href: `${basePath}/bookmarks` },
+      ],
+    },
+    {
+      label: "Không Gian AI",
+      items: [
+        { label: "Chatbot AI", icon: IconMessageChatbot, href: `${basePath}/chat` },
+        { label: "Lịch Sử Chat", icon: IconHistory, href: `${basePath}/chat/sessions` },
+        !isStudent && { label: "So Sánh", icon: IconScale, href: `${basePath}/compare` },
+        !isStudent && { label: "Tạo Quiz", icon: IconListCheck, href: `${basePath}/quiz-builder` },
+      ].filter(Boolean) as any[],
+    },
+    !isStudent && {
+      label: "Quản Lý",
+      items: [
+        { label: "Tài Liệu Của Tôi", icon: IconFolder, href: `${basePath}/documents/my` },
+        { label: "Tiến Trình", icon: IconDatabaseImport, href: `${basePath}/progress` },
+      ],
+    },
+  ];
+
+  return groups.filter(Boolean) as any[];
+};
+
+export function Sidebar({ session, signOut, children, basePath = "/lecturer", navItems, collapsed, onToggleCollapse, showCollapseButton }: { session?: any, signOut?: any, children?: React.ReactNode, basePath?: string, navItems?: any[], collapsed?: boolean, onToggleCollapse?: () => void, showCollapseButton?: boolean }) {
   const pathname = usePathname();
   const user = session?.user;
   const userName = user?.name || "Người dùng";
@@ -72,13 +78,13 @@ export function Sidebar({ session, signOut, children, basePath, navItems, collap
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        {navGroups.map((group) => (
+        {getNavGroups(basePath, basePath.replace('/', '')).map((group) => (
           <div key={group.label}>
             <h3 className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">
               {group.label}
             </h3>
             <div className="flex flex-col gap-0.5">
-              {group.items.map((item) => {
+              {group.items.map((item: any) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <Link
@@ -108,17 +114,18 @@ export function Sidebar({ session, signOut, children, basePath, navItems, collap
         <div className="bg-zinc-100 h-px my-2" />
 
         {/* New Document */}
-        <Link
-          href="/lecturer/documents/new"
-          className="w-full flex items-center rounded-md border border-zinc-200 text-zinc-700 hover:bg-zinc-50 transition-colors h-9 px-3 gap-2.5 text-sm font-medium shadow-sm bg-white mt-3"
-        >
-          <IconSquarePlus size={18} stroke={1.6} className="text-zinc-500" />
-          <span>Tài Liệu Mới</span>
-        </Link>
+        {basePath.replace('/', '') !== "student" && (
+          <Link
+            href={`${basePath}/documents/new`}
+            className="w-full flex items-center rounded-md border border-zinc-200 text-zinc-700 hover:bg-zinc-50 transition-colors h-9 px-3 gap-2.5 text-sm font-medium shadow-sm bg-white mt-3"
+          >
+            <IconSquarePlus size={18} stroke={1.6} className="text-zinc-500" />
+            <span>Tài Liệu Mới</span>
+          </Link>
+        )}
+        {/* Render children (like chat history) if passed */}
+        {children}
       </nav>
-
-      {/* Render children (like chat history) if passed */}
-      {children}
 
       {/* ── Profile Dropdown ── */}
       <div className="mt-auto p-3 shrink-0">
@@ -155,7 +162,7 @@ export function Sidebar({ session, signOut, children, basePath, navItems, collap
             
             <Menu.Item 
               component={Link} 
-              href="/lecturer/profile" 
+              href={`${basePath}/profile`} 
               leftSection={<IconUser size={15} stroke={1.6} />}
               className="!text-[13px] !font-medium !text-zinc-700 hover:!bg-zinc-50 !rounded-md"
             >
@@ -163,7 +170,7 @@ export function Sidebar({ session, signOut, children, basePath, navItems, collap
             </Menu.Item>
             <Menu.Item 
               component={Link} 
-              href="/lecturer/settings" 
+              href={`${basePath}/settings`} 
               leftSection={<IconSettings size={15} stroke={1.6} />}
               className="!text-[13px] !font-medium !text-zinc-700 hover:!bg-zinc-50 !rounded-md"
             >

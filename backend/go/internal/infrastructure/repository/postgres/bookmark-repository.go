@@ -44,7 +44,11 @@ func (r *BookmarkRepository) GetBookmarkedDocuments(ctx context.Context, userID 
 		SELECT d.id, d.owner_user_id, d.title, d.description, d.subject_id, d.status, d.visibility, d.page_count, d.total_chunks, d.total_chapters, d.view_count, d.download_count, d.search_text, d.created_at, d.updated_at, d.approved_at, d.slug, d.document_type_id, d.language_id, d.md5_hash, d.document_source_id,
 		       s.name as subject_name, s.code as subject_code, dt.name as document_type_name, l.name as language_name, l.code as language_code, ds.name as document_source_name, u.email as owner_email, u.name as owner_full_name
 		FROM documents d
-		JOIN user_bookmarks b ON d.id = b.document_id
+		JOIN (
+			SELECT user_id, document_id, MAX(created_at) as created_at 
+			FROM user_bookmarks 
+			GROUP BY user_id, document_id
+		) b ON d.id = b.document_id
 		JOIN users u ON d.owner_user_id = u.id
 		LEFT JOIN subjects s ON d.subject_id = s.id
 		LEFT JOIN document_types dt ON d.document_type_id = dt.id
