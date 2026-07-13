@@ -40,6 +40,7 @@ export interface QuizSummary {
 export interface QuizOption {
   ID: string;
   Content: string;
+  IsCorrect: boolean;
   OrderIndex: number;
 }
 

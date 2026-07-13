@@ -39,6 +39,7 @@ import {
 } from "@mantine/core";
 
 import { usePractice } from "@/hooks/lecturer/use-practice";
+import { cn } from "@/lib/utils";
 
 export function TeacherPracticeView() {
   const [mounted, setMounted] = useState(false);
@@ -744,12 +745,27 @@ export function TeacherPracticeView() {
                       key={opt.ID}
                       gap="sm"
                       p="xs"
-                      className="rounded-lg border text-xs font-semibold border-zinc-200 bg-white text-zinc-700"
+                      className={cn(
+                        "rounded-lg border text-xs font-semibold",
+                        opt.IsCorrect
+                          ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                          : "border-zinc-200 bg-white text-zinc-700"
+                      )}
                     >
-                      <div className="h-5 w-5 rounded-full border border-zinc-300 text-zinc-500 flex items-center justify-center shrink-0 text-[10px] font-bold">
-                        {String.fromCharCode(65 + i)}
+                      <div
+                        className={cn(
+                          "h-5 w-5 rounded-full border flex items-center justify-center shrink-0 text-[10px] font-bold",
+                          opt.IsCorrect
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-zinc-300 text-zinc-500"
+                        )}
+                      >
+                        {opt.IsCorrect ? "✓" : String.fromCharCode(65 + i)}
                       </div>
                       <Text size="xs" fw={600}>{opt.Content}</Text>
+                      {opt.IsCorrect && (
+                        <Badge color="green" variant="light" size="xs" ml="auto">Đáp án đúng</Badge>
+                      )}
                     </Group>
                   ))}
                 </Stack>
