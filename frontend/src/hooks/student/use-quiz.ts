@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { quizApi, SubjectWithQuiz, QuizSummary, QuizDetailResponse, StartAttemptResponse, SubmitAttemptResponse } from "@/api/quiz";
+import { notifications } from "@mantine/notifications";
 
 export interface Option {
   id: string;
@@ -9,7 +11,6 @@ export interface Question {
   id: string;
   text: string;
   options: Option[];
-  correctOptionId: string;
 }
 
 export interface Quiz {
@@ -21,130 +22,162 @@ export interface Quiz {
   questions: Question[];
 }
 
-export const historyMocks = [
-  {
-    id: "h1",
-    quizTitle: "Bài kiểm tra giữa kỳ 1",
-    subject: "Lập trình Web",
-    score: 9.5,
-    total: 10,
-    date: "10/05/2026",
-    time: "14:30",
-  },
-  {
-    id: "h2",
-    quizTitle: "Trắc nghiệm SQL cơ bản",
-    subject: "Cơ sở dữ liệu",
-    score: 8.0,
-    total: 10,
-    date: "08/05/2026",
-    time: "09:15",
-  },
-  {
-    id: "h3",
-    quizTitle: "Quiz 1: HTML & CSS",
-    subject: "Lập trình Web",
-    score: 10.0,
-    total: 10,
-    date: "01/05/2026",
-    time: "10:00",
-  },
-];
-
-
-export const subjects = [
-  { id: "s1", name: "Lập trình Web" },
-  { id: "s2", name: "Cơ sở dữ liệu" },
-  { id: "s3", name: "Toán cao cấp" },
-];
-
 export function useQuiz() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [subjects, setSubjects] = useState<SubjectWithQuiz[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  
+  const [selectedSubject, setSelectedSubject] = useState<SubjectWithQuiz | null>(null);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [activeAttempt, setActiveAttempt] = useState<StartAttemptResponse | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitResult, setSubmitResult] = useState<SubmitAttemptResponse | null>(null);
   const [score, setScore] = useState(0);
+  
   const [showHistory, setShowHistory] = useState(false);
-<{ id: string; name: string } | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null);
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Load subjects with quizzes on mount
   useEffect(() => {
-    // Mock quizzes
-    setQuizzes([
-      {
-        id: "qz1",
-        title: "Bài kiểm tra giữa kỳ 1",
-        description: "Kiểm tra kiến thức Chương 1 và 2.",
-        subject_name: "Lập trình Web",
-        duration_minutes: 15,
-        questions: [
-          {
-            id: "q1",
-            text: "HTML là viết tắt của từ gì?",
-            options: [
-              { id: "o1", text: "Hyper Text Markup Language" },
-              { id: "o2", text: "High Text Machine Language" },
-              { id: "o3", text: "Hyper Text Multiple Language" },
-            ],
-            correctOptionId: "o1",
-          },
-          {
-            id: "q2",
-            text: "Thẻ nào dùng để tạo danh sách không thứ tự?",
-            options: [
-              { id: "o1", text: "<ol>" },
-              { id: "o2", text: "<ul>" },
-              { id: "o3", text: "<li>" },
-            ],
-            correctOptionId: "o2",
-          },
-        ],
-      },
-      {
-        id: "qz2",
-        title: "Trắc nghiệm SQL cơ bản",
-        description: "Ôn tập các câu truy vấn cơ bản (SELECT, WHERE, JOIN)",
-        subject_name: "Cơ sở dữ liệu",
-        duration_minutes: 10,
-        questions: [
-          {
-            id: "q1",
-            text: "Câu lệnh SQL nào dùng để chọn tất cả cột từ bảng 'Users'?",
-            options: [
-              { id: "o1", text: "GET * FROM Users" },
-              { id: "o2", text: "SELECT * FROM Users" },
-              { id: "o3", text: "EXTRACT ALL FROM Users" },
-            ],
-            correctOptionId: "o2",
-          },
-        ],
-      },
-    ]);
+    async function fetchSubjects() {
+      setLoadingSubjects(true);
+      try {
+        const res = await quizApi.getSubjectsWithQuizzes();
+        setSubjects(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch subjects:", err);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    }
+    fetchSubjects();
   }, []);
+
+  // Fetch quizzes when subject changes
+  useEffect(() => {
+    if (!selectedSubject) {
+      setQuizzes([]);
+      return;
+    }
+    async function fetchQuizzes() {
+      setLoadingQuizzes(true);
+      try {
+        const res = await quizApi.listQuizzesForStudent(selectedSubject!.id);
+        setQuizzes(res || []);
+      } catch (err) {
+        console.error("Failed to fetch quizzes:", err);
+      } finally {
+        setLoadingQuizzes(false);
+      }
+    }
+    fetchQuizzes();
+  }, [selectedSubject]);
+
+  // Fetch attempt history
+  const fetchAttemptHistory = async (quizId: string) => {
+    setLoadingHistory(true);
+    try {
+      const res = await quizApi.getAttemptHistory(quizId);
+      setHistoryList(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch attempt history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleStartQuiz = async (quizSummary: QuizSummary) => {
+    setLoadingDetail(true);
+    try {
+      // 1. Start attempt
+      const attempt = await quizApi.startAttempt(quizSummary.ID);
+      setActiveAttempt(attempt);
+
+      // 2. Fetch quiz details
+      const detail = await quizApi.getQuizDetail(quizSummary.ID);
+      
+      const mappedQuiz: Quiz = {
+        id: detail.quiz.ID,
+        title: detail.quiz.Title,
+        description: "Bài trắc nghiệm tự động sinh từ tài liệu học tập.",
+        subject_name: selectedSubject?.name || "Môn học",
+        duration_minutes: 15, // Default duration
+        questions: detail.questions.map((q) => ({
+          id: q.ID,
+          text: q.Content,
+          options: q.Options.map((opt) => ({
+            id: opt.ID,
+            text: opt.Content,
+          })),
+        })),
+      };
+
+      setSelectedQuiz(mappedQuiz);
+      setAnswers({});
+      setSubmitted(false);
+      setScore(0);
+      setSubmitResult(null);
+    } catch (err: any) {
+      console.error("Failed to start quiz attempt:", err);
+      notifications.show({
+        title: "Lỗi hệ thống",
+        message: err.response?.data?.message || "Không thể bắt đầu làm bài. Vui lòng thử lại sau.",
+        color: "red",
+      });
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
   const handleSelectOption = (questionId: string, optionId: string) => {
     if (submitted) return;
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   };
 
-  const handleSubmit = () => {
-    if (!selectedQuiz) return;
-    let correctCount = 0;
-    selectedQuiz.questions.forEach((q) => {
-      if (answers[q.id] === q.correctOptionId) {
-        correctCount++;
-      }
-    });
-    setScore(correctCount);
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!selectedQuiz || !activeAttempt) return;
+    
+    // Construct answers array matching the API
+    const formattedAnswers = Object.entries(answers).map(([qId, optId]) => ({
+      question_id: qId,
+      selected_option_ids: [optId],
+    }));
+
+    try {
+      const result = await quizApi.submitAttempt({
+        attempt_id: activeAttempt.ID,
+        answers: formattedAnswers,
+      });
+      setSubmitResult(result);
+      setScore(result.TotalCorrect);
+      setSubmitted(true);
+      
+      // Update history if active
+      fetchAttemptHistory(selectedQuiz.id);
+    } catch (err: any) {
+      console.error("Failed to submit quiz attempt:", err);
+      notifications.show({
+        title: "Lỗi nộp bài",
+        message: err.response?.data?.message || "Đã xảy ra lỗi khi nộp bài thi.",
+        color: "red",
+      });
+    }
   };
 
   const handleBackToList = () => {
     setSelectedQuiz(null);
+    setActiveAttempt(null);
     setAnswers({});
     setSubmitted(false);
     setScore(0);
+    setSubmitResult(null);
   };
 
   const resetSelection = () => {
@@ -153,24 +186,29 @@ export function useQuiz() {
   };
 
   return {
+    subjects,
     quizzes,
+    loadingSubjects,
+    loadingQuizzes,
+    loadingDetail,
+    selectedSubject,
+    setSelectedSubject,
     selectedQuiz,
-    setSelectedQuiz,
+    handleStartQuiz,
     answers,
     submitted,
     score,
+    submitResult,
     showHistory,
     setShowHistory,
-    selectedSubject,
-    setSelectedSubject,
+    historyList,
+    loadingHistory,
+    fetchAttemptHistory,
     searchQuery,
     setSearchQuery,
     handleSelectOption,
     handleSubmit,
     handleBackToList,
     resetSelection,
-    subjects,
-    historyMocks,
   };
 }
-

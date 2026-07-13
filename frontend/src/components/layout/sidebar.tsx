@@ -42,7 +42,7 @@ const getNavGroups = (basePath: string, role: string) => {
         { label: "Chatbot AI", icon: IconMessageChatbot, href: `${basePath}/chat` },
         { label: "Lịch Sử Chat", icon: IconHistory, href: `${basePath}/sessions` },
         { label: "So Sánh", icon: IconGitCompare, href: `${basePath}/documents/compare` },
-        !isStudent && { label: "Tạo Quiz", icon: IconListCheck, href: `${basePath}/quiz-builder` },
+        { label: isStudent ? "Luyện Tập" : "Tạo Quiz", icon: IconListCheck, href: `${basePath}/practice` },
       ].filter(Boolean) as any[],
     },
     !isStudent && {
