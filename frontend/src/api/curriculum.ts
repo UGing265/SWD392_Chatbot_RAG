@@ -8,6 +8,9 @@ export interface Subject {
 
 export interface LookupData {
   subjects: any[];
+  documentTypes?: any[];
+  languages?: any[];
+  documentSources?: any[];
 }
 
 export const curriculumApi = {

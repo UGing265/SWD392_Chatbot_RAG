@@ -1,13 +1,15 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   IconListSearch,
   IconFileCertificate,
   IconBookmarkFilled,
   IconBookmark,
+  IconSearch,
 } from "@tabler/icons-react";
-import { Text } from "@mantine/core";
+import { Text, TextInput } from "@mantine/core";
 import { useParams } from "next/navigation";
 import { useBookmarks } from "@/hooks/lecturer/use-bookmarks";
 
@@ -15,6 +17,19 @@ export function BookmarksView() {
   const params = useParams();
   const role = (params?.role as string) || "student";
   const { documents, loading, bookmarkedDocIds, toggleBookmark } = useBookmarks();
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredDocuments = useMemo(() => {
+    if (!searchQuery.trim()) return documents;
+    const lowerQuery = searchQuery.toLowerCase();
+    return documents.filter((doc) => 
+      (doc.title && doc.title.toLowerCase().includes(lowerQuery)) ||
+      (doc.preview_text && doc.preview_text.toLowerCase().includes(lowerQuery)) ||
+      (doc.subject_code && doc.subject_code.toLowerCase().includes(lowerQuery)) ||
+      (doc.description && doc.description.toLowerCase().includes(lowerQuery))
+    );
+  }, [documents, searchQuery]);
 
   return (
     <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
@@ -42,6 +57,22 @@ export function BookmarksView() {
 
       {/* Content Section */}
       <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
+        {/* Search Bar */}
+        {documents.length > 0 && (
+          <div className="mb-6 flex">
+            <TextInput
+              placeholder="Tìm kiếm trong tài liệu đã lưu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              leftSection={<IconSearch size={16} stroke={1.5} className="text-zinc-400" />}
+              classNames={{
+                input: "!bg-white !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-400 !rounded-xl !h-10 !text-[13px] !font-sans !font-medium !text-zinc-800 !shadow-sm !transition-all",
+              }}
+              className="w-full sm:max-w-md"
+            />
+          </div>
+        )}
+
         {/* List Section */}
         <div className={`transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100`}>
           {documents.length === 0 && !loading ? (
@@ -49,9 +80,14 @@ export function BookmarksView() {
               <IconListSearch size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
               <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Bạn chưa lưu tài liệu nào.</h5>
             </div>
+          ) : filteredDocuments.length === 0 && !loading ? (
+            <div className="text-center py-24 rounded-2xl bg-white border border-zinc-200 shadow-sm">
+              <IconListSearch size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
+              <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Không tìm thấy tài liệu phù hợp.</h5>
+            </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {documents.map((item) => (
+              {filteredDocuments.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-5"

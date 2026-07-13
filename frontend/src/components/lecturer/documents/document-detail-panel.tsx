@@ -103,6 +103,7 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
           <Button 
             component={Link} 
             href={`/${role}/documents/${doc.slug || doc.id}`} 
+            target="_blank"
             variant="default" 
             size="sm" 
             radius="md" 
