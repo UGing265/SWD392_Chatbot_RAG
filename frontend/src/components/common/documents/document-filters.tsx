@@ -183,7 +183,7 @@ export function DocumentFilters({
           <div className="relative">
             <MultiSelect
               label="Môn Học"
-              placeholder="Chọn Môn Học..."
+              placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn Môn Học..."}
               data={subjects.map(s => {
                 const label = s.name || s.code || "";
                 return { value: s.id, label };
@@ -193,8 +193,10 @@ export function DocumentFilters({
                 setLocalSubjectIds(val);
                 (document.activeElement as HTMLElement)?.blur();
               }}
+              disabled={subjects.length === 0}
               clearable
               searchable
+              nothingFoundMessage="Không tìm thấy môn học"
               hidePickedOptions
               classNames={inputClasses}
               comboboxProps={{ width: 'max-content', position: 'bottom-start' }}

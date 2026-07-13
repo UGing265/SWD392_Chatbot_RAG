@@ -300,11 +300,13 @@ export function SessionsView() {
         <Stack gap="md">
           <Select
             label="Chọn môn học"
-            placeholder="Tìm và chọn môn học của phiên thảo luận"
+            placeholder={subjectOptions.length === 0 ? "Chưa được phân công môn học" : "Tìm và chọn môn học của phiên thảo luận"}
             data={subjectOptions}
             value={selectedSubject}
             onChange={setSelectedSubject}
+            disabled={subjectOptions.length === 0}
             searchable
+            nothingFoundMessage="Không tìm thấy môn học"
             required
           />
           <TextInput

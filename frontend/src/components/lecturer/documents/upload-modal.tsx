@@ -282,15 +282,16 @@ export function UploadModal({ opened, onClose, onSuccess }: UploadModalProps) {
                         <Select
                           id="modal-subject"
                           label="Môn học"
-                          placeholder="Chọn môn học..."
+                          placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn môn học..."}
                           data={subjects.map(s => {
                             const label = s.name || s.code || "";
                             return { value: s.id, label };
                           })}
                           value={subjectId}
                           onChange={(val) => setSubjectId(val || "")}
-                          disabled={uploading}
+                          disabled={uploading || subjects.length === 0}
                           searchable
+                          nothingFoundMessage="Không tìm thấy môn học"
                           clearable
                           classNames={selectClasses}
                           comboboxProps={{ width: 'max-content', position: 'bottom-start' }}

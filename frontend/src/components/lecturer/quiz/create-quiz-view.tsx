@@ -131,10 +131,13 @@ export function CreateQuizView() {
                     <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">Môn học</Text>
                   </Group>
                 }
-                placeholder="Chọn môn học"
+                placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn môn học"}
                 value={subjectId}
                 onChange={setSubjectId}
                 data={subjects.map((s) => ({ value: s.id, label: s.name }))}
+                disabled={subjects.length === 0}
+                searchable
+                nothingFoundMessage="Không tìm thấy môn học"
                 radius="lg"
               />
             </div>

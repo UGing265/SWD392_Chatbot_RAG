@@ -261,12 +261,12 @@ export function UploadView() {
                   id="subject"
                   label="Môn học"
                   leftSection={<IconBook size={16} className="text-[#A0A0A0]" />}
-                  placeholder="Chọn môn học"
+                  placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn môn học"}
                   data={subjects
                     .map((s) => ({ value: s.id, label: s.code || (s.name ? s.name.split(" - ")[0] : "") }))}
                   value={subjectId}
                   onChange={(val) => setSubjectId(val || "")}
-                  disabled={uploading}
+                  disabled={uploading || subjects.length === 0}
                   size="md"
                   radius="lg"
                   searchable

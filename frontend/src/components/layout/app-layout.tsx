@@ -9,6 +9,7 @@ import {
   IconChevronDown,
   IconActivity,
   IconMessage,
+  IconHistory,
 } from "@tabler/icons-react";
 import { Collapse, Text, UnstyledButton } from "@mantine/core";
 import type { ReactNode } from "react";
@@ -36,6 +37,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const basePath = role ? `/${role}` : "";
   const { signOut, session } = useAuth();
   const [historyOpened, setHistoryOpened] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const filteredNav = nav.filter((n) => {
     if (n.studentOnly && role !== "student") return false;
@@ -45,51 +47,66 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
-      <Sidebar session={session} signOut={signOut} basePath={basePath}>
+      <Sidebar 
+        session={session} 
+        signOut={signOut} 
+        basePath={basePath}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+        showCollapseButton={true}
+      >
         {role === "student" && (
-          <div>
+          <div className="mt-4">
             <UnstyledButton
               onClick={() => setHistoryOpened((o) => !o)}
-              className="w-full flex items-center justify-between group px-2 mb-1"
+              className={cn("w-full flex items-center group mb-1", sidebarCollapsed ? "justify-center px-0" : "justify-between px-2")}
             >
-              <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
-                Lịch sử
-              </h3>
-              <IconChevronDown
-                size={14}
-                className={cn(
-                  "text-zinc-400 transition-transform duration-200",
-                  !historyOpened && "-rotate-90",
-                )}
-              />
+              {!sidebarCollapsed ? (
+                <>
+                  <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
+                    Lịch sử
+                  </h3>
+                  <IconChevronDown
+                    size={14}
+                    className={cn(
+                      "text-zinc-400 transition-transform duration-200",
+                      !historyOpened && "-rotate-90",
+                    )}
+                  />
+                </>
+              ) : (
+                <IconHistory size={16} className="text-zinc-400" />
+              )}
             </UnstyledButton>
 
-            <Collapse in={historyOpened}>
-              <div className="flex flex-col gap-0.5 mt-1">
-                {sessionList.slice(0, 8).map((sessionItem) => {
-                  const isActive = searchParams?.get("session") === sessionItem.id;
-                  return (
-                    <Link
-                      key={sessionItem.id}
-                      href={`${basePath}/chat?session=${sessionItem.id}`}
-                      className={cn(
-                        "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
-                        isActive
-                          ? "bg-zinc-100/80 text-zinc-900 font-medium"
-                          : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
-                      )}
-                    >
-                      <IconMessage
-                        size={16}
-                        stroke={isActive ? 2 : 1.6}
-                        className={cn("shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")}
-                      />
-                      <span className="truncate">{sessionItem.title}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </Collapse>
+            {!sidebarCollapsed && (
+              <Collapse in={historyOpened}>
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {sessionList.slice(0, 8).map((sessionItem) => {
+                    const isActive = searchParams?.get("session") === sessionItem.id;
+                    return (
+                      <Link
+                        key={sessionItem.id}
+                        href={`${basePath}/chat?session=${sessionItem.id}`}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
+                          isActive
+                            ? "bg-zinc-100/80 text-zinc-900 font-medium"
+                            : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
+                        )}
+                      >
+                        <IconMessage
+                          size={16}
+                          stroke={isActive ? 2 : 1.6}
+                          className={cn("shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")}
+                        />
+                        <span className="truncate">{sessionItem.title}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </Collapse>
+            )}
           </div>
         )}
       </Sidebar>

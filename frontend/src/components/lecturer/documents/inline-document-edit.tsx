@@ -145,7 +145,7 @@ export function InlineDocumentEdit({
               />
               <Select
                 label="Môn học"
-                placeholder="Chọn môn học"
+                placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn môn học"}
                 data={subjects.map(s => {
                   const label = s.name || s.code || "";
                   return { value: s.id, label };
@@ -153,7 +153,9 @@ export function InlineDocumentEdit({
                 value={formData.subject_id}
                 onChange={(val) => setFormData({ ...formData, subject_id: val || "" })}
                 required
+                disabled={subjects.length === 0}
                 searchable
+                nothingFoundMessage="Không tìm thấy môn học"
                 classNames={inputClasses}
                 comboboxProps={{ width: 'max-content', position: 'bottom-start' }}
                 renderOption={({ option }) => {
