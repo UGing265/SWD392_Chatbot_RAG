@@ -13,7 +13,7 @@ import {
   IconDatabaseImport,
   IconUser,
   IconLogout,
-  IconBrain,
+  IconSparkles,
   IconPlus,
   IconSquarePlus,
   IconDiscountCheckFilled,
@@ -107,11 +107,12 @@ export function Sidebar({ session, signOut, children, basePath = "/lecturer", na
       <div className={cn("flex items-center gap-2 border-b border-zinc-100 h-[52px] shrink-0", collapsed ? "justify-center px-0" : "px-4")}>
         {!collapsed && (
           <>
-            <div className="bg-zinc-900 text-white rounded-md flex items-center justify-center w-7 h-7 shrink-0">
-              <IconBrain size={18} stroke={2} />
+            <div className="rounded-md flex items-center justify-center w-7 h-7 shrink-0 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #27272a 0%, #52525b 100%)" }}>
+              <IconSparkles size={16} stroke={2} className="text-white" />
             </div>
-            <span className="font-bold text-zinc-900 tracking-tight text-[15px] truncate flex-1">
-              EduRAG
+            <span className="font-bold text-zinc-900 tracking-tight text-[15px] truncate flex-1 select-none">
+              StudyMate
             </span>
           </>
         )}
