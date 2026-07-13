@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ragApi } from "@/api/client";
-import { Table, Progress, Button, Text, ActionIcon, MultiSelect } from "@mantine/core";
+import { Table, Progress, Button, Text, ActionIcon, MultiSelect, TextInput } from "@mantine/core";
 import { IconRefresh, IconFile, IconCheck, IconX, IconLoader2, IconActivity, IconSearch } from "@tabler/icons-react";
 
 export interface UploadJob {
@@ -162,17 +162,16 @@ export function ProgressView() {
           
           <div className="mb-6 flex flex-col xl:flex-row xl:items-center gap-4 justify-between animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out border-b border-zinc-100 pb-3">
             <div className="relative w-full xl:max-w-sm">
-              <div className="relative flex items-center h-8 bg-white border border-zinc-200/80 focus-within:border-zinc-300 rounded-lg shadow-sm overflow-hidden transition-all duration-300">
-                <div className="flex items-center justify-center pl-3.5 pr-2 text-zinc-400 pointer-events-none shrink-0">
-                  <IconSearch size={15} stroke={1.5} />
-                </div>
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Tìm kiếm tài liệu..."
-                  className="flex-1 h-full min-w-0 text-[13px] pr-3 bg-transparent border-none focus:outline-none focus:ring-0 text-zinc-900 placeholder:text-zinc-400 placeholder:text-[13px] font-medium leading-[32px] py-0"
-                />
-              </div>
+              <TextInput
+                value={q}
+                onChange={(e) => setQ(e.currentTarget.value)}
+                placeholder="Tìm kiếm tài liệu..."
+                leftSection={<IconSearch size={16} stroke={1.5} className="text-zinc-400" />}
+                classNames={{
+                  input: "!bg-white !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-400 !rounded-xl !h-10 !text-[13px] !font-sans !font-medium !text-zinc-800 !shadow-sm !transition-all",
+                }}
+                className="w-full"
+              />
             </div>
             
             <div className="flex items-center gap-3 overflow-x-auto py-1 w-full min-w-0 xl:w-auto xl:justify-end" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>

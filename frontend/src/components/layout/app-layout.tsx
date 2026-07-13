@@ -13,10 +13,10 @@ import {
 } from "@tabler/icons-react";
 import { Collapse, Text, UnstyledButton } from "@mantine/core";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { sessionList } from "@/lib/sessions-store";
+import { chatApi, type ChatSession } from "@/api/chat";
 import { Sidebar } from "./sidebar";
 import Link from "next/link";
 
@@ -38,12 +38,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { signOut, session } = useAuth();
   const [historyOpened, setHistoryOpened] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
 
-  const filteredNav = nav.filter((n) => {
-    if (n.studentOnly && role !== "student") return false;
-    if (n.lecturerOnly && role !== "lecturer" && role !== "teacher") return false;
-    return true;
-  });
+  const activeSessionId = searchParams?.get("session");
+  const userId = session?.user?.id;
+
+  // Fetch real sessions dynamically from API
+  useEffect(() => {
+    if (userId) {
+      chatApi.listSessions()
+        .then((data) => {
+          setSessions(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching sidebar sessions:", err);
+        });
+    }
+  }, [userId, activeSessionId]);
+
+  const showHistory = role === "student" || role === "lecturer";
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white selection:bg-sky-100">
@@ -55,7 +68,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         onToggleCollapse={() => setSidebarCollapsed(c => !c)}
         showCollapseButton={true}
       >
-        {role === "student" && (
+        {showHistory && (
           <div className="mt-4">
             <UnstyledButton
               onClick={() => setHistoryOpened((o) => !o)}
@@ -81,29 +94,33 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
             {!sidebarCollapsed && (
               <Collapse in={historyOpened}>
-                <div className="flex flex-col gap-0.5 mt-1">
-                  {sessionList.slice(0, 8).map((sessionItem) => {
-                    const isActive = searchParams?.get("session") === sessionItem.id;
-                    return (
-                      <Link
-                        key={sessionItem.id}
-                        href={`${basePath}/chat?session=${sessionItem.id}`}
-                        className={cn(
-                          "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
-                          isActive
-                            ? "bg-zinc-100/80 text-zinc-900 font-medium"
-                            : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
-                        )}
-                      >
-                        <IconMessage
-                          size={16}
-                          stroke={isActive ? 2 : 1.6}
-                          className={cn("shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")}
-                        />
-                        <span className="truncate">{sessionItem.title}</span>
-                      </Link>
-                    );
-                  })}
+                <div className="flex flex-col gap-0.5 mt-1 max-h-[250px] overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {sessions.length === 0 ? (
+                    <Text size="xs" c="dimmed" className="px-2.5 py-1">Chưa có phiên chat</Text>
+                  ) : (
+                    sessions.slice(0, 15).map((sessionItem) => {
+                      const isActive = activeSessionId === sessionItem.id;
+                      return (
+                        <Link
+                          key={sessionItem.id}
+                          href={`${basePath}/chat?session=${sessionItem.id}`}
+                          className={cn(
+                            "flex items-center gap-2.5 px-2.5 h-8 rounded-md transition-colors text-[13px]",
+                            isActive
+                              ? "bg-zinc-100/80 text-zinc-900 font-medium"
+                              : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
+                          )}
+                        >
+                          <IconMessage
+                            size={16}
+                            stroke={isActive ? 2 : 1.6}
+                            className={cn("shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")}
+                          />
+                          <span className="truncate flex-1">{sessionItem.title}</span>
+                        </Link>
+                      );
+                    })
+                  )}
                 </div>
               </Collapse>
             )}

@@ -22,17 +22,8 @@ export interface DocumentsResponse {
   total_pages: number;
 }
 
-export interface ComparisonDifference {
-  topic: string;
-  document1: string;
-  document2: string;
-  explanation: string;
-}
-
 export interface ComparisonResult {
-  differences: ComparisonDifference[];
-  commonThemes: string[];
-  summary: string;
+  markdown: string;
 }
 
 export const documentApi = {
@@ -64,6 +55,16 @@ export const documentApi = {
     const response = await ragApi.post<ComparisonResult>("/documents/compare", {
       document_ids: documentIds,
       question: question,
+    });
+    return response.data;
+  },
+
+  exportCompareDocuments: async (documentIds: string[], question: string): Promise<Blob> => {
+    const response = await ragApi.post("/documents/compare/export", {
+      document_ids: documentIds,
+      question: question,
+    }, {
+      responseType: "blob"
     });
     return response.data;
   },

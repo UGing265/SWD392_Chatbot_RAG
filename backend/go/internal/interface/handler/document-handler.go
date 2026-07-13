@@ -591,7 +591,7 @@ func (h *DocumentHandler) PublicSubjects(c *gin.Context) {
 
 type CompareDocumentsRequest struct {
 	DocumentIDs []string `json:"document_ids" binding:"required,min=2"`
-	Question    string   `json:"question" binding:"required"`
+	Question    string   `json:"question"`
 }
 
 // CompareDocuments godoc
@@ -602,10 +602,14 @@ type CompareDocumentsRequest struct {
 // @Accept json
 // @Produce json
 // @Param body body handler.CompareDocumentsRequest true "Comparison Request"
-// @Success 200 {object} application.ComparisonResultDto
+// @Success 200 {object} handler.CompareDocumentsResponse
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/documents/compare [post]
+type CompareDocumentsResponse struct {
+	Markdown string `json:"markdown"`
+}
+
 func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
 	var req CompareDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -629,7 +633,7 @@ func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, CompareDocumentsResponse{Markdown: result})
 }
 
 // ToggleBookmark godoc
