@@ -57,7 +57,6 @@ const getNavGroups = (basePath: string, role: string) => {
         label: "Kiểm Duyệt",
         items: [
           { label: "Tài Liệu Hệ Thống", icon: IconFileText, href: `${basePath}/documents` },
-          { label: "Báo Cáo Vi Phạm", icon: IconShieldCheck, href: `${basePath}/moderation` },
         ],
       },
     ];

@@ -74,12 +74,19 @@ export function AdminDashboardView() {
     <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <IconLayoutDashboard size={20} stroke={1.5} className="text-zinc-900" />
-            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
-              Bảng Điều Khiển
-            </h1>
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-zinc-200 text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+              <IconLayoutDashboard size={24} stroke={1.5} />
+            </div>
+            <div>
+              <h1 className="font-serif text-[40px] tracking-[-0.03em] text-zinc-900 leading-none mb-1 select-none">
+                Bảng điều khiển.
+              </h1>
+              <p className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-1 leading-none">
+                Hệ Thống RAG & Quản Trị
+              </p>
+            </div>
           </div>
           <Button
             onClick={refresh}
