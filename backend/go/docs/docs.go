@@ -15,143 +15,47 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/admin/academic-terms": {
-            "post": {
+        "/api/admin/audit-logs": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Add a new academic term (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Get system audit logs with pagination (Admin only)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "admin-metadata"
+                    "admin"
                 ],
-                "summary": "Create academic term",
+                "summary": "Get audit logs",
                 "parameters": [
                     {
-                        "description": "Term details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.AcademicTermInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/application.AcademicTermDto"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/academic-terms/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update academic term name/order by ID (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-metadata"
-                ],
-                "summary": "Update academic term",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Term ID (UUID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     },
                     {
-                        "description": "Term details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.AcademicTermInput"
-                        }
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "pageSize",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/application.AcademicTermDto"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Remove academic term by ID (Admin only)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-metadata"
-                ],
-                "summary": "Delete academic term",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Term ID (UUID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/auditlog.AuditLog"
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1641,6 +1545,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/documents/bookmarks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of documents bookmarked by the current user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "List bookmarked documents",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/application.DocumentDetailsDto"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/documents/compare": {
             "post": {
                 "security": [
@@ -1675,6 +1616,63 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/application.ComparisonResultDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/documents/compare/export": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Compare multiple documents and export the result as a PDF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Export document comparison to PDF",
+                "parameters": [
+                    {
+                        "description": "Comparison Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CompareDocumentsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ComparisonResult.pdf",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "400": {
@@ -1760,38 +1758,7 @@ const docTemplate = `{
         },
         "/api/documents/my": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a list of documents owned by the logged-in lecturer",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "documents"
-                ],
-                "summary": "List owned documents",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Search query",
-                        "name": "q",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by subject ID (UUID)",
-                        "name": "subjectId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by term ID (UUID)",
-                        "name": "termId",
-                        "in": "query"
-                    },
                     {
                         "type": "string",
                         "description": "Filter by document type ID (UUID)",
@@ -1850,60 +1817,7 @@ const docTemplate = `{
         },
         "/api/documents/upload": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Upload a document file (PDF/DOC/DOCX/PPT/PPTX) and start indexing",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "documents"
-                ],
-                "summary": "Upload document file",
                 "parameters": [
-                    {
-                        "type": "file",
-                        "description": "Document file",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Title",
-                        "name": "title",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Description",
-                        "name": "description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Subject ID (UUID)",
-                        "name": "subject_id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Document Type ID (UUID)",
-                        "name": "document_type_id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Academic Term ID (UUID)",
-                        "name": "academic_term_id",
-                        "in": "formData"
-                    },
                     {
                         "type": "string",
                         "description": "Language ID (UUID)",
@@ -1936,6 +1850,43 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/documents/upload-jobs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get recent upload jobs for current user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "List upload jobs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/uploadjob.UploadJob"
                             }
                         }
                     },
@@ -2001,6 +1952,50 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/documents/{slug}/bookmark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add or remove a document from bookmarks",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Toggle bookmark",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document Slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
@@ -2265,6 +2260,505 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/quizzes/lecturer/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start background job to generate a quiz from documents",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Generate Quiz",
+                "parameters": [
+                    {
+                        "description": "Generate Quiz Request",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.GenerateQuizReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/lecturer/jobs/{job_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check the status of a quiz generation job",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Get Job Status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID",
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/quiz.GenerationJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/lecturer/subject/{subject_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List quizzes created by lecturer for a subject",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "List Quizzes for Lecturer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subject ID",
+                        "name": "subject_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/quiz.Quiz"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/lecturer/{quiz_id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Change quiz status to published",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Publish Quiz",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/student/attempt/submit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit an attempt with answers and auto-grade",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Submit Quiz Attempt",
+                "parameters": [
+                    {
+                        "description": "Submit Attempt Request",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.SubmitAttemptReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/quiz.Attempt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/student/subject/{subject_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List published quizzes for a subject",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "List Quizzes for Student",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subject ID",
+                        "name": "subject_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/quiz.Quiz"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/student/{quiz_id}/attempt": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a new quiz attempt for student or preview for lecturer",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Start Quiz Attempt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is Preview",
+                        "name": "preview",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/quiz.Attempt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/student/{quiz_id}/attempts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of past attempts for a quiz",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Get Attempt History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/quiz.Attempt"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/subjects": {
+            "get": {
+                "description": "Returns a list of subjects that contain at least one published quiz.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Quiz"
+                ],
+                "summary": "Get all subjects that have published quizzes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quizzes/{quiz_id}/detail": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get quiz detail with questions and options",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Get Quiz Detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quiz ID",
+                        "name": "quiz_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/subjects/public": {
             "get": {
                 "description": "Get a list of subjects that are public",
@@ -2290,23 +2784,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "application.AcademicTermDto": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "order": {
-                    "type": "integer"
-                }
-            }
-        },
         "application.ComparisonResultDto": {
             "type": "object",
             "properties": {
@@ -2521,12 +2998,6 @@ const docTemplate = `{
         "application.DocumentDetailsDto": {
             "type": "object",
             "properties": {
-                "academic_term_id": {
-                    "type": "string"
-                },
-                "academic_term_name": {
-                    "type": "string"
-                },
                 "approved_at": {
                     "type": "string"
                 },
@@ -2619,9 +3090,6 @@ const docTemplate = `{
         "application.DocumentEditInput": {
             "type": "object",
             "properties": {
-                "academic_term_id": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -2686,9 +3154,6 @@ const docTemplate = `{
         "application.DocumentListItemDto": {
             "type": "object",
             "properties": {
-                "academic_term_name": {
-                    "type": "string"
-                },
                 "chunk_count": {
                     "type": "integer"
                 },
@@ -2898,9 +3363,6 @@ const docTemplate = `{
         "application.SubjectDto": {
             "type": "object",
             "properties": {
-                "academic_term_id": {
-                    "type": "string"
-                },
                 "code": {
                     "type": "string"
                 },
@@ -2947,17 +3409,32 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.AcademicTermInput": {
+        "auditlog.AuditLog": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
-                "name": {
+                "action": {
                     "type": "string"
                 },
-                "order": {
-                    "type": "integer"
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "target_id": {
+                    "type": "string"
+                },
+                "target_table": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -3005,6 +3482,38 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.GenerateQuizReq": {
+            "type": "object",
+            "required": [
+                "document_ids",
+                "subject_id",
+                "total_questions"
+            ],
+            "properties": {
+                "document_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "multiple_choice_count": {
+                    "type": "integer"
+                },
+                "single_choice_count": {
+                    "type": "integer"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "total_questions": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "true_false_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "handler.LanguageInput": {
             "type": "object",
             "required": [
@@ -3049,9 +3558,6 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "academic_term_id": {
-                    "type": "string"
-                },
                 "code": {
                     "type": "string"
                 },
@@ -3059,6 +3565,160 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "handler.SubmitAttemptReq": {
+            "type": "object",
+            "required": [
+                "answers",
+                "attempt_id"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "question_id",
+                            "selected_option_ids"
+                        ],
+                        "properties": {
+                            "question_id": {
+                                "type": "string"
+                            },
+                            "selected_option_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "attempt_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "quiz.Attempt": {
+            "type": "object",
+            "properties": {
+                "completedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isPreview": {
+                    "type": "boolean"
+                },
+                "quizID": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "startedAt": {
+                    "type": "string"
+                },
+                "totalCorrect": {
+                    "type": "integer"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "quiz.GenerationJob": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "errorMessage": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lecturerID": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "resultQuizID": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/quiz.JobStatus"
+                },
+                "subjectID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "quiz.JobStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "JobStatusPending",
+                "JobStatusProcessing",
+                "JobStatusCompleted",
+                "JobStatusFailed"
+            ]
+        },
+        "quiz.Quiz": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lecturerID": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/quiz.QuizStatus"
+                },
+                "subjectID": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "totalQuestions": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "quiz.QuizStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "published",
+                "archived"
+            ],
+            "x-enum-varnames": [
+                "StatusDraft",
+                "StatusPublished",
+                "StatusArchived"
+            ]
         },
         "request.CreateSessionRequest": {
             "type": "object",
@@ -3173,6 +3833,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "uploadjob.UploadJob": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "document_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size_bytes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_notified": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "owner_user_id": {
+                    "type": "string"
+                },
+                "progress_percent": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storage_path": {
                     "type": "string"
                 },
                 "updated_at": {
