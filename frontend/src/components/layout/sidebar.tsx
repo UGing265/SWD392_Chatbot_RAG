@@ -21,12 +21,47 @@ import {
   IconSettings,
   IconLayoutSidebar,
   IconGitCompare,
+  IconLayoutDashboard,
+  IconUsers,
+  IconBook,
+  IconTerminal2,
+  IconClipboardList,
+  IconShieldCheck,
+  IconFileText,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button, Menu, Tooltip, UnstyledButton } from "@mantine/core";
 
 const getNavGroups = (basePath: string, role: string) => {
   const isStudent = role === "student";
+  const isAdmin = role === "admin";
+
+  if (isAdmin) {
+    return [
+      {
+        label: "Tổng Quan",
+        items: [
+          { label: "Bảng Điều Khiển", icon: IconLayoutDashboard, href: `${basePath}` },
+        ],
+      },
+      {
+        label: "Quản Lý",
+        items: [
+          { label: "Quản Lý Tài Khoản", icon: IconUsers, href: `${basePath}/users` },
+          { label: "Quản Lý Môn Học", icon: IconBook, href: `${basePath}/curriculum` },
+          { label: "Phân Công Môn Học", icon: IconTerminal2, href: `${basePath}/assignment` },
+          { label: "Danh Mục Khác", icon: IconClipboardList, href: `${basePath}/metadata` },
+        ],
+      },
+      {
+        label: "Kiểm Duyệt",
+        items: [
+          { label: "Tài Liệu Hệ Thống", icon: IconFileText, href: `${basePath}/documents` },
+          { label: "Báo Cáo Vi Phạm", icon: IconShieldCheck, href: `${basePath}/moderation` },
+        ],
+      },
+    ];
+  }
 
   const groups = [
     {
@@ -56,6 +91,7 @@ const getNavGroups = (basePath: string, role: string) => {
 
   return groups.filter(Boolean) as any[];
 };
+
 
 export function Sidebar({ session, signOut, children, basePath = "/lecturer", navItems, collapsed, onToggleCollapse, showCollapseButton }: { session?: any, signOut?: any, children?: React.ReactNode, basePath?: string, navItems?: any[], collapsed?: boolean, onToggleCollapse?: () => void, showCollapseButton?: boolean }) {
   const pathname = usePathname();
@@ -144,10 +180,12 @@ export function Sidebar({ session, signOut, children, basePath = "/lecturer", na
         ))}
 
         {/* Divider */}
-        <div className="bg-zinc-100 h-px my-2" />
+        {basePath.replace('/', '') !== "student" && basePath.replace('/', '') !== "admin" && (
+          <div className="bg-zinc-100 h-px my-2" />
+        )}
 
         {/* New Document */}
-        {basePath.replace('/', '') !== "student" && (
+        {basePath.replace('/', '') !== "student" && basePath.replace('/', '') !== "admin" && (
           collapsed ? (
             <Tooltip label="Tài Liệu Mới" position="right" withArrow>
               <Link

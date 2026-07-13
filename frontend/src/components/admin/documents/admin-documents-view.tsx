@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
+
 import { DocStatus } from "@/api/document";
 import { useDocuments } from "@/hooks/admin/use-documents";
 import {
@@ -79,23 +79,31 @@ export function AdminDocumentsView() {
   } = useDocuments();
 
   return (
-    <AdminPageShell
-      eyebrow="KHO TÀI LIỆU"
-      title="Tài Liệu."
-      description="Phê duyệt, từ chối và xóa tài liệu trong hệ thống."
-      actions={
-        <Button
-          variant="filled"
-          leftSection={<IconRefresh size={16} />}
-          onClick={refresh}
-          radius="xl"
-          color="dark"
-          className="h-11 px-6"
-        >
-          Làm mới
-        </Button>
-      }
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <IconFileText size={20} stroke={1.5} className="text-zinc-900" />
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+              Tài Liệu Hệ Thống
+            </h1>
+          </div>
+          <Button
+            onClick={refresh}
+            variant="default"
+            size="xs"
+            radius="md"
+            leftSection={<IconRefresh size={14} />}
+            className="!h-8 !text-[12px] !px-4 !font-semibold !rounded-lg"
+          >
+            Làm Mới
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Stack gap="xl">
         <Paper withBorder radius={24} p="lg" className="bg-white shadow-sm">
           <TextInput
@@ -109,17 +117,17 @@ export function AdminDocumentsView() {
           />
         </Paper>
 
-        <Paper withBorder radius={24} className="overflow-hidden bg-white shadow-sm">
+        <div className="bg-white border border-zinc-200/60 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
           {loading ? (
             <Group justify="center" py="xl">
               <Loader size="lg" color="dark" />
             </Group>
           ) : (
             <Table.ScrollContainer minWidth={980}>
-              <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover>
-                <Table.Thead className="bg-zinc-50">
+              <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover className="w-full">
+                <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
                   <Table.Tr>
-                    <Table.Th style={{ width: 40 }}>
+                    <Table.Th className="w-[4%] py-3">
                       <Checkbox
                         checked={documents.length > 0 && selected.size === documents.length}
                         onChange={toggleAll}
@@ -127,19 +135,22 @@ export function AdminDocumentsView() {
                         color="dark"
                       />
                     </Table.Th>
-                    {["Tên tài liệu", "Môn học", "Giảng viên", "Ngày tạo", "Trạng thái"].map(
-                      (heading) => (
-                        <Table.Th
-                          key={heading}
-                          className="font-mono text-[11px] uppercase tracking-widest text-zinc-500"
-                        >
-                          {heading}
-                        </Table.Th>
-                      ),
-                    )}
-                    <Table.Th className="text-right font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Thao tác
+                    <Table.Th className="w-[30%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Tên Tài Liệu
                     </Table.Th>
+                    <Table.Th className="w-[20%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Môn Học
+                    </Table.Th>
+                    <Table.Th className="w-[20%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Giảng Viên
+                    </Table.Th>
+                    <Table.Th className="w-[12%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Ngày Tạo
+                    </Table.Th>
+                    <Table.Th className="w-[13%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Trạng Thái
+                    </Table.Th>
+                    <Table.Th className="w-[1%] text-left py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap" />
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -172,7 +183,7 @@ export function AdminDocumentsView() {
                               <Text
                                 size="sm"
                                 fw={700}
-                                className="max-w-[250px] font-serif text-[16px] text-zinc-900"
+                                className="max-w-[250px] font-sans text-zinc-900"
                                 truncate
                               >
                                 {doc.title}
@@ -274,10 +285,10 @@ export function AdminDocumentsView() {
               />
             </Group>
           )}
-        </Paper>
+        </div>
 
         <Paper withBorder radius={24} p="lg" className="border-dashed bg-white shadow-sm">
-          <Text size="sm" fw={700} mb="xs" className="font-serif text-[18px] text-zinc-900">
+          <Text size="sm" fw={700} mb="xs" className="font-sans text-[15px] text-zinc-900">
             Quy trình xử lý tài liệu tự động
           </Text>
           <Text size="sm" c="dimmed" mb="md" className="leading-relaxed">
@@ -309,6 +320,7 @@ export function AdminDocumentsView() {
           </Group>
         </Paper>
       </Stack>
-    </AdminPageShell>
+      </div>
+    </div>
   );
 }

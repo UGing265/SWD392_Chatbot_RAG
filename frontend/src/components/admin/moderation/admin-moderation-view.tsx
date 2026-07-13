@@ -1,31 +1,39 @@
 "use client";
 
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
+
 import { useModeration } from "@/hooks/admin/use-moderation";
 import { Alert, Button, Group, Loader, Paper, Stack, Table, Text } from "@mantine/core";
-import { IconAlertTriangle, IconCheck, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconRefresh, IconTrash, IconShieldCheck } from "@tabler/icons-react";
 
 export function AdminModerationView() {
   const { reports, loading, handleResolve, refresh } = useModeration();
 
   return (
-    <AdminPageShell
-      eyebrow="KIỂM DUYỆT NỘI DUNG"
-      title="Báo Cáo."
-      description="Phê duyệt hoặc loại bỏ các tài liệu bị báo cáo vi phạm nội dung hoặc kỹ thuật."
-      actions={
-        <Button
-          variant="filled"
-          leftSection={<IconRefresh size={16} />}
-          onClick={refresh}
-          radius="xl"
-          color="dark"
-          className="h-11 px-6"
-        >
-          Làm mới
-        </Button>
-      }
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <IconShieldCheck size={20} stroke={1.5} className="text-zinc-900" />
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+              Báo Cáo Vi Phạm
+            </h1>
+          </div>
+          <Button
+            onClick={refresh}
+            variant="default"
+            size="xs"
+            radius="md"
+            leftSection={<IconRefresh size={14} />}
+            className="!h-8 !text-[12px] !px-4 !font-semibold !rounded-lg"
+          >
+            Làm Mới
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Stack gap="xl">
         <Alert
           variant="light"
@@ -41,30 +49,30 @@ export function AdminModerationView() {
           </Text>
         </Alert>
 
-        <Paper withBorder radius={24} className="overflow-hidden bg-white shadow-sm">
+        <div className="bg-white border border-zinc-200/60 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
           {loading ? (
             <Group justify="center" py="xl">
               <Loader size="lg" color="dark" />
             </Group>
           ) : (
             <Table.ScrollContainer minWidth={840}>
-              <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover>
-                <Table.Thead className="bg-zinc-50">
+              <Table verticalSpacing="md" horizontalSpacing="md" highlightOnHover className="w-full">
+                <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
                   <Table.Tr>
-                    <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Tài liệu bị báo cáo
+                    <Table.Th className="w-[30%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Tài Liệu Bị Báo Cáo
                     </Table.Th>
-                    <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Người báo cáo
+                    <Table.Th className="w-[25%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Người Báo Cáo
                     </Table.Th>
-                    <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Lý do
+                    <Table.Th className="w-[25%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Lý Do
                     </Table.Th>
-                    <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Môn học
+                    <Table.Th className="w-[10%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Môn Học
                     </Table.Th>
-                    <Table.Th className="text-right font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                      Thao tác
+                    <Table.Th className="w-[10%] text-right py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                      Thao Tác
                     </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
@@ -88,7 +96,7 @@ export function AdminModerationView() {
                             <Text
                               size="sm"
                               fw={700}
-                              className="font-serif text-[16px] text-zinc-900"
+                              className="font-sans text-zinc-900"
                             >
                               {doc.documentTitle}
                             </Text>
@@ -144,8 +152,9 @@ export function AdminModerationView() {
               </Table>
             </Table.ScrollContainer>
           )}
-        </Paper>
+        </div>
       </Stack>
-    </AdminPageShell>
+      </div>
+    </div>
   );
 }
