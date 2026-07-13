@@ -25,7 +25,7 @@ export function ExploreView() {
     role,
     loading,
     documents,
-    totalDocuments,
+
     totalPages,
     page,
     q,
@@ -86,15 +86,7 @@ export function ExploreView() {
             )}
           </div>
           
-          <div className="flex items-center justify-end gap-3 flex-1">
-            <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-full pr-3 py-1.5 pl-1.5 shadow-sm transition-all hover:bg-zinc-100 hover:border-zinc-300">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-zinc-200 text-zinc-500 mr-2 shadow-sm">
-                <IconFileCertificate size={14} stroke={1.5} />
-              </div>
-              <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mr-2">Tài liệu công khai</div>
-              <div className="font-bold text-zinc-900 text-sm leading-none tabular-nums">{totalDocuments}</div>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -115,6 +107,7 @@ export function ExploreView() {
           updateFilters={updateFilters}
           clearFilters={clearFilters}
           handleSearchSubmit={handleSearchSubmit}
+          hideSortAndFilter={true}
         />
 
         {/* Root Mode: Subjects Grid */}
@@ -186,13 +179,9 @@ export function ExploreView() {
         )}
 
         {/* Documents Grid */}
-        <div className="mt-8">
-          <div className="flex justify-between items-end mb-6 pb-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-200 border-b border-zinc-200">
-            <h4 className="text-[18px] font-bold tracking-tight text-zinc-900 m-0">Tài Liệu</h4>
-            <Text size="xs" className="font-semibold text-zinc-400 capitalize tracking-wide font-sans">
-              Kết quả: <span className="text-zinc-900 font-bold ml-1">{totalDocuments}</span>
-            </Text>
-          </div>
+        {!isRootMode && (
+          <div className="mt-8">
+
 
           <div className={`transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-300`}>
             {documents.length === 0 && !loading ? (
@@ -204,19 +193,16 @@ export function ExploreView() {
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {documents.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
+                    className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-5"
                   >
                     <div className="flex-grow">
                       {/* Top Badges */}
-                      <div className="mb-6 flex justify-between items-center gap-2">
+                      <div className="mb-4 flex justify-between items-center gap-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
-                            <IconFileCertificate size={20} stroke={1.5} />
-                          </div>
                           <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-600 text-xs bg-zinc-100 px-2.5 py-1 rounded-md whitespace-nowrap uppercase">
                             {item.subject_code || "TÀI LIỆU"}
                           </span>
@@ -229,21 +215,21 @@ export function ExploreView() {
                       </div>
 
                       {/* Title */}
-                      <Link href={`/${role}/documents/${item.slug || item.id}`} className="block focus:outline-none mb-3">
-                        <h3 className="text-[18px] font-bold tracking-tight text-zinc-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300">
+                      <Link href={`/${role}/documents/${item.slug || item.id}`} className="block focus:outline-none mb-2">
+                        <h3 className="text-[16px] font-bold tracking-tight text-zinc-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300">
                           {item.title}
                         </h3>
                       </Link>
 
                       {/* Preview Text */}
-                      <Text size="sm" className="text-zinc-500 line-clamp-2 leading-relaxed mb-6">
+                      <Text size="xs" className="text-zinc-500 line-clamp-2 leading-relaxed mb-4">
                         {item.preview_text || item.description || "Chưa có mô tả cho tài liệu này."}
                       </Text>
                     </div>
 
                     <div>
                       {/* Metadata */}
-                      <div className="flex items-center justify-between pt-5 border-t border-zinc-100/80 mb-5">
+                      <div className="flex items-center justify-between pt-4 border-t border-zinc-100/80 mb-4">
                         <div>
                           <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mb-1">Đăng bởi</div>
                           <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none max-w-[120px] truncate">
@@ -303,6 +289,7 @@ export function ExploreView() {
             </Group>
           )}
         </div>
+        )}
       </div>
     </div>
   );

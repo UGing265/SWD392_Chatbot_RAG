@@ -26,6 +26,7 @@ export interface DocumentFiltersProps {
   handleSearchSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   viewMode?: "list" | "grid" | "sidebar";
   setViewMode?: (mode: "list" | "grid" | "sidebar") => void;
+  hideSortAndFilter?: boolean;
 }
 
 export function DocumentFilters({
@@ -44,6 +45,7 @@ export function DocumentFilters({
   handleSearchSubmit,
   viewMode = "list",
   setViewMode,
+  hideSortAndFilter = false,
 }: DocumentFiltersProps) {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   
@@ -131,39 +133,43 @@ export function DocumentFilters({
         )}
 
         {/* Sort Dropdown */}
-        <Select
-          value={sortBy || "date_desc"}
-          onChange={(val) => updateFilters({ sortBy: val })}
-          data={[
-            { value: "date_desc", label: "Mới nhất" },
-            { value: "date_asc", label: "Cũ nhất" },
-            { value: "title_asc", label: "Tên A - Z" },
-            { value: "title_desc", label: "Tên Z - A" },
-            { value: "views_desc", label: "Nhiều view" },
-          ]}
-          allowDeselect={false}
-          leftSection={<IconSortDescending size={14} className="text-zinc-400" stroke={1.5} />}
-          classNames={{
-            input: "!bg-white !border-zinc-200/60 hover:!border-zinc-300 focus:!border-zinc-400 !rounded-lg !h-8 !min-h-[32px] !text-[12px] !font-sans !font-semibold !text-zinc-800 !shadow-sm !transition-colors",
-            dropdown: "!bg-white/95 !backdrop-blur-xl !border !border-zinc-200 !rounded-xl !shadow-xl !py-1.5",
-            option: "!rounded-lg data-[hovered]:!bg-zinc-50 data-[selected]:!bg-zinc-100 data-[selected]:!text-zinc-900 !text-[12px] !font-sans !font-semibold !px-3 !py-2"
-          }}
-          styles={{ root: { width: 135, flexShrink: 0 } }}
-        />
+        {!hideSortAndFilter && (
+          <>
+            <Select
+              value={sortBy || "date_desc"}
+              onChange={(val) => updateFilters({ sortBy: val })}
+              data={[
+                { value: "date_desc", label: "Mới nhất" },
+                { value: "date_asc", label: "Cũ nhất" },
+                { value: "title_asc", label: "Tên A - Z" },
+                { value: "title_desc", label: "Tên Z - A" },
+                { value: "views_desc", label: "Nhiều view" },
+              ]}
+              allowDeselect={false}
+              leftSection={<IconSortDescending size={14} className="text-zinc-400" stroke={1.5} />}
+              classNames={{
+                input: "!bg-white !border-zinc-200/60 hover:!border-zinc-300 focus:!border-zinc-400 !rounded-lg !h-8 !min-h-[32px] !text-[12px] !font-sans !font-semibold !text-zinc-800 !shadow-sm !transition-colors",
+                dropdown: "!bg-white/95 !backdrop-blur-xl !border !border-zinc-200 !rounded-xl !shadow-xl !py-1.5",
+                option: "!rounded-lg data-[hovered]:!bg-zinc-50 data-[selected]:!bg-zinc-100 data-[selected]:!text-zinc-900 !text-[12px] !font-sans !font-semibold !px-3 !py-2"
+              }}
+              styles={{ root: { width: 135, flexShrink: 0 } }}
+            />
 
-        {/* Filters Button */}
-        <UnstyledButton
-          onClick={() => setIsFilterDrawerOpen(true)}
-          className="flex items-center gap-1.5 !h-8 !text-[12px] !px-4 !py-0 !rounded-lg !font-semibold !text-zinc-600 hover:!bg-zinc-100 hover:!text-zinc-900 transition-colors !border !border-zinc-200/60 !shadow-sm relative"
-        >
-          <IconAdjustmentsHorizontal size={14} stroke={1.5} />
-          Bộ Lọc
-          {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
-              {activeFiltersCount}
-            </span>
-          )}
-        </UnstyledButton>
+            {/* Filters Button */}
+            <UnstyledButton
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="flex items-center gap-1.5 !h-8 !text-[12px] !px-4 !py-0 !rounded-lg !font-semibold !text-zinc-600 hover:!bg-zinc-100 hover:!text-zinc-900 transition-colors !border !border-zinc-200/60 !shadow-sm relative"
+            >
+              <IconAdjustmentsHorizontal size={14} stroke={1.5} />
+              Bộ Lọc
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </UnstyledButton>
+          </>
+        )}
       </div>
 
       <Drawer

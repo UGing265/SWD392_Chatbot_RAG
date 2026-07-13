@@ -50,19 +50,16 @@ export function BookmarksView() {
               <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Bạn chưa lưu tài liệu nào.</h5>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {documents.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
+                  className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-5"
                 >
                   <div className="flex-grow">
                     {/* Top Badges */}
-                    <div className="mb-6 flex justify-between items-center gap-2">
+                    <div className="mb-4 flex justify-between items-center gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
-                          <IconFileCertificate size={20} stroke={1.5} />
-                        </div>
                         <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-600 text-xs bg-zinc-100 px-2.5 py-1 rounded-md whitespace-nowrap uppercase">
                           {item.subject_code || "TÀI LIỆU"}
                         </span>
@@ -75,21 +72,21 @@ export function BookmarksView() {
                     </div>
 
                     {/* Title */}
-                    <Link href={`/${role}/documents/${item.slug || item.id}`} className="block focus:outline-none mb-3">
-                      <h3 className="text-[18px] font-bold tracking-tight text-zinc-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300">
+                    <Link href={`/${role}/documents/${item.slug || item.id}`} className="block focus:outline-none mb-2">
+                      <h3 className="text-[16px] font-bold tracking-tight text-zinc-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300">
                         {item.title}
                       </h3>
                     </Link>
 
                     {/* Preview Text */}
-                    <Text size="sm" className="text-zinc-500 line-clamp-2 leading-relaxed mb-6">
+                    <Text size="xs" className="text-zinc-500 line-clamp-2 leading-relaxed mb-4">
                       {item.preview_text || item.description || "Chưa có mô tả cho tài liệu này."}
                     </Text>
                   </div>
 
                   <div>
                     {/* Metadata */}
-                    <div className="flex items-center justify-between pt-5 border-t border-zinc-100/80 mb-5">
+                    <div className="flex items-center justify-between pt-4 border-t border-zinc-100/80 mb-4">
                       <div>
                         <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mb-1">Đăng bởi</div>
                         <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none max-w-[120px] truncate">
