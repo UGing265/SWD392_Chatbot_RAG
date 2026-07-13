@@ -76,14 +76,17 @@ export function AdminDashboardView() {
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-zinc-200 text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <IconLayoutDashboard size={24} stroke={1.5} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl shadow-sm"
+              style={{
+                background: "linear-gradient(135deg, #27272a 0%, #52525b 100%)",
+              }}>
+              <IconLayoutDashboard size={22} className="text-white" />
             </div>
             <div>
-              <h1 className="font-serif text-[40px] tracking-[-0.03em] text-zinc-900 leading-none mb-1 select-none">
-                Bảng điều khiển.
+              <h1 className="text-[26px] font-bold tracking-tight text-zinc-900 leading-none mb-1.5 select-none">
+                Bảng Điều Khiển
               </h1>
-              <p className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-1 leading-none">
+              <p className="text-[13px] font-medium text-zinc-500 leading-none">
                 Hệ Thống RAG & Quản Trị
               </p>
             </div>
