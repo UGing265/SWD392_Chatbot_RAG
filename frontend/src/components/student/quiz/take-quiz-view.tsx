@@ -10,6 +10,7 @@ import {
   IconTrophy,
   IconFileText,
   IconSparkles,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -55,6 +56,7 @@ export function TakeQuizView() {
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [activeQuizForHistory, setActiveQuizForHistory] = useState<any>(null);
+  const [isConfirmBackOpen, setIsConfirmBackOpen] = useState(false);
 
   const openHistory = (quiz: any) => {
     setActiveQuizForHistory(quiz);
@@ -321,7 +323,7 @@ export function TakeQuizView() {
     <div className="w-full bg-transparent">
       <div className="max-w-3xl mx-auto w-full px-6 py-6 space-y-8 animate-in fade-in duration-300">
         <Button
-          onClick={handleBackToList}
+          onClick={submitted ? handleBackToList : () => setIsConfirmBackOpen(true)}
           variant="subtle"
           color="gray"
           leftSection={<IconChevronLeft size={16} />}
@@ -452,20 +454,25 @@ export function TakeQuizView() {
             {/* Questions List */}
             <Stack gap="md">
               {selectedQuiz.questions.map((q, index) => {
-                const selectedOptionId = answers[q.id];
+                const selectedOptionIds = answers[q.id] || [];
                 return (
                   <div
                     key={q.id}
                     className="p-6 rounded-2xl bg-white border border-zinc-200 shadow-sm"
                   >
-                    <Text fw={755} size="md" className="text-zinc-850 leading-relaxed mb-5">
+                    <Text component="div" fw={755} size="md" className="text-zinc-850 leading-relaxed mb-5">
                       <span className="text-indigo-600 mr-2">Câu {index + 1}:</span>
                       {q.text}
+                      {q.questionType === "multiple_choice" && (
+                        <Badge size="xs" color="indigo" variant="light" ml="xs" className="align-middle">
+                          Chọn nhiều đáp án
+                        </Badge>
+                      )}
                     </Text>
 
                     <Stack gap="sm">
                       {q.options.map((opt) => {
-                        const isSelected = selectedOptionId === opt.id;
+                        const isSelected = selectedOptionIds.includes(opt.id);
                         
                         return (
                           <div
@@ -480,12 +487,17 @@ export function TakeQuizView() {
                           >
                             <div
                               className={cn(
-                                "h-5 w-5 rounded-full border mr-3 flex items-center justify-center shrink-0 transition-colors",
+                                "h-5 w-5 border mr-3 flex items-center justify-center shrink-0 transition-all",
+                                q.questionType === "multiple_choice" ? "rounded-md" : "rounded-full",
                                 isSelected ? "border-indigo-500 bg-indigo-500" : "border-zinc-300 bg-white"
                               )}
                             >
                               {isSelected && (
-                                <div className="h-1.5 w-1.5 bg-white rounded-full" />
+                                q.questionType === "multiple_choice" ? (
+                                  <span className="text-white text-[10px] font-bold">✓</span>
+                                ) : (
+                                  <div className="h-1.5 w-1.5 bg-white rounded-full" />
+                                )
                               )}
                             </div>
                             <span className="text-sm font-semibold leading-relaxed">{opt.text}</span>
@@ -499,23 +511,91 @@ export function TakeQuizView() {
             </Stack>
 
             {/* Action Bar */}
-            <div className="mt-8 pt-4 pb-12">
-              <Button
-                onClick={handleSubmit}
-                disabled={Object.keys(answers).length < selectedQuiz.questions.length}
-                color="indigo"
-                radius="lg"
-                size="md"
-                className="w-full h-12 font-extrabold text-sm"
-              >
-                {Object.keys(answers).length < selectedQuiz.questions.length
-                  ? `Vui lòng hoàn thành tất cả câu hỏi (${Object.keys(answers).length}/${selectedQuiz.questions.length})`
-                  : "Nộp bài thi"}
-              </Button>
-            </div>
+            {(() => {
+              const completedCount = selectedQuiz.questions.filter(
+                (q) => (answers[q.id] || []).length > 0
+              ).length;
+              const isComplete = completedCount === selectedQuiz.questions.length;
+
+              return (
+                <div className="mt-8 pt-4 pb-12">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isComplete}
+                    color="indigo"
+                    radius="lg"
+                    size="md"
+                    className="w-full h-12 font-extrabold text-sm"
+                  >
+                    {!isComplete
+                      ? `Vui lòng hoàn thành tất cả câu hỏi (${completedCount}/${selectedQuiz.questions.length})`
+                      : "Nộp bài thi"}
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
+      {/* Confirmation Leave Modal */}
+      <Modal
+        opened={isConfirmBackOpen}
+        onClose={() => setIsConfirmBackOpen(false)}
+        title={
+          <Group gap="xs">
+            <IconAlertTriangle size={18} className="text-amber-500" />
+            <Text fw={800} size="sm" className="text-zinc-900">
+              Xác nhận rời khỏi bài thi?
+            </Text>
+          </Group>
+        }
+        centered
+        radius="2xl"
+        padding="xl"
+        styles={{
+          header: {
+            borderBottom: "1px solid #f4f4f5",
+            paddingBottom: "12px",
+          },
+          content: {
+            boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+          }
+        }}
+      >
+        <Stack gap="md" className="pt-2">
+          <Text size="xs" className="text-zinc-650 leading-relaxed font-medium">
+            Bài thi này của bạn vẫn đang diễn ra. Nếu rời đi bây giờ, lượt thi sẽ bị nộp tự động với điểm số là <strong className="text-red-600">0.0 điểm</strong>.
+          </Text>
+          <Text size="xs" className="text-zinc-500 italic">
+            Bạn có chắc chắn muốn thoát và hủy lượt thi này không?
+          </Text>
+
+          <Group justify="end" gap="sm" mt="md">
+            <Button
+              variant="subtle"
+              color="gray"
+              radius="lg"
+              size="xs"
+              className="font-bold !text-zinc-500"
+              onClick={() => setIsConfirmBackOpen(false)}
+            >
+              Làm tiếp
+            </Button>
+            <Button
+              color="red"
+              radius="lg"
+              size="xs"
+              className="font-extrabold"
+              onClick={() => {
+                setIsConfirmBackOpen(false);
+                handleBackToList();
+              }}
+            >
+              Đồng ý rời đi
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 }

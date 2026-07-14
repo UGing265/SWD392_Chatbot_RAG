@@ -735,6 +735,10 @@ export function TeacherPracticeView() {
                   </Badge>
                 </Group>
 
+                <pre className="text-[9px] font-mono bg-zinc-100 p-2 rounded mb-2 overflow-x-auto text-zinc-700">
+                  {JSON.stringify(question, null, 2)}
+                </pre>
+
                 <Text fw={700} size="sm" className="text-zinc-850 leading-relaxed mb-4">
                   {question.Content}
                 </Text>

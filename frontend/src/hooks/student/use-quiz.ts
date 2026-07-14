@@ -10,6 +10,7 @@ export interface Option {
 export interface Question {
   id: string;
   text: string;
+  questionType: string;
   options: Option[];
 }
 
@@ -33,7 +34,7 @@ export function useQuiz() {
   const [activeAttempt, setActiveAttempt] = useState<StartAttemptResponse | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitResult, setSubmitResult] = useState<SubmitAttemptResponse | null>(null);
   const [score, setScore] = useState(0);
@@ -58,6 +59,34 @@ export function useQuiz() {
       }
     }
     fetchSubjects();
+
+    // Restore active attempt from localStorage if present
+    if (typeof window !== "undefined") {
+      const savedSubject = localStorage.getItem("active_quiz_subject");
+      if (savedSubject) {
+        try {
+          setSelectedSubject(JSON.parse(savedSubject));
+        } catch (e) {}
+      }
+
+      const savedAttempt = localStorage.getItem("active_quiz_attempt");
+      const savedDetail = localStorage.getItem("active_quiz_detail");
+      const savedAnswers = localStorage.getItem("active_quiz_answers");
+
+      if (savedAttempt && savedDetail) {
+        try {
+          setActiveAttempt(JSON.parse(savedAttempt));
+          setSelectedQuiz(JSON.parse(savedDetail));
+          if (savedAnswers) {
+            setAnswers(JSON.parse(savedAnswers));
+          }
+        } catch (e) {
+          localStorage.removeItem("active_quiz_attempt");
+          localStorage.removeItem("active_quiz_detail");
+          localStorage.removeItem("active_quiz_answers");
+        }
+      }
+    }
   }, []);
 
   // Fetch quizzes when subject changes
@@ -112,6 +141,7 @@ export function useQuiz() {
         questions: detail.questions.map((q) => ({
           id: q.ID,
           text: q.Content,
+          questionType: q.QuestionType,
           options: q.Options.map((opt) => ({
             id: opt.ID,
             text: opt.Content,
@@ -124,6 +154,16 @@ export function useQuiz() {
       setSubmitted(false);
       setScore(0);
       setSubmitResult(null);
+
+      // Save to localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_quiz_attempt", JSON.stringify(attempt));
+        localStorage.setItem("active_quiz_detail", JSON.stringify(mappedQuiz));
+        localStorage.setItem("active_quiz_answers", JSON.stringify({}));
+        if (selectedSubject) {
+          localStorage.setItem("active_quiz_subject", JSON.stringify(selectedSubject));
+        }
+      }
     } catch (err: any) {
       console.error("Failed to start quiz attempt:", err);
       notifications.show({
@@ -137,17 +177,49 @@ export function useQuiz() {
   };
 
   const handleSelectOption = (questionId: string, optionId: string) => {
-    if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    if (submitted || !selectedQuiz) return;
+    
+    const q = selectedQuiz.questions.find((question) => question.id === questionId);
+    if (!q) return;
+
+    console.log("Selected question:", questionId, "type:", q.questionType, "option:", optionId);
+
+    setAnswers((prev) => {
+      const currentSelections = prev[questionId] || [];
+      let newAnswers;
+      if (q.questionType === "multiple_choice") {
+        if (currentSelections.includes(optionId)) {
+          newAnswers = {
+            ...prev,
+            [questionId]: currentSelections.filter((id) => id !== optionId),
+          };
+        } else {
+          newAnswers = {
+            ...prev,
+            [questionId]: [...currentSelections, optionId],
+          };
+        }
+      } else {
+        newAnswers = {
+          ...prev,
+          [questionId]: [optionId],
+        };
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_quiz_answers", JSON.stringify(newAnswers));
+      }
+      return newAnswers;
+    });
   };
 
   const handleSubmit = async () => {
     if (!selectedQuiz || !activeAttempt) return;
     
     // Construct answers array matching the API
-    const formattedAnswers = Object.entries(answers).map(([qId, optId]) => ({
+    const formattedAnswers = Object.entries(answers).map(([qId, optIds]) => ({
       question_id: qId,
-      selected_option_ids: [optId],
+      selected_option_ids: optIds,
     }));
 
     try {
@@ -158,6 +230,13 @@ export function useQuiz() {
       setSubmitResult(result);
       setScore(result.TotalCorrect);
       setSubmitted(true);
+
+      // Clear active quiz cache on submit
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("active_quiz_attempt");
+        localStorage.removeItem("active_quiz_detail");
+        localStorage.removeItem("active_quiz_answers");
+      }
       
       // Update history if active
       fetchAttemptHistory(selectedQuiz.id);
@@ -172,15 +251,32 @@ export function useQuiz() {
   };
 
   const handleBackToList = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("active_quiz_attempt");
+      localStorage.removeItem("active_quiz_detail");
+      localStorage.removeItem("active_quiz_answers");
+    }
+
     setSelectedQuiz(null);
     setActiveAttempt(null);
     setAnswers({});
     setSubmitted(false);
     setScore(0);
     setSubmitResult(null);
+
+    // Refresh the page to reload history and dashboard scores
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   };
 
   const resetSelection = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("active_quiz_subject");
+      localStorage.removeItem("active_quiz_attempt");
+      localStorage.removeItem("active_quiz_detail");
+      localStorage.removeItem("active_quiz_answers");
+    }
     setSelectedSubject(null);
     setSearchQuery("");
   };

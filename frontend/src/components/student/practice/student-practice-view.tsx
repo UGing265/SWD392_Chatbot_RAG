@@ -6,7 +6,15 @@ import { TakeQuizView } from "../quiz/take-quiz-view";
 import { StudentDashboard } from "./student-dashboard";
 
 export function StudentPracticeView() {
-  const [activeTab, setActiveTab] = useState<string | null>("dashboard");
+  const [activeTab, setActiveTab] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const savedAttempt = localStorage.getItem("active_quiz_attempt");
+      if (savedAttempt) {
+        return "quizzes";
+      }
+    }
+    return "dashboard";
+  });
 
   return (
     <div className="p-4 md:p-6 lg:px-12 lg:py-8 w-full space-y-8 min-h-full">
