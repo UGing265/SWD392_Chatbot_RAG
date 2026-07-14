@@ -96,19 +96,12 @@ export function TeacherPracticeView() {
     <div className="flex-1 bg-zinc-50 relative font-sans w-full min-h-screen">
       {/* Sticky elegant header in lecturer style */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full mb-8">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-zinc-200 text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <IconTarget size={24} stroke={1.5} />
-            </div>
-            <div>
-              <h1 className="font-serif text-[38px] tracking-[-0.03em] text-zinc-900 leading-none mb-1 select-none">
-                Tạo & Quản lý Quiz.
-              </h1>
-              <p className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-1 leading-none">
-                Quiz Intelligence Lab & RAG AI
-              </p>
-            </div>
+        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <IconTarget size={20} stroke={1.5} className="text-zinc-900" />
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+              Tạo & Quản lý Quiz
+            </h1>
           </div>
           <Group gap="sm">
             <Button
@@ -701,99 +694,7 @@ export function TeacherPracticeView() {
         </Stack>
       </Modal>
 
-      {/* View Quiz Preview Modal */}
-      <Modal
-        opened={isViewQuizOpen}
-        onClose={() => setIsViewQuizOpen(false)}
-        title={previewQuiz?.quiz.Title || "Preview: Bài trắc nghiệm"}
-        size="lg"
-        radius="2xl"
-        centered
-        overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
-      >
-        <Stack gap="md">
-          <Text size="xs" c="dimmed" fw={500}>
-            Kiểm tra các câu hỏi được sinh ngẫu nhiên từ tài liệu trước khi công khai cho sinh viên.
-          </Text>
 
-          <Stack gap="md" className="max-h-[60vh] overflow-y-auto pr-1">
-            {previewQuiz?.questions.map((question, index) => (
-              <Paper
-                key={question.ID}
-                withBorder
-                p="md"
-                radius="lg"
-                className="relative overflow-hidden bg-zinc-50/50 border-zinc-200"
-              >
-                <div className="absolute top-0 left-0 bottom-0 w-1 bg-zinc-900" />
-                <Group justify="space-between" align="center" mb="xs">
-                  <Text size="xs" fw={900} className="uppercase text-zinc-900 tracking-wider">
-                    Câu hỏi {index + 1}
-                  </Text>
-                  <Badge variant="light" color="dark" size="xs">
-                    {question.QuestionType}
-                  </Badge>
-                </Group>
-
-                <pre className="text-[9px] font-mono bg-zinc-100 p-2 rounded mb-2 overflow-x-auto text-zinc-700">
-                  {JSON.stringify(question, null, 2)}
-                </pre>
-
-                <Text fw={700} size="sm" className="text-zinc-850 leading-relaxed mb-4">
-                  {question.Content}
-                </Text>
-
-                <Stack gap="xs">
-                  {question.Options.map((opt, i) => (
-                    <Group
-                      key={opt.ID}
-                      gap="sm"
-                      p="xs"
-                      className={cn(
-                        "rounded-lg border text-xs font-semibold",
-                        opt.IsCorrect
-                          ? "border-emerald-400 bg-emerald-50 text-emerald-800"
-                          : "border-zinc-200 bg-white text-zinc-700"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "h-5 w-5 rounded-full border flex items-center justify-center shrink-0 text-[10px] font-bold",
-                          opt.IsCorrect
-                            ? "border-emerald-500 bg-emerald-500 text-white"
-                            : "border-zinc-300 text-zinc-500"
-                        )}
-                      >
-                        {opt.IsCorrect ? "✓" : String.fromCharCode(65 + i)}
-                      </div>
-                      <Text size="xs" fw={600}>{opt.Content}</Text>
-                      {opt.IsCorrect && (
-                        <Badge color="green" variant="light" size="xs" ml="auto">Đáp án đúng</Badge>
-                      )}
-                    </Group>
-                  ))}
-                </Stack>
-              </Paper>
-            ))}
-          </Stack>
-
-          <Group justify="flex-end" mt="lg">
-            <Button variant="outline" color="gray" radius="lg" onClick={() => setIsViewQuizOpen(false)}>
-              Quay lại
-            </Button>
-            {previewQuiz && previewQuiz.quiz.Status === "draft" && (
-              <Button
-                onClick={() => handlePublishQuiz(previewQuiz.quiz.ID)}
-                color="emerald"
-                radius="lg"
-                className="bg-emerald-600 text-white hover:bg-emerald-500"
-              >
-                Phát hành Quiz
-              </Button>
-            )}
-          </Group>
-        </Stack>
-      </Modal>
     </div>
   );
 }

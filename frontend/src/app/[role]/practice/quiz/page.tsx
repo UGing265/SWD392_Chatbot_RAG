@@ -2,7 +2,20 @@
 
 import { Suspense } from "react";
 import { Loader, Center, Stack, Text } from "@mantine/core";
+import { useSearchParams } from "next/navigation";
 import { TakeQuizView } from "@/components/student/quiz/take-quiz-view";
+import { QuizPreviewView } from "@/components/lecturer/quiz/quiz-preview-view";
+
+function QuizPageContent() {
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get("preview") === "true";
+
+  if (isPreview) {
+    return <QuizPreviewView />;
+  }
+
+  return <TakeQuizView />;
+}
 
 export default function QuizGamificationPage() {
   return (
@@ -17,7 +30,7 @@ export default function QuizGamificationPage() {
           </Center>
         }
       >
-        <TakeQuizView />
+        <QuizPageContent />
       </Suspense>
     </div>
   );

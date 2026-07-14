@@ -49,6 +49,7 @@ export interface QuizQuestion {
   QuizID: string;
   QuestionType: string;
   Content: string;
+  Explanation?: string;
   OrderIndex: number;
   Options: QuizOption[];
 }

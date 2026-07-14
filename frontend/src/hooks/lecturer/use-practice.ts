@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { quizApi, QuizSummary, QuizDetailResponse, GenerateQuizRequest } from "@/api/quiz";
 import { ragApi } from "@/api/client";
+import { useRouter, useParams } from "next/navigation";
 
 export const chartData = [
   { week: "W1", performance: 65, goal: 70 },
@@ -53,6 +54,10 @@ export interface DocumentInfo {
 }
 
 export function usePractice() {
+  const router = useRouter();
+  const params = useParams();
+  const role = (params?.role as string) || "lecturer";
+
   const [activeTab, setActiveTab] = useState<string | null>("dashboard");
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isViewQuizOpen, setIsViewQuizOpen] = useState(false);
@@ -171,11 +176,9 @@ export function usePractice() {
             setGenerationProgress(100);
             
             if (status.ResultQuizID) {
-              const quizDetail = await quizApi.getQuizDetail(status.ResultQuizID);
-              setPreviewQuiz(quizDetail);
               setIsGenerateModalOpen(false);
-              setIsViewQuizOpen(true);
               fetchQuizzes();
+              router.push(`/${role}/practice/quiz?id=${status.ResultQuizID}&preview=true`);
             }
           } else if (status.Status === "failed") {
             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -205,13 +208,7 @@ export function usePractice() {
   };
 
   const handlePreviewQuizClick = async (quizId: string) => {
-    try {
-      const quizDetail = await quizApi.getQuizDetail(quizId);
-      setPreviewQuiz(quizDetail);
-      setIsViewQuizOpen(true);
-    } catch (err) {
-      console.error("Failed to load preview details:", err);
-    }
+    router.push(`/${role}/practice/quiz?id=${quizId}&preview=true`);
   };
 
   return {
