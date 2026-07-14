@@ -24,7 +24,7 @@ function decodeJwt(token: string) {
 function getHomePath(role: string) {
   if (role === "admin") return "/admin";
   if (role === "lecturer") return "/lecturer/documents/my";
-  return "/student/documents/shared";
+  return "/student/explore";
 }
 
 export default function RootPage() {

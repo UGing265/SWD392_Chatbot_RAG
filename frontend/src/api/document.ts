@@ -22,17 +22,8 @@ export interface DocumentsResponse {
   total_pages: number;
 }
 
-export interface ComparisonDifference {
-  topic: string;
-  document1: string;
-  document2: string;
-  explanation: string;
-}
-
 export interface ComparisonResult {
-  differences: ComparisonDifference[];
-  commonThemes: string[];
-  summary: string;
+  markdown: string;
 }
 
 export const documentApi = {
@@ -65,6 +56,38 @@ export const documentApi = {
       document_ids: documentIds,
       question: question,
     });
+    return response.data;
+  },
+
+  exportCompareDocuments: async (documentIds: string[], question: string): Promise<Blob> => {
+    const response = await ragApi.post("/documents/compare/export", {
+      document_ids: documentIds,
+      question: question,
+    }, {
+      responseType: "blob"
+    });
+    return response.data;
+  },
+
+  getPublicDocuments: async (params?: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    subjectId?: string;
+    sortBy?: string;
+  }): Promise<{ documents: any[]; total: number }> => {
+    const response = await ragApi.get("/documents", { params });
+    return response.data;
+  },
+
+  getBookmarks: async (): Promise<{ documents: any[] }> => {
+    const response = await ragApi.get("/documents/bookmarks");
+    const docs = Array.isArray(response.data) ? response.data : (response.data?.documents || []);
+    return { documents: docs };
+  },
+
+  toggleBookmark: async (slugOrId: string): Promise<{ bookmarked: boolean }> => {
+    const response = await ragApi.post(`/documents/${slugOrId}/bookmark`);
     return response.data;
   },
 };

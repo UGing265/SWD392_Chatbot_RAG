@@ -342,7 +342,7 @@ export function AdminCurriculumView() {
               Hủy
             </Button>
             <Button
-              onClick={() => handleCreateSubject(null)}
+              onClick={() => handleCreateSubject()}
               disabled={
                 !newSubjectCode.trim() ||
                 !newSubjectName.trim() ||

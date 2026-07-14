@@ -17,7 +17,7 @@ export interface DocumentListItem {
   description?: string | null;
   subject_name?: string | null;
   subject_code?: string | null;
-  academic_term_name?: string | null;
+
   owner_email?: string | null;
   document_type_name?: string | null;
   visibility: string;
@@ -31,15 +31,7 @@ export interface Subject {
   id: string;
   code: string;
   name: string;
-  academicTermId?: string;
-}
-
-export interface AcademicTerm {
-  id: string;
-  name: string;
-  year?: string;
-  order?: number;
-}
+  }
 
 export interface DocumentType {
   id: string;
@@ -65,8 +57,7 @@ export function useSharedDocuments() {
   // URL state
   const q = searchParams.get("q") || "";
   const subjectId = searchParams.get("subjectId") || "";
-  const termId = searchParams.get("termId") || "";
-  const documentTypeId = searchParams.get("documentTypeId") || "";
+    const documentTypeId = searchParams.get("documentTypeId") || "";
   const languageId = searchParams.get("languageId") || "";
   const documentSourceId = searchParams.get("documentSourceId") || "";
   const sortBy = searchParams.get("sortBy") || "date_desc";
@@ -78,10 +69,11 @@ export function useSharedDocuments() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [subjectAccessCounts, setSubjectAccessCounts] = useState<Record<string, number>>({});
+  const [subjectDocumentCounts, setSubjectDocumentCounts] = useState<Record<string, number>>({});
 
   // Lookups
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
+
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
@@ -89,6 +81,7 @@ export function useSharedDocuments() {
   const fetchSubjectAccessCounts = useCallback(async () => {
     const token = localStorage.getItem("token");
     const counts: Record<string, number> = {};
+    const docCounts: Record<string, number> = {};
     let currentPage = 1;
     let currentTotalPages = 1;
 
@@ -116,6 +109,9 @@ export function useSharedDocuments() {
 
           counts[String(subjectId)] =
             (counts[String(subjectId)] || 0) + Number(doc.view_count || 0);
+            
+          docCounts[String(subjectId)] =
+            (docCounts[String(subjectId)] || 0) + 1;
         }
 
         currentTotalPages = Number(data.total_pages || 1);
@@ -123,9 +119,11 @@ export function useSharedDocuments() {
       } while (currentPage <= currentTotalPages);
 
       setSubjectAccessCounts(counts);
+      setSubjectDocumentCounts(docCounts);
     } catch (err) {
       console.error("Failed to fetch subject access counts:", err);
       setSubjectAccessCounts({});
+      setSubjectDocumentCounts({});
     }
   }, []);
 
@@ -154,22 +152,10 @@ export function useSharedDocuments() {
               id: String(s.id ?? ""),
               code: getString(s.code),
               name: getString(s.name),
-              academicTermId: s.academic_term_id ? String(s.academic_term_id) : undefined,
-            };
+                          };
           }),
         );
-        setTerms(
-          (Array.isArray(data.academicTerms) ? data.academicTerms : []).map((item: unknown) => {
-            const t = asRecord(item);
 
-            return {
-              id: String(t.id ?? ""),
-              name: getString(t.name),
-              year: getString(t.year),
-              order: Number(t.order || 0),
-            };
-          }),
-        );
         setDocumentTypes(
           (Array.isArray(data.documentTypes) ? data.documentTypes : []).map((item: unknown) => {
             const dt = asRecord(item);
@@ -210,8 +196,7 @@ export function useSharedDocuments() {
         });
         if (q) params.set("q", q);
         if (subjectId) params.set("subjectId", subjectId);
-        if (termId) params.set("termId", termId);
-        if (documentTypeId) params.set("documentTypeId", documentTypeId);
+                if (documentTypeId) params.set("documentTypeId", documentTypeId);
         if (languageId) params.set("languageId", languageId);
         if (documentSourceId) params.set("documentSourceId", documentSourceId);
 
@@ -237,7 +222,7 @@ export function useSharedDocuments() {
         setLoading(false);
       }
     },
-    [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page],
+    [q, subjectId, documentTypeId, languageId, documentSourceId, sortBy, page],
   );
 
   useEffect(() => {
@@ -260,7 +245,7 @@ export function useSharedDocuments() {
       setTotalDocuments(0);
       setTotalPages(1);
     }
-  }, [fetchDocuments, q, subjectId, termId, documentTypeId, languageId, documentSourceId]);
+  }, [fetchDocuments, q, subjectId, documentTypeId, languageId, documentSourceId]);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -290,18 +275,18 @@ export function useSharedDocuments() {
     totalDocuments,
     totalPages,
     subjectAccessCounts,
+    subjectDocumentCounts,
     page,
     q,
     subjectId,
-    termId,
-    documentTypeId,
+        documentTypeId,
     languageId,
     documentSourceId,
     sortBy,
     updateFilters,
     clearFilters,
     subjects,
-    terms,
+
     documentTypes,
     languages,
     documentSources,

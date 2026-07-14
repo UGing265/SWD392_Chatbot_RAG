@@ -17,8 +17,11 @@ import {
   IconTrash,
   IconSearch,
   IconEdit,
+  IconFileText,
+  IconRefresh,
+  IconListCheck,
 } from "@tabler/icons-react";
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { Line, LineChart, AreaChart, Area, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import {
   Button,
   Modal,
@@ -31,9 +34,12 @@ import {
   ActionIcon,
   TextInput,
   NativeSelect,
+  Checkbox,
+  Loader,
 } from "@mantine/core";
 
 import { usePractice } from "@/hooks/lecturer/use-practice";
+import { cn } from "@/lib/utils";
 
 export function TeacherPracticeView() {
   const [mounted, setMounted] = useState(false);
@@ -50,422 +56,647 @@ export function TeacherPracticeView() {
     setIsViewQuizOpen,
     chartData,
     mockStudentResults,
+    
+    // Subjects & docs
+    subjects,
+    selectedSubjectId,
+    setSelectedSubjectId,
+    subjectDocuments,
+    selectedDocIds,
+    setSelectedDocIds,
+    quizzes,
+    loadingQuizzes,
+    
+    // Form config
+    totalQuestions,
+    setTotalQuestions,
+    trueFalseCount,
+    setTrueFalseCount,
+    singleChoiceCount,
+    setSingleChoiceCount,
+    multipleChoiceCount,
+    setMultipleChoiceCount,
+    
+    // Generation states
+    isGenerating,
+    generationProgress,
+    generationError,
+    previewQuiz,
+    
+    // Actions
+    handleGenerateQuiz,
+    handlePublishQuiz,
+    handlePreviewQuizClick,
+    refreshQuizzes,
   } = usePractice();
 
   if (!mounted) return null;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-[#f8fafc] font-sans">
-            Quiz Intelligence Lab
-          </h1>
-          <Text size="sm" c="dimmed" className="mt-1 font-sans font-normal">
-            Quản lý bài tập, theo dõi tiến độ sinh viên và tối ưu hóa câu hỏi bằng AI.
-          </Text>
+    <div className="flex-1 bg-zinc-50 relative font-sans w-full min-h-screen">
+      {/* Sticky elegant header in lecturer style */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full mb-8">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-zinc-200 text-zinc-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+              <IconTarget size={24} stroke={1.5} />
+            </div>
+            <div>
+              <h1 className="font-serif text-[38px] tracking-[-0.03em] text-zinc-900 leading-none mb-1 select-none">
+                Tạo & Quản lý Quiz.
+              </h1>
+              <p className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-1 leading-none">
+                Quiz Intelligence Lab & RAG AI
+              </p>
+            </div>
+          </div>
+          <Group gap="sm">
+            <Button
+              onClick={() => setIsGenerateModalOpen(true)}
+              color="dark"
+              radius="lg"
+              leftSection={<IconPlus size={16} />}
+              className="!h-9 !text-[12px] !px-4 !font-semibold !rounded-lg bg-zinc-900 text-white hover:bg-zinc-800"
+            >
+              Tạo Quiz mới (AI)
+            </Button>
+          </Group>
         </div>
-        <Group gap="sm">
-          <Button
-            variant="outline"
-            color="gray"
-            radius="lg"
-            leftSection={<IconClipboardText size={16} />}
-          >
-            Báo cáo học tập
-          </Button>
-          <Button
-            onClick={() => setIsGenerateModalOpen(true)}
-            color="dark"
-            radius="lg"
-            leftSection={<IconPlus size={16} />}
-          >
-            Tạo Quiz mới
-          </Button>
-        </Group>
       </div>
 
-      <Tabs value={activeTab} onChange={setActiveTab} variant="outline" radius="lg">
-        <Tabs.List className="mb-6">
-          <Tabs.Tab value="dashboard">Dashboard</Tabs.Tab>
-          <Tabs.Tab value="results">Kết quả sinh viên</Tabs.Tab>
-        </Tabs.List>
+      <div className="max-w-6xl mx-auto px-6 pb-12 space-y-8">
+        <Tabs value={activeTab} onChange={setActiveTab} variant="outline" radius="lg">
+          <Tabs.List className="mb-6">
+            <Tabs.Tab value="dashboard" className="!font-semibold !text-xs uppercase tracking-wider">Dashboard</Tabs.Tab>
+            <Tabs.Tab value="results" className="!font-semibold !text-xs uppercase tracking-wider">Kết quả sinh viên</Tabs.Tab>
+          </Tabs.List>
 
-        <Tabs.Panel value="dashboard" className="space-y-8">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left Side: Stats & Active Modules */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Stats Grid */}
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                    <IconClipboardText size={20} />
+          <Tabs.Panel value="dashboard" className="space-y-8">
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Left Side: Stats & Active Modules */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Stats Grid */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {/* Card 1: Quiz Created */}
+                  <div className="bg-white border border-zinc-200/60 rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.015)] hover:-translate-y-0.5 hover:border-zinc-350 hover:shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-300 group">
+                    <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 border border-zinc-200/50">
+                      <IconClipboardText size={16} stroke={1.5} />
+                    </div>
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Bài Quiz Đã Tạo
+                    </span>
+                    <div className="flex items-baseline justify-between w-full mt-2">
+                      <span className="text-2xl font-extrabold text-zinc-900 tracking-tight">{quizzes?.length || 0}</span>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                        Ổn định
+                      </span>
+                    </div>
                   </div>
-                  <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-                    Bài Quiz Đã Tạo
-                  </Text>
-                  <Group align="baseline" gap="xs" mt="xs">
-                    <span className="text-2xl font-extrabold text-gray-900">12</span>
-                    <Text size="xs" fw={700} color="emerald">
-                      +2 tuần này
-                    </Text>
-                  </Group>
-                </Paper>
 
-                <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                    <IconUsers size={20} />
+                  {/* Card 2: Student Count */}
+                  <div className="bg-white border border-zinc-200/60 rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.015)] hover:-translate-y-0.5 hover:border-zinc-350 hover:shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-300 group">
+                    <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50/50 text-blue-600 border border-blue-100/30">
+                      <IconUsers size={16} stroke={1.5} />
+                    </div>
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Sinh Viên Lớp
+                    </span>
+                    <div className="flex items-baseline justify-between w-full mt-2">
+                      <span className="text-2xl font-extrabold text-zinc-900 tracking-tight">148</span>
+                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded uppercase tracking-wider">
+                        85% hoạt động
+                      </span>
+                    </div>
                   </div>
-                  <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-                    Sinh Viên Tham Gia
-                  </Text>
-                  <Group align="baseline" gap="xs" mt="xs">
-                    <span className="text-2xl font-extrabold text-gray-900">148</span>
-                    <Text size="xs" fw={700} color="emerald">
-                      85% hoạt động
-                    </Text>
-                  </Group>
-                </Paper>
 
-                <Paper withBorder p="md" radius="lg" className="bg-white hover:shadow-md transition-shadow">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                    <IconTarget size={20} />
+                  {/* Card 3: Class Performance */}
+                  <div className="bg-white border border-zinc-200/60 rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.015)] hover:-translate-y-0.5 hover:border-zinc-350 hover:shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-300 group">
+                    <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50/50 text-emerald-600 border border-emerald-100/30">
+                      <IconTarget size={16} stroke={1.5} />
+                    </div>
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Hiệu Suất Lớp
+                    </span>
+                    <div className="flex items-baseline justify-between w-full mt-2">
+                      <span className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+                        74.2<span className="text-[14px] text-zinc-400 font-semibold">%</span>
+                      </span>
+                      <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded uppercase tracking-wider">
+                        Ổn định
+                      </span>
+                    </div>
                   </div>
-                  <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-                    Hiệu Suất Lớp
-                  </Text>
-                  <Group align="baseline" gap="xs" mt="xs">
-                    <span className="text-2xl font-extrabold text-gray-900">74.2%</span>
-                    <Text size="xs" fw={700} color="zinc">
-                      Ổn định
-                    </Text>
+                </div>
+
+                {/* Performance Chart */}
+                <div className="bg-white border border-zinc-200/60 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
+                  <div className="flex justify-between items-center w-full mb-6">
+                    <h3 className="font-sans font-bold text-[14px] text-zinc-800 uppercase tracking-wider">Xu hướng kết quả của lớp</h3>
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-indigo-600" />
+                        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Điểm trung bình</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-[1.5px] w-4 border-t-2 border-dashed border-zinc-350" />
+                        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Mục tiêu lớp</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-[260px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.08}/>
+                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.00}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                        <XAxis
+                          dataKey="week"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#a1a1aa", fontWeight: 700, fontFamily: "monospace" }}
+                          dy={10}
+                        />
+                        <YAxis hide domain={[0, 100]} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#18181b",
+                            borderColor: "#27272a",
+                            borderRadius: "12px",
+                            color: "#fff",
+                            fontSize: "11px",
+                            fontWeight: "bold",
+                            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)"
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="performance"
+                          stroke="#4f46e5"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#chartGrad)"
+                          dot={{ r: 4, fill: "#4f46e5", stroke: "#fff", strokeWidth: 1.5 }}
+                          activeDot={{ r: 6, fill: "#4f46e5", stroke: "#fff", strokeWidth: 2 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="goal"
+                          stroke="#a1a1aa"
+                          strokeWidth={1.5}
+                          strokeDasharray="6 6"
+                          dot={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Created Quizzes List */}
+                <Paper withBorder p="md" radius="lg" className="bg-white border-zinc-200/80 shadow-sm">
+                  <Group justify="space-between" mb="md">
+                    <Group gap="xs">
+                      <IconHelp size={18} className="text-zinc-500" />
+                      <Text fw={700} className="text-zinc-900 font-sans">Bài Quiz trong môn học</Text>
+                    </Group>
+                    <Group gap="xs">
+                      <NativeSelect
+                        size="xs"
+                        radius="md"
+                        value={selectedSubjectId}
+                        onChange={(e) => setSelectedSubjectId(e.currentTarget.value)}
+                        className="!w-44"
+                      >
+                        {subjects.map((sub) => (
+                          <option key={sub.id} value={sub.id}>{sub.code}</option>
+                        ))}
+                      </NativeSelect>
+                      <ActionIcon variant="subtle" color="gray" onClick={refreshQuizzes} loading={loadingQuizzes}>
+                        <IconRefresh size={16} />
+                      </ActionIcon>
+                    </Group>
                   </Group>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {loadingQuizzes ? (
+                      <div className="col-span-full py-12 text-center"><Loader size="md" color="dark" /></div>
+                    ) : !quizzes || quizzes.length === 0 ? (
+                      <div className="col-span-full py-12 text-center text-sm text-zinc-400 font-medium">
+                        Không tìm thấy bài Quiz nào cho môn học này.
+                      </div>
+                    ) : (
+                      quizzes?.map((quiz) => {
+                        const isPublished = quiz.Status === "published";
+                        return (
+                          <div
+                            key={quiz.ID}
+                            onClick={() => handlePreviewQuizClick(quiz.ID)}
+                            className="relative flex flex-col items-start justify-between cursor-pointer bg-white border border-zinc-200/60 rounded-2xl p-5 hover:border-zinc-450 hover:shadow-[0_8px_30px_rgba(0,0,0,0.02)] transition-all duration-300 group shadow-[0_2px_12px_rgba(0,0,0,0.015)]"
+                          >
+                            {/* Top row */}
+                            <div className="flex justify-between items-center w-full mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200/60 flex items-center justify-center text-zinc-650">
+                                <IconListCheck size={16} stroke={1.5} />
+                              </div>
+                              <span className={`inline-flex items-center gap-1.5 font-semibold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider ${
+                                isPublished
+                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-100/60"
+                                  : "bg-zinc-100 text-zinc-600 border border-zinc-200/60"
+                              }`}>
+                                <div className={`rounded-full w-1 h-1 ${
+                                  isPublished ? "bg-emerald-500" : "bg-zinc-400"
+                                }`} />
+                                {isPublished ? "Public" : "Draft"}
+                              </span>
+                            </div>
+
+                            {/* Title */}
+                            <div className="mb-4 w-full">
+                              <h4 className="text-[13px] font-bold text-zinc-800 font-sans leading-snug line-clamp-2 group-hover:text-zinc-950 transition-colors mb-2">
+                                {quiz.Title || "Trắc nghiệm RAG"}
+                              </h4>
+                              <div className="flex items-center gap-1.5 text-zinc-400">
+                                <IconBook size={12} stroke={1.5} />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{quiz.TotalQuestions} câu hỏi</span>
+                              </div>
+                            </div>
+
+                            {/* Bottom row */}
+                            <div className="flex justify-between items-center w-full pt-3 border-t border-zinc-100">
+                              <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-400">
+                                {new Date(quiz.CreatedAt).toLocaleDateString("vi-VN")}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {!isPublished && (
+                                  <Button
+                                    size="xs"
+                                    color="emerald"
+                                    variant="light"
+                                    radius="md"
+                                    className="!h-7 !text-[9px] !px-2.5 !font-bold uppercase tracking-wider"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePublishQuiz(quiz.ID);
+                                    }}
+                                  >
+                                    Phát hành
+                                  </Button>
+                                )}
+                                <div className="w-7 h-7 rounded-full flex items-center justify-center bg-zinc-50 border border-zinc-200 text-zinc-400 group-hover:bg-zinc-900 group-hover:text-white transition-all">
+                                  <IconEye size={14} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </Paper>
               </div>
 
-              {/* Performance Chart */}
-              <Paper withBorder p="md" radius="lg" className="bg-white">
-                <Group justify="space-between" mb="lg">
-                  <Text fw={700} className="text-gray-900">Xu hướng kết quả của lớp</Text>
-                  <Group gap="md">
-                    <Group gap={6} align="center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                      <Text size="xs" fw={600} c="dimmed">Điểm trung bình</Text>
-                    </Group>
-                    <Group gap={6} align="center">
-                      <div className="h-[2px] w-4 border-t-2 border-dashed border-gray-400" />
-                      <Text size="xs" fw={600} c="dimmed">Mục tiêu lớp</Text>
-                    </Group>
-                  </Group>
-                </Group>
-                <div className="h-[260px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="week"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 600 }}
-                        dy={10}
-                      />
-                      <YAxis hide domain={[0, 100]} />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="performance"
-                        stroke="#2563EB"
-                        strokeWidth={4}
-                        dot={{ r: 6, fill: "#2563EB", strokeWidth: 2, stroke: "#fff" }}
-                        activeDot={{ r: 8, strokeWidth: 0 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="goal"
-                        stroke="#94a3b8"
-                        strokeWidth={2}
-                        strokeDasharray="6 6"
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </Paper>
-
-              {/* Created Quizzes List */}
-              <Paper withBorder p="md" radius="lg" className="bg-white">
-                <Group justify="space-between" mb="md">
-                  <Group gap="xs">
-                    <IconHelp size={18} className="text-zinc-500" />
-                    <Text fw={700} className="text-gray-900">Bài Quiz đã tạo gần đây</Text>
-                  </Group>
-                  <Button variant="subtle" color="gray" size="xs" fw={700}>
-                    Xem lịch sử
-                  </Button>
-                </Group>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    {
-                      title: "Quiz Chương 4: Kinh tế chính trị",
-                      items: 20,
-                      students: 42,
-                      date: "2 giờ trước",
-                    },
-                    {
-                      title: "Kiểm tra 15p: Triết học Mác-Lenin",
-                      items: 10,
-                      students: 50,
-                      date: "1 ngày trước",
-                    },
-                  ].map((quiz, idx) => (
-                    <Paper
-                      key={idx}
-                      onClick={() => setIsViewQuizOpen(true)}
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      className="cursor-pointer hover:shadow-md transition-all hover:border-zinc-800 group bg-white"
+              {/* Right Side: Quick Creator & Modules */}
+              <Stack gap="md">
+                <div
+                  className="p-6 rounded-2xl bg-zinc-900 text-white shadow-lg overflow-hidden relative group w-full"
+                >
+                  <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all duration-700" />
+                  <Stack gap="md" className="relative z-10">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-inner w-10 h-10">
+                      <IconSparkles size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-sans font-bold text-[16px] text-white">AI Quiz Generator</h3>
+                      <p className="text-[12px] text-zinc-300 leading-relaxed font-medium mt-1">
+                        Sử dụng RAG AI để tự động tạo câu hỏi trắc nghiệm trực tiếp từ tài liệu đã chọn.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsGenerateModalOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-white text-zinc-950 font-bold rounded-xl h-9 text-xs transition-colors hover:bg-zinc-100 shadow-sm cursor-pointer"
                     >
-                      <Group justify="space-between" align="start" mb="xs" wrap="nowrap">
-                        <Text fw={700} size="sm" className="text-gray-800 group-hover:text-[#111111] transition-colors">
-                          {quiz.title}
-                        </Text>
-                        <ActionIcon variant="subtle" color="gray" size="sm">
-                          <IconEye size={16} />
-                        </ActionIcon>
-                      </Group>
-                      <Group justify="space-between" className="text-xs text-gray-500" mt="sm">
-                        <Group gap="xs">
-                          <Group gap={4} align="center">
-                            <IconBook size={12} />
-                            <Text size="xs">{quiz.items} câu</Text>
-                          </Group>
-                          <Group gap={4} align="center">
-                            <IconUsers size={12} />
-                            <Text size="xs">{quiz.students} SV</Text>
-                          </Group>
-                        </Group>
-                        <Text size="xs" color="blue">{quiz.date}</Text>
-                      </Group>
-                    </Paper>
-                  ))}
+                      Thử nghiệm RAG AI <IconArrowRight size={14} />
+                    </button>
+                  </Stack>
                 </div>
-              </Paper>
-            </div>
 
-            {/* Right Side: Quick Creator & Modules */}
-            <Stack gap="md">
-              <Paper
-                p="md"
-                radius="lg"
-                className="bg-[#111111] text-white shadow-lg overflow-hidden relative group"
-              >
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all duration-700" />
-                <Stack gap="md" className="relative z-10">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-inner">
-                    <IconSparkles size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <Text fw={800} size="lg">AI Quiz Generator</Text>
-                    <Text size="xs" className="text-zinc-300 leading-relaxed font-medium mt-1">
-                      Tại sao phải soạn câu hỏi thủ công? Để AI trích xuất nội dung từ tài liệu bài giảng của bạn.
-                    </Text>
-                  </div>
-                  <Button
-                    onClick={() => setIsGenerateModalOpen(true)}
-                    variant="white"
-                    color="dark"
-                    radius="lg"
-                    rightSection={<IconArrowRight size={16} />}
-                  >
-                    Thử nghiệm RAG AI
-                  </Button>
-                </Stack>
-              </Paper>
-
-              <Paper withBorder p="md" radius="lg" className="bg-white">
-                <Group justify="space-between" mb="sm">
-                  <Text fw={700} size="sm" className="text-gray-900">Học phần đang dạy</Text>
-                  <Button variant="subtle" color="gray" size="xs" fw={700}>
-                    Xem tất cả
-                  </Button>
-                </Group>
-                <Stack gap="xs">
-                  {[
-                    {
-                      name: "Kinh tế chính trị MLN",
-                      code: "MLN111",
-                      students: 45,
-                      status: "Active",
-                    },
-                    { name: "Triết học MLN", code: "MLN101", students: 52, status: "Completed" },
-                  ].map((course, idx) => (
-                    <Group
-                      key={idx}
-                      justify="space-between"
-                      p="xs"
-                      className="rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer border border-transparent hover:border-gray-100"
-                    >
-                      <Group gap="sm">
-                        <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">
-                          {course.code.slice(0, 3)}
-                        </div>
-                        <div>
-                          <Text fw={700} size="sm" className="text-gray-800">{course.name}</Text>
-                          <Text size="xs" c="dimmed">
-                            {course.students} sinh viên
-                          </Text>
-                        </div>
-                      </Group>
-                      <IconChevronRight size={16} className="text-gray-400" />
-                    </Group>
-                  ))}
-                </Stack>
-              </Paper>
-            </Stack>
-          </div>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="results" className="space-y-6">
-          <Paper withBorder radius="lg" className="overflow-hidden bg-white">
-            <Group justify="space-between" p="md" className="border-b border-gray-100 bg-zinc-50/50">
-              <Text fw={700} size="sm" className="text-gray-800">
-                Danh sách sinh viên hoàn thành Quiz:{" "}
-                <span className="text-[#111111] font-bold underline decoration-2 underline-offset-4">
-                  Chương 4 - MLN111
-                </span>
-              </Text>
-              <TextInput
-                placeholder="Tìm sinh viên..."
-                leftSection={<IconSearch size={14} className="text-gray-400" />}
-                size="xs"
-                radius="lg"
-              />
-            </Group>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-zinc-50 border-b border-gray-100 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                  <tr>
-                    <th className="px-6 py-3">Sinh viên</th>
-                    <th className="px-6 py-3">Điểm số</th>
-                    <th className="px-6 py-3">Thời gian làm</th>
-                    <th className="px-6 py-3">Đúng / Sai</th>
-                    <th className="px-6 py-3">Ngày nộp</th>
-                    <th className="px-6 py-3 text-right">Chi tiết</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {mockStudentResults.map((res) => (
-                    <tr key={res.id} className="hover:bg-zinc-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-bold text-gray-900">{res.name}</td>
-                      <td className="px-6 py-4">
-                        <Badge
-                          color={res.score >= 80 ? "emerald" : res.score >= 50 ? "orange" : "red"}
-                          variant="light"
-                          size="md"
+                <Paper withBorder p="md" radius="lg" className="bg-white border-zinc-200 shadow-sm">
+                  <Group justify="space-between" mb="md">
+                    <Text fw={700} size="sm" className="text-zinc-900 font-sans uppercase tracking-wider text-[11px] text-zinc-500">Danh sách học phần</Text>
+                  </Group>
+                  <Stack gap="sm">
+                    {subjects.map((course) => {
+                      const isSelected = selectedSubjectId === course.id;
+                      return (
+                        <div
+                          key={course.id}
+                          onClick={() => setSelectedSubjectId(course.id)}
+                          className={`relative flex flex-col items-start justify-between cursor-pointer bg-white border rounded-2xl p-5 hover:border-zinc-450 hover:shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-300 group ${
+                            isSelected
+                              ? "border-zinc-900 ring-[0.5px] ring-zinc-900 bg-zinc-50/40"
+                              : "border-zinc-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.015)]"
+                          }`}
                         >
-                          {res.score}/100
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500 font-semibold">{res.time}</td>
-                      <td className="px-6 py-4">
-                        <Group gap="xs">
-                          <Text size="xs" fw={700} color="emerald">{res.correct}✓</Text>
-                          <Text size="xs" fw={500} c="dimmed">/</Text>
-                          <Text size="xs" fw={700} color="red">{res.wrong}✗</Text>
-                        </Group>
-                      </td>
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">
-                        {res.date}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <ActionIcon variant="subtle" color="gray" size="sm">
-                          <IconEye size={16} />
-                        </ActionIcon>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {/* Top row */}
+                          <div className="flex justify-between items-center w-full mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200/60 flex items-center justify-center text-zinc-650">
+                              <IconBook size={16} stroke={1.5} />
+                            </div>
+                            <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100/80 px-2 py-0.5 rounded uppercase tracking-wider">
+                              Bộ tài liệu
+                            </span>
+                          </div>
+
+                          {/* Code & Title */}
+                          <div className="mb-4">
+                            <span className="font-mono font-bold text-[10px] tracking-wider text-zinc-400 block mb-0.5">
+                              {course.code}
+                            </span>
+                            <h3 className="text-[13px] font-bold text-zinc-800 font-sans leading-snug line-clamp-2 group-hover:text-zinc-950 transition-colors">
+                              {course.name}
+                            </h3>
+                          </div>
+
+                          {/* Bottom Row */}
+                          <div className="flex justify-between items-center w-full pt-3 border-t border-zinc-100">
+                            <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
+                              Môn học đang dạy
+                            </span>
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                              isSelected
+                                ? "bg-zinc-900 text-white"
+                                : "bg-zinc-50 border border-zinc-200 text-zinc-400 group-hover:bg-zinc-900 group-hover:text-white"
+                            }`}>
+                              <IconChevronRight size={14} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </Stack>
+                </Paper>
+              </Stack>
             </div>
-          </Paper>
-        </Tabs.Panel>
-      </Tabs>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="results" className="space-y-6">
+            <Paper withBorder radius="lg" className="overflow-hidden bg-white border-zinc-200 shadow-sm">
+              <Group justify="space-between" p="md" className="border-b border-zinc-100 bg-zinc-50/50">
+                <Text fw={700} size="sm" className="text-zinc-800">
+                  Danh sách sinh viên hoàn thành Quiz
+                </Text>
+                <TextInput
+                  placeholder="Tìm sinh viên..."
+                  leftSection={<IconSearch size={14} className="text-gray-400" />}
+                  size="xs"
+                  radius="lg"
+                />
+              </Group>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm" style={{ minWidth: 800 }}>
+                  <thead className="bg-zinc-50 border-b border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    <tr>
+                      <th className="px-6 py-3 whitespace-nowrap">Sinh viên</th>
+                      <th className="px-6 py-3 whitespace-nowrap">Điểm số</th>
+                      <th className="px-6 py-3 whitespace-nowrap">Thời gian làm</th>
+                      <th className="px-6 py-3 whitespace-nowrap">Đúng / Sai</th>
+                      <th className="px-6 py-3 whitespace-nowrap">Ngày nộp</th>
+                      <th className="px-6 py-3 text-right whitespace-nowrap">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {mockStudentResults.map((res) => (
+                      <tr key={res.id} className="hover:bg-zinc-50/50 transition-colors group">
+                        <td className="px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">{res.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 font-semibold text-xs px-2.5 py-1 rounded-md whitespace-nowrap ${
+                            res.score >= 80 ? "bg-emerald-50 text-emerald-600" :
+                            res.score >= 50 ? "bg-amber-50 text-amber-600" :
+                            "bg-red-50 text-red-600"
+                          }`}>
+                            <div className={`rounded-full w-1.5 h-1.5 ${
+                              res.score >= 80 ? "bg-emerald-500" :
+                              res.score >= 50 ? "bg-amber-500" :
+                              "bg-red-500"
+                            }`} />
+                            {res.score}/100
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-zinc-500 font-semibold whitespace-nowrap">{res.time}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Group gap="xs">
+                            <Text size="xs" fw={700} color="emerald">{res.correct}✓</Text>
+                            <Text size="xs" fw={500} c="dimmed">/</Text>
+                            <Text size="xs" fw={700} color="red">{res.wrong}✗</Text>
+                          </Group>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-semibold text-zinc-500 whitespace-nowrap">
+                          {res.date}
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <ActionIcon variant="subtle" color="gray" size="sm">
+                            <IconEye size={16} />
+                          </ActionIcon>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Paper>
+          </Tabs.Panel>
+        </Tabs>
+      </div>
 
       {/* Generate Quiz Modal */}
       <Modal
         opened={isGenerateModalOpen}
-        onClose={() => setIsGenerateModalOpen(false)}
-        title="AI Quiz Generator (RAG)"
+        onClose={() => !isGenerating && setIsGenerateModalOpen(false)}
+        title={
+          <Group gap="xs">
+            <IconSparkles size={18} className="text-zinc-900" />
+            <Text fw={700} className="text-zinc-900 font-sans text-sm uppercase tracking-wider">AI Quiz Generator (RAG)</Text>
+          </Group>
+        }
         radius="2xl"
         centered
         overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
+        styles={{
+          header: { borderBottom: '1px solid #f4f4f5', paddingBottom: '12px' },
+          content: { boxShadow: '0 20px 40px -15px rgba(0,0,0,0.08)' }
+        }}
       >
-        <Stack gap="md">
-          <Text size="xs" c="dimmed" fw={500}>
-            Sử dụng trí tuệ nhân tạo để trích xuất câu hỏi từ kho bài giảng.
+        <Stack gap="md" pt="xs">
+          <Text size="xs" c="dimmed" fw={500} className="leading-relaxed">
+            Hệ thống sử dụng mô hình Gemini để đọc, phân tích và trích xuất câu hỏi trắc nghiệm tự động dựa trên tài liệu tham khảo được chọn bên dưới.
           </Text>
 
           <Stack gap={4}>
-            <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-              Chọn Học phần & Tài liệu
+            <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              Chọn Môn Học
             </Text>
-            <NativeSelect radius="lg">
-              <option>MLN111 - Giáo trình Kinh tế Chính trị</option>
-              <option>MLN101 - Tài liệu Triết học Mác-Lênin</option>
+            <NativeSelect
+              radius="lg"
+              value={selectedSubjectId}
+              onChange={(e) => {
+                setSelectedSubjectId(e.currentTarget.value);
+                setSelectedDocIds([]);
+              }}
+              disabled={isGenerating}
+              classNames={{
+                input: "!bg-zinc-50/50 !border-zinc-200 !h-9 !text-[13px] !font-medium !rounded-xl"
+              }}
+            >
+              {subjects.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.code} - {sub.name}</option>
+              ))}
             </NativeSelect>
+          </Stack>
+
+          <Stack gap={4}>
+            <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              Chọn Tài Liệu Tham Khảo (RAG)
+            </Text>
+            {subjectDocuments.length === 0 ? (
+              <div className="p-3 border border-red-100 bg-red-50/30 rounded-xl">
+                <Text size="xs" c="red" className="font-semibold">Môn học này chưa có tài liệu nào. Hãy tải lên tài liệu trước.</Text>
+              </div>
+            ) : (
+              <Stack gap="xs" style={{ maxHeight: 150, overflowY: 'auto' }} className="border border-zinc-200/80 rounded-xl p-3 bg-zinc-50/20">
+                {subjectDocuments.map((doc) => (
+                  <Checkbox
+                    key={doc.id}
+                    label={doc.title}
+                    checked={selectedDocIds.includes(doc.id)}
+                    onChange={(event) => {
+                      if (event.currentTarget.checked) {
+                        setSelectedDocIds([...selectedDocIds, doc.id]);
+                      } else {
+                        setSelectedDocIds(selectedDocIds.filter(id => id !== doc.id));
+                      }
+                    }}
+                    disabled={isGenerating}
+                    styles={{
+                      label: { fontSize: '12px', fontWeight: 600, color: '#374151', cursor: 'pointer' },
+                      inner: { cursor: 'pointer' }
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
           </Stack>
 
           <div className="grid grid-cols-2 gap-4">
             <Stack gap={4}>
-              <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-                Số lượng câu hỏi
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                Tổng Số Câu Hỏi
               </Text>
-              <NativeSelect radius="lg">
-                <option>10 Câu</option>
-                <option>20 Câu</option>
-                <option>30 Câu</option>
-              </NativeSelect>
+              <TextInput
+                type="number"
+                radius="lg"
+                value={totalQuestions}
+                onChange={(e) => setTotalQuestions(Number(e.target.value))}
+                disabled={isGenerating}
+                classNames={{
+                  input: "!bg-zinc-50/50 !border-zinc-200 !h-9 !text-[13px] !font-medium !rounded-xl !pl-3"
+                }}
+              />
             </Stack>
             <Stack gap={4}>
-              <Text size="xs" fw={700} c="dimmed" className="uppercase tracking-wider">
-                Độ khó gợi ý
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                Độ Khó (AI)
               </Text>
-              <NativeSelect radius="lg">
-                <option>Adaptive (AI)</option>
-                <option>Cơ bản</option>
-                <option>Nâng cao</option>
+              <NativeSelect
+                radius="lg" 
+                disabled={isGenerating}
+                classNames={{
+                  input: "!bg-zinc-50/50 !border-zinc-200 !h-9 !text-[13px] !font-medium !rounded-xl"
+                }}
+              >
+                <option>Tự động (Adaptive)</option>
               </NativeSelect>
             </Stack>
           </div>
 
-          <Paper withBorder p="sm" radius="lg" className="bg-zinc-50 border-zinc-200 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#111111] flex items-center justify-center text-white shrink-0">
-              <IconSparkles size={20} />
-            </div>
-            <div>
-              <Text size="xs" fw={700} className="text-gray-900">Smart Prompting Hoạt động</Text>
-              <Text size="10px" c="dimmed" fw={500}>
-                Hệ thống sẽ ưu tiên các nội dung quan trọng đã được giảng viên đánh dấu.
-              </Text>
-            </div>
-          </Paper>
+          <div className="grid grid-cols-3 gap-2">
+            <Stack gap={2}>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Đúng/Sai</Text>
+              <TextInput
+                type="number"
+                radius="md"
+                size="xs"
+                value={trueFalseCount}
+                onChange={(e) => setTrueFalseCount(Number(e.target.value))}
+                disabled={isGenerating}
+                classNames={{
+                  input: "!bg-zinc-50/50 !border-zinc-200 !h-8 !text-[12px] !font-medium !rounded-lg !text-center"
+                }}
+              />
+            </Stack>
+            <Stack gap={2}>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">1 Đáp án</Text>
+              <TextInput
+                type="number"
+                radius="md"
+                size="xs"
+                value={singleChoiceCount}
+                onChange={(e) => setSingleChoiceCount(Number(e.target.value))}
+                disabled={isGenerating}
+                classNames={{
+                  input: "!bg-zinc-50/50 !border-zinc-200 !h-8 !text-[12px] !font-medium !rounded-lg !text-center"
+                }}
+              />
+            </Stack>
+            <Stack gap={2}>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Nhiều đáp án</Text>
+              <TextInput
+                type="number"
+                radius="md"
+                size="xs"
+                value={multipleChoiceCount}
+                onChange={(e) => setMultipleChoiceCount(Number(e.target.value))}
+                disabled={isGenerating}
+                classNames={{
+                  input: "!bg-zinc-50/50 !border-zinc-200 !h-8 !text-[12px] !font-medium !rounded-lg !text-center"
+                }}
+              />
+            </Stack>
+          </div>
 
-          <Group justify="flex-end" mt="lg">
-            <Button variant="outline" color="gray" radius="lg" onClick={() => setIsGenerateModalOpen(false)}>
-              Hủy bỏ
-            </Button>
-            <Button
-              onClick={() => {
-                setIsGenerateModalOpen(false);
-                setIsViewQuizOpen(true);
-              }}
-              color="dark"
-              radius="lg"
+          {isGenerating && (
+            <Stack gap="xs" mt="sm">
+              <Group justify="space-between" className="text-xs font-semibold text-zinc-700">
+                <Text size="xs">Đang sinh câu hỏi bằng AI...</Text>
+                <Text size="xs">{generationProgress}%</Text>
+              </Group>
+              <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200">
+                <div className="bg-zinc-900 h-full transition-all duration-300" style={{ width: `${generationProgress}%` }} />
+              </div>
+            </Stack>
+          )}
+
+          {generationError && (
+            <Text size="xs" c="red" fw={600} mt="sm">{generationError}</Text>
+          )}
+
+          <Group justify="flex-end" mt="lg" className="border-t border-zinc-100 pt-4">
+            <button
+              onClick={() => setIsGenerateModalOpen(false)}
+              disabled={isGenerating}
+              className="px-4 h-9 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 border border-zinc-200/80 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
             >
-              Bắt đầu khởi tạo
-            </Button>
+              Hủy bỏ
+            </button>
+            <button
+              onClick={handleGenerateQuiz}
+              disabled={subjectDocuments.length === 0 || selectedDocIds.length === 0 || isGenerating}
+              className="px-4 h-9 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              {isGenerating ? "Đang xử lý..." : "Bắt đầu khởi tạo"}
+            </button>
           </Group>
         </Stack>
       </Modal>
@@ -474,7 +705,7 @@ export function TeacherPracticeView() {
       <Modal
         opened={isViewQuizOpen}
         onClose={() => setIsViewQuizOpen(false)}
-        title="Preview: Quiz MLN111 - Ch4"
+        title={previewQuiz?.quiz.Title || "Preview: Bài trắc nghiệm"}
         size="lg"
         radius="2xl"
         centered
@@ -482,62 +713,63 @@ export function TeacherPracticeView() {
       >
         <Stack gap="md">
           <Text size="xs" c="dimmed" fw={500}>
-            Kiểm tra lại các câu hỏi AI vừa khởi tạo trước khi công khai cho sinh viên.
+            Kiểm tra các câu hỏi được sinh ngẫu nhiên từ tài liệu trước khi công khai cho sinh viên.
           </Text>
 
           <Stack gap="md" className="max-h-[60vh] overflow-y-auto pr-1">
-            {[1, 2, 3].map((num) => (
+            {previewQuiz?.questions.map((question, index) => (
               <Paper
-                key={num}
+                key={question.ID}
                 withBorder
                 p="md"
                 radius="lg"
-                className="relative overflow-hidden group bg-zinc-50/50"
+                className="relative overflow-hidden bg-zinc-50/50 border-zinc-200"
               >
-                <div className="absolute top-0 left-0 bottom-0 w-1 bg-[#111111]" />
+                <div className="absolute top-0 left-0 bottom-0 w-1 bg-zinc-900" />
                 <Group justify="space-between" align="center" mb="xs">
-                  <Text size="xs" fw={900} className="uppercase text-[#111111] tracking-wider">
-                    Câu hỏi {num}
+                  <Text size="xs" fw={900} className="uppercase text-zinc-900 tracking-wider">
+                    Câu hỏi {index + 1}
                   </Text>
-                  <Group gap={4}>
-                    <ActionIcon variant="subtle" color="gray" size="sm">
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                    <ActionIcon variant="subtle" color="red" size="sm">
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
+                  <Badge variant="light" color="dark" size="xs">
+                    {question.QuestionType}
+                  </Badge>
                 </Group>
 
-                <Text fw={700} size="sm" className="text-gray-800 leading-relaxed mb-4">
-                  Tại sao hàng hóa có hai thuộc tính là giá trị sử dụng và giá trị? Nhân tố nào quyết định thuộc tính này?
+                <pre className="text-[9px] font-mono bg-zinc-100 p-2 rounded mb-2 overflow-x-auto text-zinc-700">
+                  {JSON.stringify(question, null, 2)}
+                </pre>
+
+                <Text fw={700} size="sm" className="text-zinc-850 leading-relaxed mb-4">
+                  {question.Content}
                 </Text>
 
                 <Stack gap="xs">
-                  {[
-                    "Do tính chất lưỡng tính của lao động sản xuất hàng hóa",
-                    "Do nhu cầu tiêu dùng của con người",
-                    "Do quá trình trao đổi bù trừ",
-                    "Do chi phí sản xuất tăng cao",
-                  ].map((opt, i) => (
+                  {question.Options.map((opt, i) => (
                     <Group
-                      key={i}
+                      key={opt.ID}
                       gap="sm"
                       p="xs"
-                      className={`rounded-lg border text-xs font-semibold ${
-                        i === 0
-                          ? "border-emerald-500 bg-emerald-50/20 text-emerald-700"
-                          : "border-gray-200 bg-white text-gray-600"
-                      }`}
+                      className={cn(
+                        "rounded-lg border text-xs font-semibold",
+                        opt.IsCorrect
+                          ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                          : "border-zinc-200 bg-white text-zinc-700"
+                      )}
                     >
                       <div
-                        className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 text-[10px] font-bold ${
-                          i === 0 ? "bg-emerald-600 text-white border-transparent" : "border-gray-300 text-gray-500"
-                        }`}
+                        className={cn(
+                          "h-5 w-5 rounded-full border flex items-center justify-center shrink-0 text-[10px] font-bold",
+                          opt.IsCorrect
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-zinc-300 text-zinc-500"
+                        )}
                       >
-                        {String.fromCharCode(65 + i)}
+                        {opt.IsCorrect ? "✓" : String.fromCharCode(65 + i)}
                       </div>
-                      <Text size="xs" fw={600}>{opt}</Text>
+                      <Text size="xs" fw={600}>{opt.Content}</Text>
+                      {opt.IsCorrect && (
+                        <Badge color="green" variant="light" size="xs" ml="auto">Đáp án đúng</Badge>
+                      )}
                     </Group>
                   ))}
                 </Stack>
@@ -549,9 +781,16 @@ export function TeacherPracticeView() {
             <Button variant="outline" color="gray" radius="lg" onClick={() => setIsViewQuizOpen(false)}>
               Quay lại
             </Button>
-            <Button onClick={() => setIsViewQuizOpen(false)} color="dark" radius="lg">
-              Công khai bài Quiz
-            </Button>
+            {previewQuiz && previewQuiz.quiz.Status === "draft" && (
+              <Button
+                onClick={() => handlePublishQuiz(previewQuiz.quiz.ID)}
+                color="emerald"
+                radius="lg"
+                className="bg-emerald-600 text-white hover:bg-emerald-500"
+              >
+                Phát hành Quiz
+              </Button>
+            )}
           </Group>
         </Stack>
       </Modal>

@@ -25,8 +25,7 @@ func (uc *LookupUseCase) GetSubjects(ctx context.Context) ([]*application.Subjec
 			ID:             sub.ID,
 			Code:           sub.Code,
 			Name:           sub.Name,
-			AcademicTermID: sub.AcademicTermID,
-			CreatedAt:      sub.CreatedAt,
+						CreatedAt:      sub.CreatedAt,
 		})
 	}
 	return dtos, nil
@@ -43,8 +42,7 @@ func (uc *LookupUseCase) GetPublicSubjects(ctx context.Context) ([]*application.
 			ID:             sub.ID,
 			Code:           sub.Code,
 			Name:           sub.Name,
-			AcademicTermID: sub.AcademicTermID,
-			CreatedAt:      sub.CreatedAt,
+						CreatedAt:      sub.CreatedAt,
 		})
 	}
 	return dtos, nil
@@ -61,8 +59,7 @@ func (uc *LookupUseCase) GetSubjectsByOwner(ctx context.Context, ownerUserID uui
 			ID:             sub.ID,
 			Code:           sub.Code,
 			Name:           sub.Name,
-			AcademicTermID: sub.AcademicTermID,
-			CreatedAt:      sub.CreatedAt,
+						CreatedAt:      sub.CreatedAt,
 		})
 	}
 	return dtos, nil
@@ -87,8 +84,7 @@ func (uc *LookupUseCase) GetAssignedSubjectsByLecturer(ctx context.Context, lect
 			ID:             sub.ID,
 			Code:           sub.Code,
 			Name:           sub.Name,
-			AcademicTermID: sub.AcademicTermID,
-			CreatedAt:      sub.CreatedAt,
+						CreatedAt:      sub.CreatedAt,
 		})
 	}
 	return dtos, nil
@@ -185,7 +181,7 @@ func (uc *LookupUseCase) ReplaceLecturerSubjectAssignments(ctx context.Context, 
 	return uc.GetLecturerSubjectAssignmentsByLecturer(ctx, lecturerID)
 }
 
-func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string, termID *uuid.UUID) (*application.SubjectDto, error) {
+func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string) (*application.SubjectDto, error) {
 	if code == "" || name == "" {
 		return nil, errors.New("Mã môn học và tên môn học không được để trống")
 	}
@@ -203,8 +199,7 @@ func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string, t
 		ID:             uuid.New(),
 		Code:           normCode,
 		Name:           strings.TrimSpace(name),
-		AcademicTermID: termID,
-		CreatedAt:      time.Now(),
+				CreatedAt:      time.Now(),
 	}
 
 	if err := uc.subjectRepo.Create(ctx, sub); err != nil {
@@ -215,12 +210,11 @@ func (uc *LookupUseCase) CreateSubject(ctx context.Context, code, name string, t
 		ID:             sub.ID,
 		Code:           sub.Code,
 		Name:           sub.Name,
-		AcademicTermID: sub.AcademicTermID,
-		CreatedAt:      sub.CreatedAt,
+				CreatedAt:      sub.CreatedAt,
 	}, nil
 }
 
-func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, name string, termID *uuid.UUID) (*application.SubjectDto, error) {
+func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, name string) (*application.SubjectDto, error) {
 	if code == "" || name == "" {
 		return nil, errors.New("Mã môn học và tên môn học không được để trống")
 	}
@@ -243,8 +237,7 @@ func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, 
 
 	sub.Code = normCode
 	sub.Name = strings.TrimSpace(name)
-	sub.AcademicTermID = termID
-
+	
 	if err := uc.subjectRepo.Update(ctx, sub); err != nil {
 		return nil, err
 	}
@@ -253,8 +246,7 @@ func (uc *LookupUseCase) UpdateSubject(ctx context.Context, id uuid.UUID, code, 
 		ID:             sub.ID,
 		Code:           sub.Code,
 		Name:           sub.Name,
-		AcademicTermID: sub.AcademicTermID,
-		CreatedAt:      sub.CreatedAt,
+				CreatedAt:      sub.CreatedAt,
 	}, nil
 }
 

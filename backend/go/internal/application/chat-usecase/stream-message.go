@@ -51,9 +51,25 @@ func (uc *ChatUseCase) StreamMessage(ctx context.Context, userID, sessionID uuid
 	}
 
 	// 5. Semantic search — find top-K similar chunks
-	chunks, err := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, session.DocumentIDs, topKChunks)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to search chunks: %w", err)
+	var chunks []*message.SimilarChunk
+
+	if len(session.DocumentIDs) > 1 {
+		// Retrieve chunks for each document to ensure balanced representation in comparison
+		chunksPerDoc := 5
+		if len(session.DocumentIDs) > 2 {
+			chunksPerDoc = 3
+		}
+		for _, docID := range session.DocumentIDs {
+			docChunks, docErr := uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, []uuid.UUID{docID}, chunksPerDoc)
+			if docErr == nil {
+				chunks = append(chunks, docChunks...)
+			}
+		}
+	} else {
+		chunks, err = uc.msgRepo.SearchSimilarChunks(ctx, queryEmbedding, session.CourseID, session.DocumentIDs, topKChunks)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to search chunks: %w", err)
+		}
 	}
 
 	// 6. Check similarity threshold
@@ -64,7 +80,10 @@ func (uc *ChatUseCase) StreamMessage(ctx context.Context, userID, sessionID uuid
 		}
 	}
 
-	if maxScore < similarityThreshold || len(chunks) == 0 {
+	// Bypass threshold if documents are explicitly attached to the session
+	bypassThreshold := len(session.DocumentIDs) > 0
+
+	if (!bypassThreshold && maxScore < similarityThreshold) || len(chunks) == 0 {
 		botMsg := &message.Message{
 			ID:         uuid.New(),
 			SessionID:  sessionID,

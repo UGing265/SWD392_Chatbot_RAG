@@ -1,21 +1,16 @@
 import { ragApi } from "./client";
 
-export interface AcademicTerm {
-  id: string;
-  name: string;
-  order: number;
-}
-
 export interface Subject {
   id: string;
   code: string;
   name: string;
-  academic_term_id: string | null;
 }
 
 export interface LookupData {
-  academicTerms: any[];
   subjects: any[];
+  documentTypes?: any[];
+  languages?: any[];
+  documentSources?: any[];
 }
 
 export const curriculumApi = {
@@ -24,23 +19,8 @@ export const curriculumApi = {
     return response.data;
   },
 
-  createTerm: async (name: string, order: number): Promise<any> => {
-    const response = await ragApi.post("/admin/academic-terms", { name, order });
-    return response.data;
-  },
-
-  updateTerm: async (termId: string, name: string, order: number): Promise<any> => {
-    const response = await ragApi.put(`/admin/academic-terms/${termId}`, { name, order });
-    return response.data;
-  },
-
-  deleteTerm: async (termId: string): Promise<any> => {
-    const response = await ragApi.delete(`/admin/academic-terms/${termId}`);
-    return response.data;
-  },
-
-  createSubject: async (code: string, name: string, academicTermId: string | null): Promise<any> => {
-    const response = await ragApi.post("/admin/subjects", { code, name, academic_term_id: academicTermId });
+  createSubject: async (code: string, name: string): Promise<any> => {
+    const response = await ragApi.post("/admin/subjects", { code, name });
     return response.data;
   },
 
@@ -48,12 +28,10 @@ export const curriculumApi = {
     subjectId: string,
     code: string,
     name: string,
-    academicTermId: string | null,
   ): Promise<any> => {
     const response = await ragApi.put(`/admin/subjects/${subjectId}`, {
       code,
       name,
-      academic_term_id: academicTermId,
     });
     return response.data;
   },

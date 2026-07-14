@@ -6,6 +6,7 @@ import { Loader, Modal, Textarea } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconBookmark,
+  IconBookmarkFilled,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
@@ -22,6 +23,8 @@ import {
 } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { documentApi } from "@/api/document";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const CHUNK_PAGE_SIZE = 12; // Increased slightly for better bento filling
@@ -57,8 +60,6 @@ interface DocumentDetails {
   subject_name?: string | null;
   subject_code?: string | null;
   subject_id?: string | null;
-  academic_term_name?: string | null;
-  academic_term_id?: string | null;
   visibility: string;
   document_type_name?: string | null;
   document_type_id?: string | null;
@@ -108,6 +109,9 @@ export default function DocumentDetailPage() {
   const [reportReason, setReportReason] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isTogglingBookmark, setIsTogglingBookmark] = useState(false);
+
   const fetchDocument = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
@@ -130,6 +134,16 @@ export default function DocumentDetailPage() {
         chapters: Array.isArray(data.chapters) ? data.chapters : [],
         chunks: Array.isArray(data.chunks) ? data.chunks : [],
       });
+      
+      // Fetch bookmark status for this document
+      try {
+        const bookmarksResp = await documentApi.getBookmarks();
+        if (bookmarksResp.documents?.some((b: any) => b.id === data.id)) {
+          setIsBookmarked(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch bookmarks status", err);
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
@@ -137,6 +151,19 @@ export default function DocumentDetailPage() {
       setLoading(false);
     }
   }, [chunkPage, slug]);
+
+  const handleToggleBookmark = async () => {
+    if (!document || isTogglingBookmark) return;
+    setIsTogglingBookmark(true);
+    try {
+      const res = await documentApi.toggleBookmark(slug);
+      setIsBookmarked(res.bookmarked);
+    } catch (error) {
+      console.error("Failed to toggle bookmark:", error);
+    } finally {
+      setIsTogglingBookmark(false);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -198,7 +225,7 @@ export default function DocumentDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white p-6">
         <div className="text-center max-w-md">
-          <h2 className="font-serif text-3xl text-zinc-950 mb-3">Tài liệu không tồn tại</h2>
+          <h2 className="font-sans font-bold text-2xl text-zinc-950 mb-3 tracking-tight">Tài liệu không tồn tại</h2>
           <p className="text-zinc-500 mb-8">{error}</p>
           <button onClick={() => router.back()} className="px-6 py-3 bg-zinc-950 text-white rounded-full font-medium hover:bg-zinc-800 transition-transform active:scale-[0.98]">
             Quay lại thư viện
@@ -210,76 +237,80 @@ export default function DocumentDetailPage() {
 
   const isLecturer = role === "lecturer" || role === "teacher";
   const isPrivate = document.visibility === "private";
-  const baseLibraryPath = (isLecturer && isPrivate) ? `/${role}/documents/my` : `/${role}/documents/shared`;
-
-  const termFilterPath = document.academic_term_id
-    ? `${baseLibraryPath}?termId=${document.academic_term_id}`
-    : baseLibraryPath;
+  const baseLibraryPath = isPrivate ? `/${role}/documents/my` : `/${role}/explore`;
 
   const subjectFilterPath = document.subject_id
-    ? `${baseLibraryPath}?${document.academic_term_id ? `termId=${document.academic_term_id}&` : ''}subjectId=${document.subject_id}`
+    ? `${baseLibraryPath}?subjectId=${document.subject_id}`
     : baseLibraryPath;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-zinc-900 pb-20">
-      <div className="max-w-[1200px] mx-auto px-6 md:px-10">
-
-        {/* HERO SECTION: Editorial style, max 4 text elements */}
-        <header className="pt-16 pb-12 border-b border-zinc-100 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
-          <div className="max-w-3xl">
-            <div className="flex items-center flex-wrap gap-3 mb-8">
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col text-zinc-900">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 shrink-0 min-w-0">
+            <IconFileText size={20} className="text-zinc-900 shrink-0" stroke={1.5} />
+            <h1 className="font-bold text-zinc-900 tracking-tight text-lg truncate">{document.title}</h1>
+          </div>
+          <div
+            className="flex items-center gap-2 overflow-x-auto py-1 w-full min-w-0 sm:w-auto sm:justify-end"
+            style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+          >
+            {/* Breadcrumb pills */}
+            <div className="flex items-center gap-2 shrink-0">
               <Link
                 href={baseLibraryPath}
-                className="text-[11px] font-mono font-bold tracking-[0.2em] text-zinc-700 hover:text-zinc-950 hover:underline transition-colors uppercase cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-semibold text-zinc-600 text-xs bg-zinc-100 px-2.5 py-1 rounded-md whitespace-nowrap hover:bg-zinc-200 transition-colors"
               >
-                KHO TÀI LIỆU
+                Kho Tài Liệu
               </Link>
-              <div className="hidden sm:block h-3 w-px bg-zinc-300"></div>
-              <div className="flex flex-wrap items-center gap-3">
-
-
-                {/* Subject */}
-                {isPrivate ? (
-                  <span
-                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-zinc-400 cursor-not-allowed flex items-center gap-1 uppercase select-none"
-                    title="Liên kết không khả dụng đối với tài liệu riêng tư"
-                  >
-                    <IconLock size={12} className="shrink-0 text-zinc-400" />
-                    {document.subject_code ? `${document.subject_code} - ${document.subject_name}` : (document.subject_name || "Môn học chung")}
-                  </span>
-                ) : (
-                  <Link
-                    href={subjectFilterPath}
-                    className="text-[11px] font-mono font-bold tracking-[0.1em] text-sky-600 hover:text-sky-800 hover:underline transition-colors uppercase cursor-pointer"
-                  >
-                    {document.subject_code ? `${document.subject_code} - ${document.subject_name}` : (document.subject_name || "Môn học chung")}
-                  </Link>
-                )}
-              </div>
+              {document.subject_code && (
+                <>
+                  <span className="text-zinc-300 text-xs">/</span>
+                  {isPrivate ? (
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-400 text-xs bg-zinc-50 px-2.5 py-1 rounded-md whitespace-nowrap border border-zinc-200 select-none">
+                      <IconLock size={12} className="shrink-0" />
+                      {document.subject_code}
+                    </span>
+                  ) : (
+                    <Link
+                      href={subjectFilterPath}
+                      className="inline-flex items-center gap-1.5 font-semibold text-sky-600 text-xs bg-sky-50 px-2.5 py-1 rounded-md whitespace-nowrap hover:bg-sky-100 transition-colors"
+                    >
+                      {document.subject_code}
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
-
-            <h1 className="font-serif text-5xl md:text-[72px] leading-[1.05] tracking-[-0.02em] text-zinc-950 mb-8">
-              {document.title}
-            </h1>
-
-            <p className="text-xl md:text-[22px] font-serif text-zinc-500 leading-[1.6] max-w-[50ch]">
-              {document.description || "Tài liệu này chưa có mô tả chi tiết từ tác giả."}
-            </p>
           </div>
-        </header>
+        </div>
+      </div>
 
-        {/* MAIN GRID: Asymmetric Bento Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pt-8 pb-16">
+      {/* Content Section */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
+        {/* Document Title & Description */}
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
+          <h2 className="font-bold text-[28px] md:text-[32px] leading-tight tracking-tight text-zinc-900 mb-4">
+            {document.title}
+          </h2>
+          <p className="text-[15px] text-zinc-500 leading-relaxed max-w-[70ch]">
+            {document.description || "Tài liệu này chưa có mô tả chi tiết từ tác giả."}
+          </p>
+        </div>
+
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 pb-16">
 
           {/* Left Column (Content) */}
-          <div className="lg:col-span-8 space-y-16">
+          <div className="lg:col-span-8 space-y-12">
 
             {/* Chapters */}
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 ease-out fill-mode-both">
-              <h2 className="text-[13px] font-mono font-bold tracking-[0.1em] text-zinc-400 uppercase mb-6">Cấu trúc chương học thuật</h2>
+              <h2 className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mb-6">Cấu trúc chương học thuật</h2>
               {document.chapters.length === 0 ? (
                 <div className="py-12 border border-dashed border-zinc-200 rounded-2xl text-center">
-                  <div className="text-zinc-500 font-serif italic">AI chưa trích xuất được phân mục chương cho tài liệu này.</div>
+                  <div className="text-zinc-500 font-sans text-[14px]">AI chưa trích xuất được phân mục chương cho tài liệu này.</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -287,7 +318,7 @@ export default function DocumentDetailPage() {
                     <div
                       key={chapter.id}
                       onClick={() => setSelectedChapter(chapter)}
-                      className="group relative p-8 rounded-[24px] border bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-[0.98]"
+                      className="group relative p-6 rounded-2xl border bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-[0.98]"
                     >
                       {/* Abstract Background Decoration */}
                       <div className="absolute -top-6 -right-6 text-[120px] font-black opacity-[0.03] select-none pointer-events-none leading-none tracking-tighter">
@@ -299,12 +330,12 @@ export default function DocumentDetailPage() {
                           <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-zinc-100 text-zinc-600 group-hover:bg-zinc-200 transition-colors">
                             <IconBookmark size={16} />
                           </div>
-                          <div className="text-xs font-mono font-bold tracking-widest uppercase text-zinc-500">
+                          <div className="font-semibold text-zinc-500 capitalize tracking-wide font-sans text-xs">
                             Chương {String(chapter.chapter_order).padStart(2, '0')}
                           </div>
                         </div>
 
-                        <h3 className="text-lg font-serif font-medium leading-snug mb-3 text-zinc-900">
+                        <h3 className="text-[16px] font-sans font-bold leading-snug mb-3 text-zinc-900">
                           {chapter.title}
                         </h3>
 
@@ -323,7 +354,7 @@ export default function DocumentDetailPage() {
             {/* Chunks */}
             <section className={cn("transition-opacity duration-500", loading ? "opacity-40" : "opacity-100")}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[13px] font-mono font-bold tracking-[0.1em] text-zinc-400 uppercase">Phân đoạn dữ liệu</h2>
+                <h2 className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs">Phân đoạn dữ liệu</h2>
                 <div className="flex gap-2 items-center">
                   <span className="text-[13px] font-medium text-zinc-500 mr-2">
                     Trang {chunkPage} / {totalPages}
@@ -347,7 +378,7 @@ export default function DocumentDetailPage() {
 
               {document.chunks.length === 0 ? (
                 <div className="py-12 border border-dashed border-zinc-200 rounded-2xl text-center">
-                  <div className="text-zinc-500 font-serif italic">Tài liệu trống hoặc đang trong hàng đợi xử lý.</div>
+                  <div className="text-zinc-500 font-sans text-[14px]">Tài liệu trống hoặc đang trong hàng đợi xử lý.</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -357,7 +388,7 @@ export default function DocumentDetailPage() {
                       <div
                         key={chunk.id}
                         onClick={() => setSelectedChunk(chunk)}
-                        className="group relative p-6 rounded-[20px] border border-zinc-200 bg-white cursor-pointer hover:border-zinc-300 transition-all duration-300 active:scale-[0.98] flex flex-col h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+                        className="group relative p-6 rounded-2xl border border-zinc-200 bg-white cursor-pointer hover:border-zinc-400 transition-all duration-300 active:scale-[0.98] flex flex-col h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
                       >
                         <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-zinc-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -365,8 +396,8 @@ export default function DocumentDetailPage() {
                             <div className="w-6 h-6 rounded bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 group-hover:text-zinc-600 transition-colors">
                               <IconQuote size={12} />
                             </div>
-                            <span className="text-[11px] font-mono font-bold tracking-widest text-zinc-400">
-                              CHUNK {String(chunk.chunk_order).padStart(3, '0')}
+                            <span className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs">
+                              Chunk {String(chunk.chunk_order).padStart(3, '0')}
                             </span>
                           </div>
                           {chunk.has_embedding && (
@@ -376,7 +407,7 @@ export default function DocumentDetailPage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-[14px] text-zinc-600 leading-[1.8] line-clamp-4 font-serif relative z-10">
+                        <p className="text-[14px] text-zinc-600 leading-[1.8] line-clamp-4 font-sans relative z-10">
                           {cleanContent}
                         </p>
                       </div>
@@ -388,41 +419,52 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Right Sidebar (Metrics & Files) */}
-          <div className="lg:col-span-4 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 ease-out fill-mode-both lg:sticky lg:top-8 self-start">
+          <div className="lg:col-span-4 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 ease-out fill-mode-both lg:sticky lg:top-[72px] self-start">
 
             {/* Quick Actions (Owner/Admin) */}
-            {(isOwner || canReport) && (
-              <div className="flex items-center gap-1 p-1.5 bg-zinc-50 border border-zinc-200/80 rounded-full w-full shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
-                {isOwner && (
-                  <>
-                    <button
-                      onClick={() => router.push(`/${role}/documents/${slug}/edit`)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-zinc-900 text-[13px] font-medium transition-all"
-                    >
-                      <IconEdit size={16} /> Chỉnh sửa
-                    </button>
-                    <button
-                      onClick={() => setDeleteModalOpen(true)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-red-600 text-[13px] font-medium transition-all"
-                    >
-                      <IconTrash size={16} /> Xóa
-                    </button>
-                  </>
-                )}
-                {canReport && (
+            {/* Always show this container because anyone can bookmark */}
+            <div className="flex items-center gap-1 p-1.5 bg-zinc-50 border border-zinc-200/80 rounded-full w-full shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+              {isOwner && (
+                <>
                   <button
-                    onClick={() => setReportModalOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-orange-600 text-[13px] font-medium transition-all"
+                    onClick={() => router.push(`/${role}/documents/${slug}/edit`)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-zinc-900 text-[13px] font-medium transition-all"
                   >
-                    <IconAlertTriangle size={16} /> Báo cáo
+                    <IconEdit size={16} /> Chỉnh sửa
                   </button>
-                )}
-              </div>
-            )}
+                  <button
+                    onClick={() => setDeleteModalOpen(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-red-600 text-[13px] font-medium transition-all"
+                  >
+                    <IconTrash size={16} /> Xóa
+                  </button>
+                </>
+              )}
+              {canReport && (
+                <button
+                  onClick={() => setReportModalOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-zinc-600 hover:text-orange-600 text-[13px] font-medium transition-all"
+                >
+                  <IconAlertTriangle size={16} /> Báo cáo
+                </button>
+              )}
+              
+              <button
+                onClick={handleToggleBookmark}
+                disabled={isTogglingBookmark}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full hover:bg-white hover:shadow-sm text-[13px] font-medium transition-all ${
+                  isBookmarked ? "text-sky-600" : "text-zinc-600 hover:text-zinc-900"
+                } ${isTogglingBookmark ? "opacity-50 cursor-not-allowed" : ""}`}
+                title={isBookmarked ? "Bỏ lưu tài liệu" : "Lưu tài liệu"}
+              >
+                {isBookmarked ? <IconBookmarkFilled size={16} /> : <IconBookmark size={16} />}
+                Lưu
+              </button>
+            </div>
 
             {/* Quick Metrics Card */}
-            <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-              <h3 className="text-[13px] font-mono font-bold tracking-[0.1em] text-zinc-400 uppercase mb-8">Thông tin tài liệu</h3>
+            <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm">
+              <h3 className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mb-6">Thông tin tài liệu</h3>
               <div className="flex flex-col gap-6">
 
                 <div className="flex items-center gap-4">
@@ -430,8 +472,8 @@ export default function DocumentDetailPage() {
                     <IconDatabase size={20} stroke={1.5} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Số lượng</div>
-                    <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">{document.total_chunks} đoạn</div>
+                    <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-[11px] mb-1">Số lượng</div>
+                    <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none">{document.total_chunks} đoạn</div>
                   </div>
                 </div>
 
@@ -440,8 +482,8 @@ export default function DocumentDetailPage() {
                     <IconEye size={20} stroke={1.5} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Lượt xem</div>
-                    <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">{document.view_count} lượt</div>
+                    <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-[11px] mb-1">Lượt xem</div>
+                    <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none">{document.view_count} lượt</div>
                   </div>
                 </div>
 
@@ -450,8 +492,8 @@ export default function DocumentDetailPage() {
                     <IconLanguage size={20} stroke={1.5} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Ngôn ngữ</div>
-                    <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">{document.language_name || "—"}</div>
+                    <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-[11px] mb-1">Ngôn ngữ</div>
+                    <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none">{document.language_name || "—"}</div>
                   </div>
                 </div>
 
@@ -460,8 +502,8 @@ export default function DocumentDetailPage() {
                     {document.visibility === "private" ? <IconLock size={20} stroke={1.5} /> : <IconWorld size={20} stroke={1.5} />}
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Trạng thái</div>
-                    <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
+                    <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-[11px] mb-1">Trạng thái</div>
+                    <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none">
                       {document.visibility === "private" ? "Riêng tư" : document.visibility === "school_wide" ? "Nội bộ" : "Công khai"}
                     </div>
                   </div>
@@ -472,8 +514,8 @@ export default function DocumentDetailPage() {
                     {document.owner_full_name ? document.owner_full_name.charAt(0) : "U"}
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Người đăng tải</div>
-                    <div className="text-[13px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none truncate max-w-[150px]">
+                    <div className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-[11px] mb-1">Người đăng tải</div>
+                    <div className="text-[13px] font-bold text-zinc-900 font-sans leading-none truncate max-w-[150px]">
                       {document.owner_full_name || "Hệ thống"}
                     </div>
                   </div>
@@ -484,7 +526,7 @@ export default function DocumentDetailPage() {
 
             {/* Files List */}
             <div>
-              <h3 className="text-[13px] font-mono font-bold tracking-[0.1em] text-zinc-400 uppercase mb-4 pl-2">Tệp đính kèm</h3>
+              <h3 className="font-semibold text-zinc-400 capitalize tracking-wide font-sans text-xs mb-4 pl-2">Tệp đính kèm</h3>
               <div className="space-y-3">
                 {document.files.map(file => (
                   <div key={file.id} className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-50 transition-colors">
@@ -526,8 +568,8 @@ export default function DocumentDetailPage() {
                 <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600">
                   <IconQuote size={14} />
                 </div>
-                <span className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase">
-                  CHUNK {String(selectedChunk.chunk_order).padStart(3, '0')}
+                <span className="font-semibold text-zinc-500 capitalize tracking-wide font-sans text-xs">
+                  Chunk {String(selectedChunk.chunk_order).padStart(3, '0')}
                 </span>
               </div>
               <button onClick={() => setSelectedChunk(null)} className="w-8 h-8 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 shadow-sm transition-colors">
@@ -562,7 +604,7 @@ export default function DocumentDetailPage() {
                 <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600">
                   <IconBookmark size={14} />
                 </div>
-                <span className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase">
+                <span className="font-semibold text-zinc-500 capitalize tracking-wide font-sans text-xs">
                   Chương {String(selectedChapter.chapter_order).padStart(2, '0')}
                 </span>
               </div>
@@ -673,3 +715,4 @@ export default function DocumentDetailPage() {
     </div>
   );
 }
+

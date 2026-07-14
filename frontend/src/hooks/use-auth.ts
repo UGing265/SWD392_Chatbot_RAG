@@ -194,7 +194,7 @@ export function useAuth() {
         const currentRole = role;
         setTimeout(() => {
           if (currentRole === "student") {
-            router.push(`/student/documents/shared`);
+            router.push(`/student/explore`);
           } else if (currentRole === "admin") {
             router.push(`/admin`);
           } else {

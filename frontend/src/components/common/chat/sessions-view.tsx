@@ -36,8 +36,6 @@ export function SessionsView() {
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("Gần đây");
-  const [searchQuery, setSearchQuery] = useState("");
 
   // New session modal states
   const [modalOpen, setModalOpen] = useState(false);
@@ -112,37 +110,29 @@ export function SessionsView() {
     }
   };
 
-  // Group sessions by dates
-  const getFilteredSessions = () => {
-    return sessions.filter((s) => {
-      const matchesSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = filter === "Quan trọng" ? s.is_starred : true;
-      return matchesSearch && matchesFilter;
-    });
-  };
 
   const groupSessionsByDate = (items: ChatSession[]) => {
     const groups: Record<string, ChatSession[]> = {
-      "Hôm nay": [],
-      "Hôm qua": [],
-      "Tuần này": [],
-      "Trước đó": [],
+      "Hôm Nay": [],
+      "Hôm Qua": [],
+      "Tuần Này": [],
+      "Trước Đó": [],
     };
 
     items.forEach((s) => {
       try {
         const d = parseISO(s.updated_at);
         if (isToday(d)) {
-          groups["Hôm nay"].push(s);
+          groups["Hôm Nay"].push(s);
         } else if (isYesterday(d)) {
-          groups["Hôm qua"].push(s);
+          groups["Hôm Qua"].push(s);
         } else if (isThisWeek(d)) {
-          groups["Tuần này"].push(s);
+          groups["Tuần Này"].push(s);
         } else {
-          groups["Trước đó"].push(s);
+          groups["Trước Đó"].push(s);
         }
       } catch (e) {
-        groups["Trước đó"].push(s);
+        groups["Trước Đó"].push(s);
       }
     });
 
@@ -151,74 +141,53 @@ export function SessionsView() {
     );
   };
 
-  const filteredList = getFilteredSessions();
-  const groupedSessions = groupSessionsByDate(filteredList);
+  const groupedSessions = groupSessionsByDate(sessions);
 
   const subjectOptions = subjects.map((sub) => ({
     value: sub.id,
     label: `${sub.code} - ${sub.name}`,
   }));
 
-  return (
-    <div className="h-full overflow-y-auto bg-zinc-50">
-      <div className="mx-auto max-w-5xl px-6 py-12">
-        <Group justify="space-between" align="start" className="mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Phiên hội thoại</h1>
-            <Text size="sm" c="dimmed" className="mt-1">
-              Xem lại và tiếp tục các phiên chat trước đây.
-            </Text>
-          </div>
-          <Button
-            onClick={handleOpenNewSessionModal}
-            radius="md"
-            color="blue"
-            leftSection={<IconPlus size={16} />}
-          >
-            Phiên mới
-          </Button>
-        </Group>
+  const isLecturer = role === "lecturer";
 
-        <div className="mb-6 flex flex-wrap items-center gap-4">
-          <div className="flex-1 sm:max-w-md">
-            <TextInput
-              placeholder="Tìm theo từ khoá…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              leftSection={<IconSearch size={16} className="text-gray-400" />}
-              radius="md"
-            />
+  return (
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header Section - matching explore-view pattern */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <IconMessage2 size={20} stroke={1.5} className="text-zinc-900" />
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+              Phiên Hội Thoại
+            </h1>
           </div>
-          <Group gap="xs">
-            {["Gần đây", "Quan trọng", "Tất cả"].map((t) => (
-              <Button
-                key={t}
-                onClick={() => setFilter(t)}
-                variant={filter === t ? "filled" : "light"}
-                color={filter === t ? "blue" : "gray"}
-                radius="xl"
-                size="xs"
-              >
-                {t}
-              </Button>
-            ))}
-          </Group>
         </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader size="md" color="blue" />
+          <div className="flex justify-center py-16">
+            <Loader size="md" color={isLecturer ? "dark" : "blue"} />
           </div>
-        ) : filteredList.length === 0 ? (
-          <Paper withBorder p="xl" radius="lg" className="text-center bg-white shadow-sm">
-            <Text size="md" c="dimmed">Không tìm thấy phiên hội thoại nào.</Text>
-          </Paper>
+        ) : sessions.length === 0 ? (
+          <div className="text-center py-24 rounded-2xl bg-white border border-zinc-200 shadow-sm">
+            <IconMessage2 size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
+            <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Không tìm thấy phiên hội thoại nào.</h5>
+            <Text size="xs" c="dimmed">Bắt đầu cuộc trò chuyện mới từ trang Chat.</Text>
+          </div>
         ) : (
           Object.entries(groupedSessions).map(([group, items]) => (
-            <div key={group} className="mb-8">
-              <Text size="xs" fw={700} c="dimmed" mb="sm" className="tracking-wider uppercase">
-                {group}
-              </Text>
+            <div key={group} className="mb-8 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
+              <div className="flex justify-between items-end mb-3 pb-2 border-b border-zinc-200">
+                <Text size="xs" fw={700} c="dimmed" className="tracking-wider uppercase">
+                  {group}
+                </Text>
+                <Text size="xs" className="font-semibold text-zinc-400 capitalize tracking-wide">
+                  {items.length} phiên
+                </Text>
+              </div>
               <Stack gap="sm">
                 {items.map((s) => {
                   let relativeTime = "";
@@ -231,21 +200,27 @@ export function SessionsView() {
                     relativeTime = s.updated_at;
                   }
 
-                  return (
-                    <Paper
-                      key={s.id}
-                      onClick={() => handleOpen(s.id)}
-                      withBorder
-                      p="md"
-                      radius="lg"
-                      className={`group cursor-pointer hover:border-blue-500/40 hover:shadow-md transition-all bg-white ${
-                        s.status === "active" ? "border-blue-500 ring-1 ring-blue-500/30" : ""
-                      }`}
-                    >
-                      <Group gap="md" align="center">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                          <IconMessage2 size={20} />
-                        </div>
+                    return (
+                      <Paper
+                        key={s.id}
+                        onClick={() => handleOpen(s.id)}
+                        withBorder
+                        p="md"
+                        radius="lg"
+                        className={`group cursor-pointer hover:shadow-md transition-all bg-white ${
+                          s.status === "active"
+                            ? isLecturer
+                              ? "border-zinc-800 ring-1 ring-zinc-800/30"
+                              : "border-blue-500 ring-1 ring-blue-500/30"
+                            : "hover:border-zinc-300"
+                        }`}
+                      >
+                        <Group gap="md" align="center">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                            isLecturer ? "bg-zinc-100 text-zinc-800" : "bg-blue-50 text-blue-600"
+                          }`}>
+                            <IconMessage2 size={20} />
+                          </div>
                         <div className="min-w-0 flex-1">
                           <Group gap="xs" align="center" wrap="nowrap">
                             <Text fw={700} size="sm" className="line-clamp-1 text-gray-900 flex-1">
@@ -263,11 +238,13 @@ export function SessionsView() {
                               </ActionIcon>
                             </Group>
                             {s.is_starred && (
-                              <IconPin size={14} className="-rotate-45 text-blue-500 shrink-0" />
+                              <IconPin size={14} className={`-rotate-45 shrink-0 ${
+                                isLecturer ? "text-zinc-600" : "text-blue-500"
+                              }`} />
                             )}
                             {s.status === "active" && (
-                              <Badge color="blue" variant="light" size="xs">
-                                Đang mở
+                              <Badge color={isLecturer ? "dark" : "blue"} variant="light" size="xs">
+                                Đang Mở
                               </Badge>
                             )}
                           </Group>
@@ -300,11 +277,13 @@ export function SessionsView() {
         <Stack gap="md">
           <Select
             label="Chọn môn học"
-            placeholder="Tìm và chọn môn học của phiên thảo luận"
+            placeholder={subjectOptions.length === 0 ? "Chưa được phân công môn học" : "Tìm và chọn môn học của phiên thảo luận"}
             data={subjectOptions}
             value={selectedSubject}
             onChange={setSelectedSubject}
+            disabled={subjectOptions.length === 0}
             searchable
+            nothingFoundMessage="Không tìm thấy môn học"
             required
           />
           <TextInput
@@ -321,7 +300,7 @@ export function SessionsView() {
               onClick={handleCreateSession}
               disabled={!selectedSubject || creating}
               loading={creating}
-              color="blue"
+              color={isLecturer ? "dark" : "blue"}
             >
               Tạo phiên
             </Button>

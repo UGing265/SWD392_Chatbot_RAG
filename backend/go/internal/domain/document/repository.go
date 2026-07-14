@@ -7,15 +7,14 @@ import (
 )
 
 type FilterParams struct {
-	Query            *string
-	SubjectID        *uuid.UUID
-	AcademicTermID   *uuid.UUID
-	DocumentTypeID   *uuid.UUID
-	LanguageID       *uuid.UUID
-	DocumentSourceID *uuid.UUID
-	SortBy           *string
-	Page             int
-	PageSize         int
+	Query             *string
+	SubjectIDs        []uuid.UUID
+	DocumentTypeIDs   []uuid.UUID
+	LanguageIDs       []uuid.UUID
+	DocumentSourceIDs []uuid.UUID
+	SortBy            *string
+	Page              int
+	PageSize          int
 }
 
 type DocumentRepository interface {
