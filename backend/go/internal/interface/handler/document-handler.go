@@ -16,6 +16,20 @@ import (
 	"github.com/google/uuid"
 )
 
+func parseUUIDs(param string) []uuid.UUID {
+	if param == "" {
+		return nil
+	}
+	parts := strings.Split(param, ",")
+	var uuids []uuid.UUID
+	for _, p := range parts {
+		if uid, err := uuid.Parse(strings.TrimSpace(p)); err == nil {
+			uuids = append(uuids, uid)
+		}
+	}
+	return uuids
+}
+
 type DocumentHandler struct {
 	docUseCase    *document_usecase.DocumentUseCase
 	lookupUseCase *lookup_usecase.LookupUseCase
@@ -58,33 +72,10 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		queryPtr = &q
 	}
 
-	var subjectIDPtr *uuid.UUID
-	if subIDStr := c.Query("subjectId"); subIDStr != "" {
-		if subID, err := uuid.Parse(subIDStr); err == nil {
-			subjectIDPtr = &subID
-		}
-	}
-
-	var typeIDPtr *uuid.UUID
-	if typeIDStr := c.Query("documentTypeId"); typeIDStr != "" {
-		if typeID, err := uuid.Parse(typeIDStr); err == nil {
-			typeIDPtr = &typeID
-		}
-	}
-
-	var langIDPtr *uuid.UUID
-	if langIDStr := c.Query("languageId"); langIDStr != "" {
-		if langID, err := uuid.Parse(langIDStr); err == nil {
-			langIDPtr = &langID
-		}
-	}
-
-	var sourceIDPtr *uuid.UUID
-	if sourceIDStr := c.Query("documentSourceId"); sourceIDStr != "" {
-		if sourceID, err := uuid.Parse(sourceIDStr); err == nil {
-			sourceIDPtr = &sourceID
-		}
-	}
+		subjectIDs := parseUUIDs(c.Query("subjectId"))
+	typeIDs := parseUUIDs(c.Query("documentTypeId"))
+	langIDs := parseUUIDs(c.Query("languageId"))
+	sourceIDs := parseUUIDs(c.Query("documentSourceId"))
 
 	sortBy := c.DefaultQuery("sortBy", "date_desc")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -97,7 +88,7 @@ func (h *DocumentHandler) List(c *gin.Context) {
 		requesterIDPtr = &uid
 	}
 
-	result, err := h.docUseCase.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDPtr, page, pageSize, requesterIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr)
+	result, err := h.docUseCase.GetAllDocuments(c.Request.Context(), queryPtr, subjectIDs, page, pageSize, requesterIDPtr, &sortBy, typeIDs, langIDs, sourceIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch documents: " + err.Error()})
 		return
@@ -114,7 +105,7 @@ func (h *DocumentHandler) List(c *gin.Context) {
 // @Produce json
 // @Param q query string false "Search query"
 // @Param subjectId query string false "Filter by subject ID (UUID)"
-// @Param termId query string false "Filter by term ID (UUID)"
+
 // @Param documentTypeId query string false "Filter by document type ID (UUID)"
 // @Param languageId query string false "Filter by language ID (UUID)"
 // @Param documentSourceId query string false "Filter by source ID (UUID)"
@@ -133,46 +124,16 @@ func (h *DocumentHandler) MyDocuments(c *gin.Context) {
 		queryPtr = &q
 	}
 
-	var subjectIDPtr *uuid.UUID
-	if subIDStr := c.Query("subjectId"); subIDStr != "" {
-		if subID, err := uuid.Parse(subIDStr); err == nil {
-			subjectIDPtr = &subID
-		}
-	}
-
-	var termIDPtr *uuid.UUID
-	if termIDStr := c.Query("termId"); termIDStr != "" {
-		if termID, err := uuid.Parse(termIDStr); err == nil {
-			termIDPtr = &termID
-		}
-	}
-
-	var typeIDPtr *uuid.UUID
-	if typeIDStr := c.Query("documentTypeId"); typeIDStr != "" {
-		if typeID, err := uuid.Parse(typeIDStr); err == nil {
-			typeIDPtr = &typeID
-		}
-	}
-
-	var langIDPtr *uuid.UUID
-	if langIDStr := c.Query("languageId"); langIDStr != "" {
-		if langID, err := uuid.Parse(langIDStr); err == nil {
-			langIDPtr = &langID
-		}
-	}
-
-	var sourceIDPtr *uuid.UUID
-	if sourceIDStr := c.Query("documentSourceId"); sourceIDStr != "" {
-		if sourceID, err := uuid.Parse(sourceIDStr); err == nil {
-			sourceIDPtr = &sourceID
-		}
-	}
+		subjectIDs := parseUUIDs(c.Query("subjectId"))
+	typeIDs := parseUUIDs(c.Query("documentTypeId"))
+	langIDs := parseUUIDs(c.Query("languageId"))
+	sourceIDs := parseUUIDs(c.Query("documentSourceId"))
 
 	sortBy := c.DefaultQuery("sortBy", "date_desc")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "6"))
 
-	result, err := h.docUseCase.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDPtr, termIDPtr, &sortBy, typeIDPtr, langIDPtr, sourceIDPtr, page, pageSize)
+	result, err := h.docUseCase.GetMyDocuments(c.Request.Context(), userID, queryPtr, subjectIDs, &sortBy, typeIDs, langIDs, sourceIDs, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch my documents: " + err.Error()})
 		return
@@ -193,7 +154,7 @@ func (h *DocumentHandler) MyDocuments(c *gin.Context) {
 // @Param description formData string false "Description"
 // @Param subject_id formData string false "Subject ID (UUID)"
 // @Param document_type_id formData string false "Document Type ID (UUID)"
-// @Param academic_term_id formData string false "Academic Term ID (UUID)"
+
 // @Param language_id formData string false "Language ID (UUID)"
 // @Param document_source_id formData string false "Document Source ID (UUID)"
 // @Param visibility formData string false "Visibility (public, school_wide, private)"
@@ -254,12 +215,6 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		}
 	}
 
-	var termID *uuid.UUID
-	if termIDStr := c.PostForm("academic_term_id"); termIDStr != "" {
-		if uid, err := uuid.Parse(termIDStr); err == nil {
-			termID = &uid
-		}
-	}
 
 	var langID *uuid.UUID
 	if langIDStr := c.PostForm("language_id"); langIDStr != "" {
@@ -291,8 +246,7 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 		Description:      descPtr,
 		SubjectID:        subjectID,
 		DocumentTypeID:   typeID,
-		AcademicTermID:   termID,
-		LanguageID:       langID,
+				LanguageID:       langID,
 		Visibility:       &visibility,
 		DocumentSourceID: sourceID,
 		OwnerUserID:      userID,
@@ -407,7 +361,7 @@ func (h *DocumentHandler) Edit(c *gin.Context) {
 		Description      *string `json:"description"`
 		SubjectID        *string `json:"subject_id"`
 		DocumentTypeID   *string `json:"document_type_id"`
-		AcademicTermID   *string `json:"academic_term_id"`
+
 		LanguageID       *string `json:"language_id"`
 		Visibility       string  `json:"visibility" binding:"required"`
 		DocumentSourceID *string `json:"document_source_id"`
@@ -438,12 +392,7 @@ func (h *DocumentHandler) Edit(c *gin.Context) {
 		}
 	}
 
-	var termID *uuid.UUID
-	if input.AcademicTermID != nil && *input.AcademicTermID != "" {
-		if uid, err := uuid.Parse(*input.AcademicTermID); err == nil {
-			termID = &uid
-		}
-	}
+
 
 	var langID *uuid.UUID
 	if input.LanguageID != nil && *input.LanguageID != "" {
@@ -459,7 +408,7 @@ func (h *DocumentHandler) Edit(c *gin.Context) {
 		}
 	}
 
-	err = h.docUseCase.UpdateDocument(c.Request.Context(), docID, userID, input.Title, input.Description, subjectID, typeID, termID, langID, sourceID, input.Visibility)
+	err = h.docUseCase.UpdateDocument(c.Request.Context(), docID, userID, input.Title, input.Description, subjectID, typeID, langID, sourceID, input.Visibility)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -615,15 +564,13 @@ func (h *DocumentHandler) GetMetadataLookups(c *gin.Context) {
 	types, _ := h.lookupUseCase.GetDocumentTypes(c.Request.Context())
 	langs, _ := h.lookupUseCase.GetLanguages(c.Request.Context())
 	sources, _ := h.lookupUseCase.GetDocumentSources(c.Request.Context())
-	terms, _ := h.lookupUseCase.GetAcademicTerms(c.Request.Context())
 
 	c.JSON(http.StatusOK, gin.H{
 		"subjects":        subjects,
 		"documentTypes":   types,
 		"languages":       langs,
 		"documentSources": sources,
-		"academicTerms":   terms,
-	})
+			})
 }
 
 // PublicSubjects godoc
@@ -644,7 +591,7 @@ func (h *DocumentHandler) PublicSubjects(c *gin.Context) {
 
 type CompareDocumentsRequest struct {
 	DocumentIDs []string `json:"document_ids" binding:"required,min=2"`
-	Question    string   `json:"question" binding:"required"`
+	Question    string   `json:"question"`
 }
 
 // CompareDocuments godoc
@@ -655,10 +602,14 @@ type CompareDocumentsRequest struct {
 // @Accept json
 // @Produce json
 // @Param body body handler.CompareDocumentsRequest true "Comparison Request"
-// @Success 200 {object} application.ComparisonResultDto
+// @Success 200 {object} handler.CompareDocumentsResponse
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/documents/compare [post]
+type CompareDocumentsResponse struct {
+	Markdown string `json:"markdown"`
+}
+
 func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
 	var req CompareDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -682,7 +633,7 @@ func (h *DocumentHandler) CompareDocuments(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, CompareDocumentsResponse{Markdown: result})
 }
 
 // ToggleBookmark godoc
@@ -700,7 +651,7 @@ func (h *DocumentHandler) ToggleBookmark(c *gin.Context) {
 	userID := c.MustGet("user_id").(uuid.UUID)
 
 	// Need to find document ID by slug first
-	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, nil, 1, 1, false, false)
+	doc, err := h.docUseCase.GetDocumentDetailsBySlug(c.Request.Context(), slug, &userID, 1, 1, false, false)
 	if err != nil || doc == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
 		return

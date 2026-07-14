@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { curriculumApi, AcademicTerm, Subject } from "@/api/curriculum";
+import { curriculumApi, Subject } from "@/api/curriculum";
 import { documentApi } from "@/api/document";
 import { notify } from "@/lib/notifications";
 
@@ -21,34 +21,18 @@ const getErrorMessage = (err: unknown, fallback: string) => {
 };
 
 export type SavingAction =
-  | "create-term"
-  | `update-term-${string}`
-  | `delete-term-${string}`
-  | `create-subject-${string}`
+  | `create-subject-standalone`
   | `update-subject-${string}`
-  | `delete-subject-${string}`
-  | `attach-subject-${string}`
-  | `detach-subject-${string}`;
+  | `delete-subject-${string}`;
 
 export function useCurriculum() {
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingAction, setSavingAction] = useState<SavingAction | null>(null);
   const [subjectAccessCounts, setSubjectAccessCounts] = useState<Record<string, number>>({});
-  const [expandedTerms, setExpandedTerms] = useState<Set<string>>(new Set());
-
-  // Form states for creating/editing terms
-  const [editingTermId, setEditingTermId] = useState<string | null>(null);
-  const [editingTermName, setEditingTermName] = useState("");
-  const [editingTermOrder, setEditingTermOrder] = useState(0);
-  const [addingTerm, setAddingTerm] = useState(false);
-  const [newTermName, setNewTermName] = useState("");
-  const [newTermOrder, setNewTermOrder] = useState(1);
 
   // Form states for creating/editing subjects
-  const [addingSubjectForTerm, setAddingSubjectForTerm] = useState<string | null>(null);
   const [newSubjectCode, setNewSubjectCode] = useState("");
   const [newSubjectName, setNewSubjectName] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
@@ -56,36 +40,13 @@ export function useCurriculum() {
   const [editingSubjectName, setEditingSubjectName] = useState("");
 
   const [addingStandaloneSubject, setAddingStandaloneSubject] = useState(false);
-  const [selectedExistingSubject, setSelectedExistingSubject] = useState<string | null>(null);
-
-  const sortedTerms = useMemo(() => {
-    return [...terms].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
-  }, [terms]);
-
-  const nextTermOrder = useMemo(() => {
-    if (terms.length === 0) return 1;
-    return Math.max(...terms.map((t) => t.order)) + 1;
-  }, [terms]);
-
-  const normalizeTerm = (term: unknown): AcademicTerm => {
-    const data = asRecord(term);
-
-    return {
-      id: String(data.id ?? ""),
-      name: getString(data.name),
-      order: Number(data.order ?? data.term_order ?? 0),
-    };
-  };
 
   const normalizeSubject = (subject: unknown): Subject => {
     const data = asRecord(subject);
-    const academicTermId = data.academic_term_id ?? data.academicTermId ?? data.academicTermID;
-
     return {
       id: String(data.id ?? ""),
       code: getString(data.code),
       name: getString(data.name),
-      academic_term_id: academicTermId ? String(academicTermId) : null,
     };
   };
 
@@ -122,7 +83,6 @@ export function useCurriculum() {
     setError(null);
     try {
       const data = await curriculumApi.getLookups();
-      setTerms((data.academicTerms || []).map(normalizeTerm));
       setSubjects(Array.isArray(data.subjects) ? data.subjects.map(normalizeSubject) : []);
       await fetchSubjectAccessCounts();
     } catch (err: unknown) {
@@ -138,172 +98,27 @@ export function useCurriculum() {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (addingTerm) {
-      setNewTermOrder(nextTermOrder);
-    }
-  }, [addingTerm, nextTermOrder]);
-
-  const toggleTerm = (termId: string) => {
-    setExpandedTerms((prev) => {
-      const next = new Set(prev);
-      if (next.has(termId)) next.delete(termId);
-      else next.add(termId);
-      return next;
-    });
-  };
-
-  const startAddingTerm = () => {
-    setAddingTerm(true);
-    setNewTermName("");
-    setNewTermOrder(nextTermOrder);
-  };
-
-  const startEditingTerm = (term: AcademicTerm) => {
-    setAddingTerm(false);
-    setEditingTermId(term.id);
-    setEditingTermName(term.name);
-    setEditingTermOrder(term.order);
-  };
-
-  const resetTermForm = () => {
-    setAddingTerm(false);
-    setNewTermName("");
-    setNewTermOrder(nextTermOrder);
-    setEditingTermId(null);
-    setEditingTermName("");
-    setEditingTermOrder(0);
-  };
-
-  const handleCreateTerm = async () => {
-    const name = newTermName.trim();
-    if (!name || savingAction) return;
-
-    setSavingAction("create-term");
-    try {
-      await curriculumApi.createTerm(name, newTermOrder);
-      notify.success("Tạo học kỳ thành công");
-      resetTermForm();
-      await fetchData();
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Tạo học kỳ thất bại.");
-      notify.error(msg);
-    } finally {
-      setSavingAction(null);
-    }
-  };
-
-  const handleUpdateTerm = async (termId: string) => {
-    const name = editingTermName.trim();
-    if (!name || savingAction) return;
-
-    setSavingAction(`update-term-${termId}`);
-    try {
-      await curriculumApi.updateTerm(termId, name, editingTermOrder);
-      notify.success("Cập nhật học kỳ thành công");
-      setEditingTermId(null);
-      await fetchData();
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Cập nhật học kỳ thất bại.");
-      notify.error(msg);
-    } finally {
-      setSavingAction(null);
-    }
-  };
-
-  const handleDeleteTerm = async (term: AcademicTerm) => {
-    const termSubjects = subjects.filter((s) => s.academic_term_id === term.id);
-    const message =
-      termSubjects.length > 0
-        ? `Xóa học kỳ "${term.name}"? ${termSubjects.length} môn học trong kỳ này sẽ bị gỡ liên kết.`
-        : `Xóa học kỳ "${term.name}"?`;
-
-    if (!confirm(message) || savingAction) return;
-
-    setSavingAction(`delete-term-${term.id}`);
-    try {
-      await curriculumApi.deleteTerm(term.id);
-      notify.success("Xóa học kỳ thành công");
-      await fetchData();
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Xóa học kỳ thất bại.");
-      notify.error(msg);
-    } finally {
-      setSavingAction(null);
-    }
-  };
-
-  const startAddingSubject = (termId: string) => {
-    setAddingSubjectForTerm(termId);
-    setEditingSubjectId(null);
-    setNewSubjectCode("");
-    setNewSubjectName("");
-    setExpandedTerms((prev) => new Set(prev).add(termId));
-  };
-
   const startEditingSubject = (subject: Subject) => {
-    setAddingSubjectForTerm(null);
     setEditingSubjectId(subject.id);
     setEditingSubjectCode(subject.code);
     setEditingSubjectName(subject.name);
   };
 
-  const handleCreateSubject = async (termId: string | null) => {
+  const handleCreateSubject = async () => {
     const code = newSubjectCode.trim();
     const name = newSubjectName.trim();
     if (!code || !name || savingAction) return;
 
-    setSavingAction(`create-subject-${termId || "standalone"}`);
+    setSavingAction(`create-subject-standalone`);
     try {
-      await curriculumApi.createSubject(code, name, termId);
+      await curriculumApi.createSubject(code, name);
       notify.success("Tạo môn học thành công");
       setNewSubjectCode("");
       setNewSubjectName("");
-      if (termId) {
-        setAddingSubjectForTerm(null);
-      } else {
-        setAddingStandaloneSubject(false);
-      }
+      setAddingStandaloneSubject(false);
       await fetchData();
     } catch (err: unknown) {
       const msg = getErrorMessage(err, "Tạo môn học thất bại.");
-      notify.error(msg);
-    } finally {
-      setSavingAction(null);
-    }
-  };
-
-  const handleAttachSubject = async (termId: string) => {
-    if (!selectedExistingSubject || savingAction) return;
-
-    const subject = subjects.find((s) => s.id === selectedExistingSubject);
-    if (!subject) return;
-
-    setSavingAction(`attach-subject-${termId}`);
-    try {
-      await curriculumApi.updateSubject(subject.id, subject.code, subject.name, termId);
-      notify.success(`Đã gắn môn ${subject.code} vào học kỳ`);
-      setSelectedExistingSubject(null);
-      setAddingSubjectForTerm(null);
-      await fetchData();
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Gắn môn học thất bại.");
-      notify.error(msg);
-    } finally {
-      setSavingAction(null);
-    }
-  };
-
-  const handleDetachSubject = async (subject: Subject) => {
-    if (!confirm(`Gỡ môn ${subject.code} khỏi học kỳ này?`) || savingAction) return;
-
-    setSavingAction(`detach-subject-${subject.id}`);
-    try {
-      await curriculumApi.updateSubject(subject.id, subject.code, subject.name, null);
-      notify.success("Đã gỡ môn học khỏi học kỳ");
-      await fetchData();
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Gỡ môn học thất bại.");
       notify.error(msg);
     } finally {
       setSavingAction(null);
@@ -317,7 +132,7 @@ export function useCurriculum() {
 
     setSavingAction(`update-subject-${subject.id}`);
     try {
-      await curriculumApi.updateSubject(subject.id, code, name, subject.academic_term_id);
+      await curriculumApi.updateSubject(subject.id, code, name);
       notify.success("Cập nhật môn học thành công");
       setEditingSubjectId(null);
       await fetchData();
@@ -346,22 +161,11 @@ export function useCurriculum() {
   };
 
   return {
-    terms,
     subjects,
     loading,
     error,
     savingAction,
     subjectAccessCounts,
-    expandedTerms,
-    sortedTerms,
-    addingTerm,
-    newTermName,
-    newTermOrder,
-    editingTermId,
-    setEditingTermId,
-    editingTermName,
-    editingTermOrder,
-    addingSubjectForTerm,
     newSubjectCode,
     newSubjectName,
     editingSubjectId,
@@ -369,32 +173,15 @@ export function useCurriculum() {
     editingSubjectName,
     addingStandaloneSubject,
     setAddingStandaloneSubject,
-    selectedExistingSubject,
-    setSelectedExistingSubject,
-    setNewTermName,
-    setNewTermOrder,
-    setEditingTermName,
-    setEditingTermOrder,
     setNewSubjectCode,
     setNewSubjectName,
     setEditingSubjectCode,
     setEditingSubjectName,
-    toggleTerm,
-    startAddingTerm,
-    startEditingTerm,
-    resetTermForm,
-    handleCreateTerm,
-    handleUpdateTerm,
-    handleDeleteTerm,
-    startAddingSubject,
     startEditingSubject,
-    setAddingSubjectForTerm,
     setEditingSubjectId,
     handleCreateSubject,
     handleUpdateSubject,
     handleDeleteSubject,
-    handleAttachSubject,
-    handleDetachSubject,
     refresh: fetchData,
   };
 }

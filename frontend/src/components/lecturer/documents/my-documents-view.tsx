@@ -1,44 +1,58 @@
 "use client";
 
-import Link from "next/link";
+import { useMyDocuments } from "@/hooks/lecturer/use-my-documents";
 import {
-  IconSearch,
-  IconEye,
-  IconListSearch,
+  ActionIcon,
+  Button,
+  Group,
+  Loader,
+  Modal,
+  Pagination,
+  Table,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
+import {
   IconDatabaseImport,
-  IconFileCertificate,
+  IconEdit,
+  IconEye,
+  IconFileText,
+  IconListSearch,
+  IconSortAscending,
+  IconSortDescending,
+  IconUsers,
   IconTrash,
 } from "@tabler/icons-react";
-import {
-  TextInput,
-  Button,
-  Text,
-  Group,
-  Stack,
-  Select,
-  Pagination,
-} from "@mantine/core";
-import { useMyDocuments } from "@/hooks/lecturer/use-my-documents";
+import { useState } from "react";
+import { DocumentFilters } from "../../common/documents/document-filters";
+import { DocumentDetailPanel } from "./document-detail-panel";
+import { InlineDocumentEdit } from "./inline-document-edit";
+import { UploadModal } from "./upload-modal";
 
-const getVisibilityBadge = (visibility: string) => {
-  switch (visibility) {
-    case "private":
-      return {
-        label: "Riêng tư",
-        className: "bg-rose-50 border-rose-200 text-rose-600",
-      };
-    case "school_wide":
-      return {
-        label: "Nội bộ",
-        className: "bg-sky-50 border-sky-200 text-sky-600",
-      };
-    case "public":
-    default:
-      return {
-        label: "Công khai",
-        className: "bg-emerald-50 border-emerald-200 text-emerald-600",
-      };
-  }
+const getStatusDot = (status: string) => {
+  if (status === "pending")
+    return (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-600 text-xs bg-zinc-100 px-2.5 py-1 rounded-md whitespace-nowrap">
+        <div className="rounded-full bg-zinc-500 w-1.5 h-1.5" /> Chờ xử lý
+      </span>
+    );
+  if (status === "active" || status === "ready" || status === "completed")
+    return (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 text-xs bg-emerald-50 px-2.5 py-1 rounded-md whitespace-nowrap">
+        <div className="rounded-full bg-emerald-500 w-1.5 h-1.5" /> Hoàn tất
+      </span>
+    );
+  if (status === "processing")
+    return (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600 text-xs bg-blue-50 px-2.5 py-1 rounded-md whitespace-nowrap">
+        <div className="rounded-full bg-blue-500 w-1.5 h-1.5" /> Đang xử lý
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 text-xs bg-red-50 px-2.5 py-1 rounded-md whitespace-nowrap">
+      <div className="rounded-full bg-red-500 w-1.5 h-1.5" /> Lỗi
+    </span>
+  );
 };
 
 export function MyDocumentsView() {
@@ -53,7 +67,6 @@ export function MyDocumentsView() {
     page,
     q,
     subjectId,
-    termId,
     documentTypeId,
     languageId,
     documentSourceId,
@@ -61,20 +74,30 @@ export function MyDocumentsView() {
     updateFilters,
     clearFilters,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,
     handleDelete,
   } = useMyDocuments();
 
+  const [activeTab, setActiveTab] = useState<"overview" | "detail">("overview");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "sidebar">("list");
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [selectedDocumentSlug, setSelectedDocumentSlug] = useState<string | null>(null);
+  const [uploadModalOpened, setUploadModalOpened] = useState(false);
+
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [deletingDocument, setDeletingDocument] = useState<{ id: string; slug: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const displayDocuments = documents.filter(
-    (item) => item.status !== "processing" && item.status !== "pending"
+    (item) => item.status !== "processing" && item.status !== "pending",
   );
 
   const displayedCount = Math.max(
     0,
-    totalDocuments - documents.filter((d) => d.status === "processing" || d.status === "pending").length
+    totalDocuments -
+      documents.filter((d) => d.status === "processing" || d.status === "pending").length,
   );
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,294 +106,550 @@ export function MyDocumentsView() {
     updateFilters({ q: formData.get("q") as string, page: "1" });
   };
 
+  const handleSort = (field: string) => {
+    const isAsc = sortBy === `${field}_asc`;
+    updateFilters({ sortBy: isAsc ? `${field}_desc` : `${field}_asc` });
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortBy === `${field}_asc`)
+      return <IconSortAscending size={14} className="ml-1 text-zinc-600 inline" />;
+    if (sortBy === `${field}_desc`)
+      return <IconSortDescending size={14} className="ml-1 text-zinc-600 inline" />;
+    return <span className="text-zinc-300 ml-1 inline text-[10px]">▼</span>;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader size="sm" color="gray" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 bg-zinc-50 relative font-sans w-full">
-      <div className="container mx-auto max-w-6xl p-6 py-12">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-5 animate-in fade-in slide-in-from-top-4 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
-          <div>
-            <Text size="xs" fw={600} className="text-zinc-500 tracking-[0.15em] uppercase mb-3 font-mono text-[11px]">
-              KHÔNG GIAN CÁ NHÂN
-            </Text>
-            <h1 className="font-serif text-[40px] tracking-[-0.03em] text-zinc-900 leading-none mb-0 select-none">
-              Thư Viện.
-            </h1>
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 shrink-0">
+            {activeTab === "detail" ? (
+              <button
+                onClick={() => setActiveTab("overview")}
+                className="font-bold text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1.5 text-[15px]"
+              >
+                ← Quay lại danh sách
+              </button>
+            ) : (
+              <>
+                <IconUsers size={20} className="text-zinc-900" stroke={1.5} />
+                <h1 className="font-bold text-zinc-900 tracking-tight text-lg">Tài Liệu Của Tôi</h1>
+              </>
+            )}
           </div>
-          
-          <div className="flex items-center">
-            <div className="flex items-center gap-4 px-5 py-3 rounded-xl bg-white border border-zinc-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-600">
-                <IconDatabaseImport size={16} stroke={1.5} />
-              </div>
-              <div>
-                <div className="text-[10px] font-sans font-bold tracking-widest text-zinc-400 mb-0.5 uppercase">Tổng tài liệu</div>
-                <div className="text-[14px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                  {totalDocuments}
-                </div>
-              </div>
-            </div>
+          <div
+            className={`flex items-center gap-2 overflow-x-auto py-1 w-full min-w-0 sm:w-auto sm:justify-end ${activeTab === "detail" ? "hidden" : ""}`}
+            style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+          >
+            <Button
+              variant="default"
+              onClick={() => {
+                clearFilters();
+                setViewMode("list");
+              }}
+              className="!h-8 !px-4 !rounded-lg !text-[12px] !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 !shadow-sm shrink-0 transition-colors"
+            >
+              Reset Filter Layout
+            </Button>
+            <Button
+              variant="filled"
+              className="!h-8 !px-4 !rounded-lg !text-[12px] !font-semibold !bg-zinc-900 hover:!bg-zinc-800 !text-white !shadow-sm shrink-0 transition-colors !border-0"
+              onClick={() => setUploadModalOpened(true)}
+            >
+              Thêm Tài Liệu
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* Active Upload Jobs Integration Panel */}
-        {activeUploadJobs.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-              </span>
-              <Text size="xs" fw={700} className="text-zinc-500 tracking-[0.15em] uppercase font-mono text-[11px]">
-                Tài liệu đang tích hợp ({activeUploadJobs.length})
-              </Text>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {activeUploadJobs.map((job) => (
-                <div key={job.id} className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 text-zinc-600 shrink-0">
-                        <IconDatabaseImport size={16} stroke={1.5} className="animate-pulse" />
-                      </div>
-                      <div className="min-w-0">
-                        <Text className="text-[14px] font-bold text-zinc-900 truncate" fw={600}>
-                          {job.file_name}
-                        </Text>
-                        <Text className="text-[12px] text-zinc-500 truncate">
-                          {job.message || "Đang xử lý..."}
-                        </Text>
-                      </div>
-                    </div>
-                    <Text className="text-[12px] font-bold font-mono text-zinc-700 shrink-0">
-                      {job.progress_percent}%
-                    </Text>
-                  </div>
-                  
-                  <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-[#0EA5E9] rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${job.progress_percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="w-full p-4 sm:p-6 lg:p-10 flex-1">
+        {activeTab === "detail" && (
+          <div className="mb-6">
+            {selectedDocumentId ? (
+              <DocumentDetailPanel documentId={selectedDocumentSlug!} role={role} />
+            ) : (
+              <div className="text-center py-20 bg-white border border-zinc-200 rounded-2xl shadow-sm animate-in fade-in">
+                <IconFileText size={48} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
+                <h3 className="font-bold text-zinc-900 mb-2 text-lg">Chưa chọn tài liệu</h3>
+                <p className="text-zinc-500 max-w-sm mx-auto">
+                  Vui lòng chọn một tài liệu ở tab Overview để xem chi tiết thông tin và nội dung.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Search & Filter Form */}
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100">
-          <Stack gap="lg">
-            {/* Row 1: Search */}
-            <form onSubmit={handleSearchSubmit} className="flex gap-4 items-center flex-wrap">
-              <div className="flex-1 relative min-w-[200px]">
-                <IconSearch size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input
-                  name="q"
-                  defaultValue={q}
-                  placeholder="Tìm kiếm tài liệu..."
-                  className="w-full h-12 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-xl text-[14px] text-zinc-900 focus:outline-none focus:border-zinc-800 transition-colors"
-                />
-              </div>
-              <button type="submit" className="h-12 px-8 bg-zinc-900 hover:bg-zinc-800 text-white text-[14px] font-medium rounded-xl transition-colors">
-                Tìm Kiếm
-              </button>
-              <button type="button" onClick={() => clearFilters()} className="h-12 px-6 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 text-[14px] font-medium rounded-xl transition-colors">
-                Xóa lọc
-              </button>
-            </form>
+        {activeTab === "overview" && (
+          <>
 
-            {/* Row 2: Selects */}
-            <Group gap="md" grow>
-              <Select
-                value={subjectId || null}
-                onChange={(val) => updateFilters({ subjectId: val })}
-                placeholder="Tất cả môn học"
-                data={subjects.map(s => ({ value: s.id, label: s.code }))}
-                searchable
-                radius="lg"
-                clearable
-                styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
+            {/* Refined Modern Search & Filter Form */}
+            <div className="animate-in fade-in duration-700 mb-6">
+              <DocumentFilters
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                q={q}
+                subjectId={subjectId}
+                documentTypeId={documentTypeId}
+                languageId={languageId}
+                documentSourceId={documentSourceId}
+                sortBy={sortBy}
+                subjects={subjects}
+                documentTypes={documentTypes}
+                languages={languages}
+                documentSources={documentSources}
+                updateFilters={updateFilters}
+                clearFilters={clearFilters}
+                handleSearchSubmit={handleSearchSubmit}
               />
-              <Select
-                value={documentTypeId || null}
-                onChange={(val) => updateFilters({ documentTypeId: val })}
-                placeholder="Tất cả học liệu"
-                data={documentTypes.map(t => ({ value: t.id, label: t.name }))}
-                radius="lg"
-                clearable
-                styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
-              />
-              <Select
-                value={languageId || null}
-                onChange={(val) => updateFilters({ languageId: val })}
-                placeholder="Tất cả ngôn ngữ"
-                data={languages.map(l => ({ value: l.id, label: l.name }))}
-                radius="lg"
-                clearable
-                styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
-              />
-              <Select
-                value={documentSourceId || null}
-                onChange={(val) => updateFilters({ documentSourceId: val })}
-                placeholder="Tất cả nguồn"
-                data={documentSources.map(s => ({ value: s.id, label: s.name }))}
-                radius="lg"
-                clearable
-                styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
-              />
-              <Select
-                value={sortBy}
-                onChange={(val) => updateFilters({ sortBy: val })}
-                data={[
-                  { value: "date_desc", label: "Mới nhất trước" },
-                  { value: "date_asc", label: "Cũ nhất trước" },
-                  { value: "title_asc", label: "Tên A - Z" },
-                  { value: "title_desc", label: "Tên Z - A" },
-                  { value: "views_desc", label: "Nhiều lượt xem" },
-                  { value: "views_asc", label: "Ít lượt xem" },
-                ]}
-                radius="lg"
-                allowDeselect={false}
-                styles={{ input: { borderColor: '#EAEAEA', '&:focus': { borderColor: '#111111' } } }}
-              />
-            </Group>
-          </Stack>
-        </div>
+            </div>
 
-        {/* Results Header */}
-        <div className="flex justify-between items-end mb-6 pb-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-200 border-b border-zinc-200">
-          <h4 className="text-[18px] font-serif tracking-[-0.02em] text-zinc-900 m-0">Danh Sách</h4>
-          <Text size="xs" className="font-mono text-zinc-500 uppercase tracking-widest">
-            KẾT QUẢ: <span className="text-zinc-900 font-bold ml-1">{displayedCount}</span>
-          </Text>
-        </div>
-
-        {/* Document Grid */}
-        <div className={`transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-300`}>
-          {displayDocuments.length === 0 && !loading ? (
-            <div className="text-center py-24 rounded-2xl bg-white border border-zinc-200 shadow-sm">
-              {(q || subjectId) ? (
-                <>
-                  <IconListSearch size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
-                  <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Không tìm thấy tài liệu phù hợp.</h5>
-                  <Button variant="outline" color="dark" radius="lg" onClick={() => clearFilters()}>
-                    Xóa Bộ Lọc
-                  </Button>
-                </>
+            {/* Table Area - Double Bezel Layout */}
+            <div
+              className={`bg-white border border-zinc-200/60 rounded-2xl overflow-hidden transition-all duration-700 shadow-[0_2px_12px_rgba(0,0,0,0.03)] ${loading ? "opacity-50 blur-sm pointer-events-none" : "opacity-100"} animate-in fade-in slide-in-from-bottom-8`}
+            >
+              {displayDocuments.length === 0 && !loading ? (
+                <div className="text-center py-24">
+                  {q || subjectId ? (
+                    <>
+                      <IconListSearch
+                        size={32}
+                        className="mx-auto text-zinc-300 mb-4"
+                        stroke={1.5}
+                      />
+                      <h5 className="font-medium text-zinc-900 mb-2 text-base">
+                        Không tìm thấy tài liệu phù hợp.
+                      </h5>
+                      <button
+                        className="mt-2 border border-zinc-200 text-zinc-700 font-semibold px-4 rounded-full hover:bg-zinc-50 transition-colors h-8 text-xs"
+                        onClick={() => clearFilters()}
+                      >
+                        Xóa Bộ Lọc
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <IconFileText size={32} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
+                      <h5 className="font-medium text-zinc-900 mb-2 text-base">
+                        Chưa có tài liệu nào.
+                      </h5>
+                      <Text size="xs" className="text-zinc-500 mb-6">
+                        Bạn chưa tải lên tài liệu nào trong thư viện cá nhân.
+                      </Text>
+                      <button
+                        onClick={() => setUploadModalOpened(true)}
+                        className="border border-transparent bg-zinc-900 text-white font-semibold px-4 rounded-full hover:bg-zinc-800 transition-colors h-8 text-xs"
+                      >
+                        Thêm Tài Liệu Mới
+                      </button>
+                    </>
+                  )}
+                </div>
               ) : (
-                <>
-                  <IconFileCertificate size={40} className="mx-auto text-zinc-300 mb-4" stroke={1.5} />
-                  <h5 className="text-[15px] font-medium text-zinc-900 mb-2">Chưa có tài liệu nào.</h5>
-                  <Text size="sm" className="text-zinc-500 mb-6">Bạn chưa tải lên tài liệu nào trong thư viện cá nhân.</Text>
-                  <Button component={Link} href={`/${role}/upload`} color="dark" radius="lg" className="bg-zinc-900">
-                    Tải Lên Ngay
-                  </Button>
-                </>
+                <div
+                  className="overflow-x-auto"
+                  style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+                >
+                  {viewMode === "list" && (
+                    <Table
+                      verticalSpacing="md"
+                      horizontalSpacing="xl"
+                      className="w-full border-collapse"
+                      style={{ minWidth: 1000 }}
+                    >
+                      <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
+                        <Table.Tr>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[22%] py-3 text-xs whitespace-nowrap rounded-tl-xl cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("title")}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 shrink-0"></div>
+                              <span>Tên tài liệu {renderSortIcon("title")}</span>
+                            </div>
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap">
+                            Môn Học
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[10%] py-3 text-xs whitespace-nowrap">
+                            Trạng thái
+                          </Table.Th>
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[14%] py-3 text-xs whitespace-nowrap">
+                            Phân quyền
+                          </Table.Th>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[16%] py-3 text-xs whitespace-nowrap cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("date")}
+                          >
+                            Ngày tạo {renderSortIcon("date")}
+                          </Table.Th>
+                          <Table.Th
+                            className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[12%] py-3 text-xs whitespace-nowrap cursor-pointer hover:bg-zinc-200/50 transition-colors select-none"
+                            onClick={() => handleSort("views")}
+                          >
+                            Lượt xem {renderSortIcon("views")}
+                          </Table.Th>
+
+                          <Table.Th className="font-semibold text-zinc-400 capitalize tracking-wide font-sans border-0 w-[1%] py-3 text-xs text-left whitespace-nowrap rounded-tr-xl"></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {displayDocuments.map((item, index) => {
+                          return (
+                            <Table.Tr
+                              key={item.id}
+                              onClick={() => {
+                                setSelectedDocumentId(item.id);
+                                setSelectedDocumentSlug(item.slug || item.id);
+                                setActiveTab("detail");
+                              }}
+                              className="group/row cursor-pointer hover:bg-zinc-50/50 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] border-b border-zinc-100 last:border-0"
+                            >
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <div className="flex items-center gap-4">
+                                  <div className="min-w-0 flex items-center">
+                                    <span
+                                      className="block font-semibold text-zinc-900 group-hover:text-zinc-700 transition-colors truncate text-sm"
+                                      title={item.title}
+                                    >
+                                      {item.title || "Tài liệu không tên"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap min-w-[200px]">
+                                <div className="flex flex-col">
+                                  <span className="text-zinc-900 font-bold text-sm">
+                                    {item.subject_code || "Dùng chung"}
+                                  </span>
+                                  {item.subject_name && (
+                                    <span
+                                      className="text-zinc-500 font-medium text-xs truncate max-w-[200px]"
+                                      title={item.subject_name}
+                                    >
+                                      {item.subject_name}
+                                    </span>
+                                  )}
+                                </div>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                {getStatusDot(item.status)}
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-500 font-medium text-xs">
+                                  {item.visibility === "public"
+                                    ? "Công khai"
+                                    : item.visibility === "school_wide"
+                                      ? "Nội bộ trường"
+                                      : "Riêng tư"}
+                                </span>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-500 font-medium text-xs">
+                                  {new Date(item.created_at).toLocaleDateString("vi-VN")}
+                                </span>
+                              </Table.Td>
+                              <Table.Td className="border-0 whitespace-nowrap">
+                                <span className="text-zinc-400 font-medium text-xs">
+                                  {item.view_count || 0} lượt
+                                </span>
+                              </Table.Td>
+
+                              <Table.Td className="border-0 whitespace-nowrap !pl-0">
+                                <div className="flex items-center justify-start gap-1">
+                                  <ActionIcon
+                                    variant="subtle"
+                                    size="sm"
+                                    radius="md"
+                                    className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors opacity-0 group-hover/row:opacity-100 w-7 h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingRowId(item.id);
+                                    }}
+                                  >
+                                    <IconEdit size={16} stroke={1.5} />
+                                  </ActionIcon>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    size="sm"
+                                    radius="md"
+                                    className="text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover/row:opacity-100 w-7 h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                    }}
+                                  >
+                                    <IconTrash size={16} stroke={1.5} />
+                                  </ActionIcon>
+                                </div>
+                              </Table.Td>
+                            </Table.Tr>
+                          );
+                        })}
+                      </Table.Tbody>
+                    </Table>
+                  )}
+
+                  {viewMode === "grid" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 p-6">
+                      {displayDocuments.map((item, index) => {
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              setSelectedDocumentId(item.id);
+                              setSelectedDocumentSlug(item.slug || item.id);
+                              setActiveTab("detail");
+                            }}
+                            className="group relative bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 cursor-pointer flex flex-col hover:-translate-y-0.5"
+                          >
+                            <div className="w-full px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+                              <div className="bg-zinc-100 px-2 py-0.5 rounded text-[10px] font-bold text-zinc-600 uppercase tracking-wider">
+                                {item.subject_code || "CHUNG"}
+                              </div>
+                              <div className="scale-90 origin-top-right shrink-0">
+                                {getStatusDot(item.status)}
+                              </div>
+                            </div>
+                            <div className="p-4 flex-1 flex flex-col">
+                              <h3
+                                className="font-semibold text-zinc-900 text-[13px] line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors"
+                                title={item.title}
+                              >
+                                {item.title || "Tài liệu không tên"}
+                              </h3>
+                              {item.subject_name && (
+                                <p
+                                  className="text-zinc-500 text-xs line-clamp-1 mb-3"
+                                  title={item.subject_name}
+                                >
+                                  {item.subject_name}
+                                </p>
+                              )}
+                              <div className="mt-auto pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400 font-medium">
+                                <span>{new Date(item.created_at).toLocaleDateString("vi-VN")}</span>
+                                <div className="flex items-center gap-1">
+                                  <IconEye size={14} />
+                                  <span>{item.view_count || 0}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="absolute top-16 -mt-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                              <UnstyledButton
+                                className="bg-white hover:bg-zinc-50 text-zinc-700 p-1.5 rounded-lg shadow-sm border border-zinc-200/50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRowId(item.id);
+                                }}
+                              >
+                                <IconEdit size={14} stroke={1.5} />
+                              </UnstyledButton>
+                              <UnstyledButton
+                                className="bg-white hover:bg-red-50 text-zinc-700 hover:text-red-600 p-1.5 rounded-lg shadow-sm border border-zinc-200/50 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                }}
+                              >
+                                <IconTrash size={14} stroke={1.5} />
+                              </UnstyledButton>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {viewMode === "sidebar" && (
+                    <div className="flex flex-col lg:flex-row gap-6 items-start p-6">
+                      <div
+                        className="w-full lg:w-[35%] xl:w-[30%] shrink-0 flex flex-col gap-2 max-h-[80vh] overflow-y-auto pr-2"
+                        style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+                      >
+                        {displayDocuments.map((item, index) => {
+                          const safeIndex = index % 14;
+                          const isSelected = selectedDocumentId === item.id;
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                setSelectedDocumentId(item.id);
+                                setSelectedDocumentSlug(item.slug || item.id);
+                              }}
+                              className={`group/sidebar-item relative flex gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer ${isSelected ? "bg-zinc-900 border-zinc-900 shadow-md" : "bg-white border-zinc-100 hover:border-zinc-200 hover:bg-zinc-50/50"}`}
+                            >
+                              <div className="min-w-0 flex-1 pr-8">
+                                <h4
+                                  className={`text-[13px] font-semibold truncate mb-0.5 ${isSelected ? "text-white" : "text-zinc-900"}`}
+                                >
+                                  {item.title || "Tài liệu không tên"}
+                                </h4>
+                                <p
+                                  className={`text-[11px] truncate uppercase tracking-wide font-medium ${isSelected ? "text-zinc-400" : "text-zinc-500"}`}
+                                >
+                                  {item.subject_code || "CHUNG"} •{" "}
+                                  <span className="normal-case tracking-normal">
+                                    {new Date(item.created_at).toLocaleDateString("vi-VN")}
+                                  </span>
+                                </p>
+                              </div>
+
+                              <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover/sidebar-item:opacity-100 transition-opacity flex items-center gap-1">
+                                <UnstyledButton
+                                  className="bg-white hover:bg-zinc-50 text-zinc-700 p-1.5 rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] border border-zinc-200/80"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingRowId(item.id);
+                                  }}
+                                >
+                                  <IconEdit size={14} stroke={1.5} />
+                                </UnstyledButton>
+                                <UnstyledButton
+                                  className="bg-white hover:bg-red-50 text-zinc-700 hover:text-red-600 p-1.5 rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] border border-zinc-200/80 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeletingDocument({ id: item.id, slug: item.slug || item.id, title: item.title });
+                                  }}
+                                >
+                                  <IconTrash size={14} stroke={1.5} />
+                                </UnstyledButton>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="w-full lg:w-[65%] xl:w-[70%] bg-white rounded-2xl border border-zinc-200 shadow-sm min-h-[500px] overflow-hidden sticky top-6">
+                        {selectedDocumentId ? (
+                          <DocumentDetailPanel documentId={selectedDocumentSlug!} role={role} />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-zinc-400">
+                            <IconFileText size={48} className="mb-4 text-zinc-200" stroke={1.5} />
+                            <p className="font-medium text-[13px]">
+                              Chọn một tài liệu để xem chi tiết
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {displayDocuments.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group p-6"
-                >
-                  <div className="flex-grow">
-                    {/* Top Badges */}
-                    <div className="mb-6 flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200">
-                          <IconFileCertificate size={20} stroke={1.5} />
-                        </div>
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-[10px] font-bold text-zinc-600 font-mono uppercase tracking-widest">
-                          {item.subject_code || item.subject_name || "TÀI LIỆU"}
-                        </span>
-                      </div>
-                      {(() => {
-                        const badge = getVisibilityBadge(item.visibility);
-                        return (
-                          <span className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-bold font-sans uppercase tracking-wider ${badge.className}`}>
-                            {badge.label}
-                          </span>
-                        );
-                      })()}
-                    </div>
 
-                    {/* Title */}
-                    <Link href={`/${role}/documents/${item.slug || item.id}`} className="block focus:outline-none mb-3">
-                      <h3 className="text-[18px] font-bold text-zinc-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-zinc-300 font-serif">
-                        {item.title}
-                      </h3>
-                    </Link>
-
-                    {/* Preview Text */}
-                    <Text size="sm" className="text-zinc-500 line-clamp-2 leading-relaxed mb-6">
-                      {item.preview_text || item.description || "Chưa có mô tả cho tài liệu này."}
-                    </Text>
-                  </div>
-
-                  <div>
-                    {/* Metadata */}
-                    <div className="flex items-center justify-between pt-5 border-t border-zinc-100/80 mb-5">
-                      <div>
-                        <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Đăng tải</div>
-                        <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                          {new Date(item.updated_at || item.created_at).toLocaleDateString("vi-VN")}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[9px] font-sans font-bold tracking-widest text-zinc-400 mb-1 uppercase">Lượt xem</div>
-                        <div className="text-[12px] font-bold text-zinc-900 font-mono tracking-wider uppercase leading-none">
-                          {item.view_count || 0}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/${role}/documents/${item.slug || item.id}`}
-                        className="px-4 py-2 text-[12px] font-bold text-white bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors uppercase tracking-widest"
-                      >
-                        Chi Tiết
-                      </Link>
-                      
-                      <Link
-                        href={`/${role}/documents/edit/${item.slug || item.id}`}
-                        className="px-4 py-2 text-[12px] font-bold text-zinc-700 bg-zinc-100 rounded-full hover:bg-zinc-200 transition-colors uppercase tracking-widest"
-                      >
-                        Sửa
-                      </Link>
-                      
-                      <button
-                        onClick={(e) => handleDelete(e, item.slug || item.id)}
-                        className="w-9 h-9 flex items-center justify-center text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors shrink-0"
-                      >
-                        <IconTrash size={16} stroke={1.5} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <Group justify="center" mt={48}>
-            <Pagination
-              value={page}
-              onChange={(p) => updateFilters({ page: p.toString() })}
-              total={totalPages}
-              radius="lg"
-              color="dark"
-              withEdges
-            />
-          </Group>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Group justify="center" mt={32} className="animate-in fade-in duration-700">
+                <Pagination
+                  value={page}
+                  onChange={(p) => updateFilters({ page: p.toString() })}
+                  total={totalPages}
+                  radius="lg"
+                  color="dark"
+                  withEdges
+                />
+              </Group>
+            )}
+          </>
         )}
+
+        <UploadModal
+          opened={uploadModalOpened}
+          onClose={() => setUploadModalOpened(false)}
+          onSuccess={() => {
+            updateFilters({ page: "1" });
+            router.push(`/${role}/progress`);
+          }}
+        />
+
+        <Modal
+          opened={!!editingRowId}
+          onClose={() => setEditingRowId(null)}
+          withCloseButton={false}
+          yOffset="10vh"
+          size="50rem"
+          radius="0"
+          padding={0}
+          classNames={{
+            content: "!bg-transparent !shadow-none !border-0",
+            inner: "!p-4 sm:!p-6",
+          }}
+          transitionProps={{
+            transition: "fade",
+            duration: 200,
+          }}
+        >
+          {editingRowId && (
+            <InlineDocumentEdit
+              slug={documents.find((d) => d.id === editingRowId)?.slug || editingRowId}
+              docId={editingRowId}
+              subjects={subjects}
+              documentTypes={documentTypes}
+              languages={languages}
+              documentSources={documentSources}
+              onCancel={() => setEditingRowId(null)}
+              onSave={() => {
+                setEditingRowId(null);
+                updateFilters({ page: page.toString() });
+              }}
+            />
+          )}
+        </Modal>
+
+        <Modal
+          opened={!!deletingDocument}
+          onClose={() => !isDeleting && setDeletingDocument(null)}
+          title={<span className="font-bold text-zinc-900 text-lg">Xác nhận xoá tài liệu</span>}
+          yOffset="10vh"
+          padding="lg"
+          size="md"
+          transitionProps={{ transition: "fade", duration: 200 }}
+          classNames={{
+            content: "!rounded-2xl !bg-white !transform-none",
+            header: "!mb-2",
+          }}
+        >
+          <Text size="sm" className="text-zinc-600" mb="xl">
+            Bạn có chắc chắn muốn xoá tài liệu <span className="font-semibold text-zinc-900">"{deletingDocument?.title}"</span> không? Hành động này không thể hoàn tác.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="default"
+              onClick={() => setDeletingDocument(null)}
+              disabled={isDeleting}
+              className="!rounded-lg !font-semibold !text-zinc-700 hover:!bg-zinc-50 !border-zinc-200 transition-colors"
+            >
+              Hủy
+            </Button>
+            <Button
+              color="red"
+              onClick={async () => {
+                if (!deletingDocument) return;
+                setIsDeleting(true);
+                await handleDelete(deletingDocument.slug || deletingDocument.id);
+                setIsDeleting(false);
+                setDeletingDocument(null);
+              }}
+              loading={isDeleting}
+              className="!rounded-lg !font-semibold !bg-red-600 hover:!bg-red-700 !text-white transition-colors"
+            >
+              Xoá tài liệu
+            </Button>
+          </Group>
+        </Modal>
       </div>
     </div>
   );
 }
+
+// Trigger HMR

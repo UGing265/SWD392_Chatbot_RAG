@@ -24,7 +24,7 @@ type DocumentCreateInput struct {
 	Description      *string    `json:"description"`
 	SubjectID        *uuid.UUID `json:"subject_id"`
 	DocumentTypeID   *uuid.UUID `json:"document_type_id"`
-	AcademicTermID   *uuid.UUID `json:"academic_term_id"`
+
 	LanguageID       *uuid.UUID `json:"language_id"`
 	Visibility       *string    `json:"visibility"`
 	DocumentSourceID *uuid.UUID `json:"document_source_id"`
@@ -36,7 +36,7 @@ type DocumentEditInput struct {
 	Description      *string    `json:"description"`
 	SubjectID        *uuid.UUID `json:"subject_id"`
 	DocumentTypeID   *uuid.UUID `json:"document_type_id"`
-	AcademicTermID   *uuid.UUID `json:"academic_term_id"`
+
 	LanguageID       *uuid.UUID `json:"language_id"`
 	Visibility       string     `json:"visibility"`
 	DocumentSourceID *uuid.UUID `json:"document_source_id"`
@@ -101,8 +101,6 @@ type DocumentDetailsDto struct {
 	SubjectCode        *string              `json:"subject_code,omitempty"`
 	DocumentTypeID     *uuid.UUID           `json:"document_type_id"`
 	DocumentTypeName   *string              `json:"document_type_name,omitempty"`
-	AcademicTermName   *string              `json:"academic_term_name,omitempty"`
-	AcademicTermID     *uuid.UUID           `json:"academic_term_id"`
 	DocumentSourceID   *uuid.UUID           `json:"document_source_id"`
 	DocumentSourceName *string              `json:"document_source_name,omitempty"`
 	Visibility         string               `json:"visibility"`
@@ -143,7 +141,6 @@ type DocumentListItemDto struct {
 	SubjectCode      *string    `json:"subject_code,omitempty"`
 	DocumentTypeID   *uuid.UUID `json:"document_type_id"`
 	DocumentTypeName *string    `json:"document_type_name,omitempty"`
-	AcademicTermName *string    `json:"academic_term_name,omitempty"`
 	Status           string     `json:"status"`
 	Visibility       string     `json:"visibility"`
 	CreatedAt        time.Time  `json:"created_at"`
@@ -194,11 +191,10 @@ type DashboardSummaryDto struct {
 }
 
 type SubjectDto struct {
-	ID             uuid.UUID  `json:"id"`
-	Code           string     `json:"code"`
-	Name           string     `json:"name"`
-	AcademicTermID *uuid.UUID `json:"academic_term_id,omitempty"`
-	CreatedAt      time.Time  `json:"created_at"`
+	ID             uuid.UUID `json:"id"`
+	Code           string    `json:"code"`
+	Name           string    `json:"name"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type LecturerSubjectAssignmentDto struct {
@@ -231,12 +227,7 @@ type DocumentSourceDto struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type AcademicTermDto struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Order     int       `json:"order"`
-	CreatedAt time.Time `json:"created_at"`
-}
+
 
 type DocumentReportDto struct {
 	ID             uuid.UUID `json:"id"`

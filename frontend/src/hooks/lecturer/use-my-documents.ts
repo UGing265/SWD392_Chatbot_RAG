@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ragApi } from "@/api/client";
+import { notify } from "@/lib/notifications";
 
 export interface Document {
   id: string;
@@ -9,7 +10,7 @@ export interface Document {
   preview_text?: string | null;
   subject_name: string | null;
   subject_code?: string | null;
-  academic_term_name: string | null;
+  subject_id?: string | null;
   visibility: string;
   status: string;
   created_at: string;
@@ -34,15 +35,8 @@ export interface Subject {
   id: string;
   code: string;
   name: string;
-  academicTermId?: string;
 }
 
-export interface AcademicTerm {
-  id: string;
-  name: string;
-  year?: string;
-  order?: number;
-}
 
 export interface DocumentType {
   id: string;
@@ -68,7 +62,6 @@ export function useMyDocuments() {
   // URL state
   const q = searchParams.get("q") || "";
   const subjectId = searchParams.get("subjectId") || "";
-  const termId = searchParams.get("termId") || "";
   const documentTypeId = searchParams.get("documentTypeId") || "";
   const languageId = searchParams.get("languageId") || "";
   const documentSourceId = searchParams.get("documentSourceId") || "";
@@ -84,7 +77,6 @@ export function useMyDocuments() {
 
   // Lookups
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
@@ -101,13 +93,6 @@ export function useMyDocuments() {
           id: s.id,
           code: s.code,
           name: s.name,
-          academicTermId: s.academic_term_id,
-        })));
-        setTerms((data.academicTerms || []).map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          year: t.year,
-          order: t.order,
         })));
         setDocumentTypes((data.documentTypes || []).map((dt: any) => ({ id: dt.id, name: dt.name })));
         setLanguages((data.languages || []).map((l: any) => ({ id: l.id, name: l.name })));
@@ -129,7 +114,6 @@ export function useMyDocuments() {
           sortBy: sortBy,
           ...(q && { q }),
           ...(subjectId && { subjectId }),
-          ...(termId && { termId }),
           ...(documentTypeId && { documentTypeId }),
           ...(languageId && { languageId }),
           ...(documentSourceId && { documentSourceId }),
@@ -147,7 +131,7 @@ export function useMyDocuments() {
     } finally {
       if (!isPoll) setLoading(false);
     }
-  }, [q, subjectId, termId, documentTypeId, languageId, documentSourceId, sortBy, page]);
+  }, [q, subjectId, documentTypeId, languageId, documentSourceId, sortBy, page]);
 
   useEffect(() => {
     fetchDocuments();
@@ -184,17 +168,16 @@ export function useMyDocuments() {
     router.push(`/${role}/documents/my`);
   };
 
-  const handleDelete = async (e: React.MouseEvent, docSlug: string | undefined) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = async (docSlug: string) => {
     if (!docSlug) return;
-    if (!confirm("Bạn có chắc chắn muốn xoá tài liệu này không?")) return;
 
     try {
       await ragApi.post(`/documents/${docSlug}/delete`);
+      notify.success("Thành công", "Đã xoá tài liệu thành công");
       fetchDocuments();
     } catch (error) {
       console.error("Delete error:", error);
+      notify.error("Lỗi", "Không thể xoá tài liệu. Vui lòng thử lại sau.");
     }
   };
 
@@ -209,7 +192,6 @@ export function useMyDocuments() {
     page,
     q,
     subjectId,
-    termId,
     documentTypeId,
     languageId,
     documentSourceId,
@@ -217,10 +199,13 @@ export function useMyDocuments() {
     updateFilters,
     clearFilters,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,
     handleDelete,
   };
 }
+
+
+
+

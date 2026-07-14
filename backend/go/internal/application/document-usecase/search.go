@@ -139,9 +139,7 @@ func (uc *DocumentUseCase) GetDocumentDetails(ctx context.Context, docID uuid.UU
 		SubjectCode:        doc.SubjectCode,
 		DocumentTypeID:     doc.DocumentTypeID,
 		DocumentTypeName:   doc.DocumentTypeName,
-		AcademicTermName:   doc.AcademicTermName,
-		AcademicTermID:     doc.AcademicTermID,
-		DocumentSourceID:   doc.DocumentSourceID,
+						DocumentSourceID:   doc.DocumentSourceID,
 		DocumentSourceName: doc.DocumentSourceName,
 		Visibility:         doc.Visibility,
 		LanguageID:         doc.LanguageID,
@@ -193,7 +191,7 @@ func (uc *DocumentUseCase) GetOwnedDocumentDetailsBySlug(ctx context.Context, sl
 	return uc.GetDocumentDetails(ctx, doc.ID, 1, 10, false)
 }
 
-func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.UUID, query *string, subjectID *uuid.UUID, termID *uuid.UUID, sortBy *string, typeID *uuid.UUID, langID *uuid.UUID, sourceID *uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
+func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.UUID, query *string, subjectIDs []uuid.UUID, sortBy *string, typeIDs []uuid.UUID, langIDs []uuid.UUID, sourceIDs []uuid.UUID, page, pageSize int) (*application.MyDocumentsDto, error) {
 	if pageSize < 6 || pageSize > 12 {
 		pageSize = 6
 	}
@@ -203,11 +201,10 @@ func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.
 
 	params := document.FilterParams{
 		Query:            query,
-		SubjectID:        subjectID,
-		AcademicTermID:   termID,
-		DocumentTypeID:   typeID,
-		LanguageID:       langID,
-		DocumentSourceID: sourceID,
+		SubjectIDs:        subjectIDs,
+				DocumentTypeIDs:   typeIDs,
+		LanguageIDs:       langIDs,
+		DocumentSourceIDs: sourceIDs,
 		SortBy:           sortBy,
 		Page:             page,
 		PageSize:         pageSize,
@@ -243,8 +240,7 @@ func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.
 			SubjectCode:      d.SubjectCode,
 			DocumentTypeID:   d.DocumentTypeID,
 			DocumentTypeName: d.DocumentTypeName,
-			AcademicTermName: d.AcademicTermName,
-			Status:           d.Status,
+						Status:           d.Status,
 			Visibility:       d.Visibility,
 			CreatedAt:        d.CreatedAt,
 			UpdatedAt:        d.UpdatedAt,
@@ -293,7 +289,7 @@ func (uc *DocumentUseCase) GetMyDocuments(ctx context.Context, ownerUserID uuid.
 	}, nil
 }
 
-func (uc *DocumentUseCase) GetAllDocuments(ctx context.Context, query *string, subjectID *uuid.UUID, page, pageSize int, requesterUserID *uuid.UUID, sortBy *string, typeID *uuid.UUID, langID *uuid.UUID, sourceID *uuid.UUID) (*application.MyDocumentsDto, error) {
+func (uc *DocumentUseCase) GetAllDocuments(ctx context.Context, query *string, subjectIDs []uuid.UUID, page, pageSize int, requesterUserID *uuid.UUID, sortBy *string, typeIDs []uuid.UUID, langIDs []uuid.UUID, sourceIDs []uuid.UUID) (*application.MyDocumentsDto, error) {
 	if pageSize < 6 || pageSize > 12 {
 		pageSize = 6
 	}
@@ -303,10 +299,10 @@ func (uc *DocumentUseCase) GetAllDocuments(ctx context.Context, query *string, s
 
 	params := document.FilterParams{
 		Query:            query,
-		SubjectID:        subjectID,
-		DocumentTypeID:   typeID,
-		LanguageID:       langID,
-		DocumentSourceID: sourceID,
+		SubjectIDs:        subjectIDs,
+		DocumentTypeIDs:   typeIDs,
+		LanguageIDs:       langIDs,
+		DocumentSourceIDs: sourceIDs,
 		SortBy:           sortBy,
 		Page:             page,
 		PageSize:         pageSize,
@@ -337,8 +333,7 @@ func (uc *DocumentUseCase) GetAllDocuments(ctx context.Context, query *string, s
 			SubjectCode:      d.SubjectCode,
 			DocumentTypeID:   d.DocumentTypeID,
 			DocumentTypeName: d.DocumentTypeName,
-			AcademicTermName: d.AcademicTermName,
-			Status:           d.Status,
+						Status:           d.Status,
 			Visibility:       d.Visibility,
 			CreatedAt:        d.CreatedAt,
 			UpdatedAt:        d.UpdatedAt,

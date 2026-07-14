@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
+
 import { useAdminSettings } from "@/hooks/admin/use-settings";
 import {
   Button,
@@ -23,6 +23,7 @@ import {
   IconKey,
   IconRefresh,
   IconShield,
+  IconSettings,
 } from "@tabler/icons-react";
 
 function SectionCard({
@@ -50,7 +51,7 @@ function SectionCard({
           {icon}
         </ThemeIcon>
         <div>
-          <Text fw={700} className="font-serif text-[20px] tracking-[-0.02em] text-zinc-900">
+          <Text fw={700} className="font-sans text-[16px] text-zinc-900">
             {title}
           </Text>
           <Text size="xs" className="font-medium text-zinc-500">
@@ -86,11 +87,19 @@ export function AdminSettingsView() {
   } = useAdminSettings();
 
   return (
-    <AdminPageShell
-      eyebrow="THIẾT LẬP HỆ THỐNG"
-      title="Cài Đặt."
-      description="Cấu hình các tham số RAG engine, bảo mật và thông báo cho hệ thống."
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex items-center gap-2.5">
+          <IconSettings size={20} stroke={1.5} className="text-zinc-900" />
+          <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+            Cấu Hình Hệ Thống
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Stack gap="xl">
         <SectionCard
           icon={<IconDatabase size={20} />}
@@ -267,6 +276,7 @@ export function AdminSettingsView() {
           </Button>
         </Group>
       </Stack>
-    </AdminPageShell>
+      </div>
+    </div>
   );
 }

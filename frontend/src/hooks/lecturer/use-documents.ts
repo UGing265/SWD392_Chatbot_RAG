@@ -1,351 +1,170 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { notify } from "@/lib/notifications";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ragApi } from "@/api/client";
 
-
-export interface Subject {
+export interface ApiSubject {
   id: string;
+  code: string;
   name: string;
-}
-
-export interface Item {
-  id: string;
-  name: string;
-}
-
-export interface Chapter {
-  id: string;
-  name: string;
-  items: Item[];
 }
 
 export interface Material {
   id: string;
-  slug: string;
-  resource: string;
-  subjectId: string;
-  date: string;
-  format: string;
-  status: string;
-  chapters: Chapter[];
-}
-
-interface ApiAcademicTerm {
-  id: string;
-  name: string;
-  order: number;
-  created_at: string;
-}
-
-interface ApiSubject {
-  id: string;
-  code: string;
-  name: string;
-  academic_term_id?: string;
-  created_at: string;
-}
-
-interface ApiDocument {
-  id: string;
-  slug: string;
   title: string;
-  subject_id?: string;
-  subject_name?: string;
-  subject_code?: string;
-  academic_term_name?: string;
-  status: string;
+  description: string;
   visibility: string;
+  document_type_name?: string;
+  language_name?: string;
+  document_source_name?: string;
   created_at: string;
-  updated_at: string;
-  file_count: number;
-  chunk_count: number;
-  preview_text: string;
-  view_count: number;
-}
-
-function extractYearFromTermName(name: string): string {
-  const match = name.match(/(\d{4}[-–]\d{4})/);
-  if (match) return match[1];
-  const yearMatch = name.match(/(\d{4})/);
-  if (yearMatch) return yearMatch[1];
-  return "Khác";
+  original_file_name?: string;
+  file_url?: string;
+  status?: string;
+  subject_id?: string;
+  subject_code?: string;
 }
 
 export function useLecturerDocuments() {
-  const [step, setStep] = useState<"term" | "subject" | "documents" | "chapters" | "viewing">("term");
-  const [selectedTerm, setSelectedTerm] = useState<{ id: string; name: string; year: string } | null>(null);
+  const [step, setStep] = useState<"subject" | "documents" | "chapters" | "viewing">("subject");
   const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null);
+  
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
-  const [selectedChapterIds, setSelectedChapterIds] = useState<Set<string>>(new Set());
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [subjects, setSubjects] = useState<{ id: string; name: string; termId: string }[]>([]);
-  const [terms, setTerms] = useState<{ id: string; name: string; year: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modal states
+  // Modals
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddSubjectModalOpen, setIsAddSubjectModalOpen] = useState(false);
-  const [currentMaterial, setCurrentMaterial] = useState<Partial<Material> | null>(null);
+
+  // Editing state
+  const [currentMaterial, setCurrentMaterial] = useState<Material | null>(null);
+  
+  // Adding subject state
   const [newSubjectName, setNewSubjectName] = useState("");
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const groupedTerms = useMemo(
-    () =>
-      terms.reduce(
-        (acc, term) => {
-          if (!acc[term.year]) acc[term.year] = [];
-          acc[term.year].push(term);
-          return acc;
-        },
-        {} as Record<string, typeof terms>
-      ),
-    [terms]
-  );
+  useEffect(() => {
+    fetchLookups();
+  }, []);
 
-  const fetchLookups = useCallback(async () => {
+  const fetchLookups = async () => {
+    setIsLoading(true);
     try {
       const res = await ragApi.get("/documents/lookups");
       const data = res.data;
 
-      const apiTerms: ApiAcademicTerm[] = data.academicTerms || [];
-      const mappedTerms = apiTerms.map((t) => ({
-        id: t.id,
-        name: t.name,
-        year: extractYearFromTermName(t.name),
-      }));
-      setTerms(mappedTerms);
-
+      // Map subjects
       const apiSubjects: ApiSubject[] = data.subjects || [];
       const mappedSubjects = apiSubjects.map((s) => ({
         id: s.id,
         name: `${s.code} - ${s.name}`,
-        termId: s.academic_term_id || "",
       }));
       setSubjects(mappedSubjects);
-    } catch (err) {
-      console.error("Failed to fetch lookups:", err);
-      notify.error("Không thể tải danh sách kỳ học và môn học.");
-    }
-  }, []);
 
-  const fetchMyDocuments = useCallback(async () => {
-    try {
-      const res = await ragApi.get("/documents/my", {
-        params: { pageSize: 100 }
-      });
-      const data = res.data;
-
-      const apiDocs: ApiDocument[] = data.documents || [];
-      const mapped: Material[] = apiDocs.map((doc) => {
-        const ext = doc.title?.split(".").pop()?.toUpperCase();
-        const format = ["PDF", "DOCX", "DOC", "PPTX", "PPT"].includes(ext || "") ? ext! : "PDF";
-
-        let status = "Processing";
-        if (doc.status === "completed") status = "Ready";
-        else if (doc.status === "failed") status = "Failed";
-
-        return {
-          id: doc.id,
-          slug: doc.slug,
-          resource: doc.title,
-          subjectId: doc.subject_id || "",
-          date: new Date(doc.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          format,
-          status,
-          chapters: [],
-        };
-      });
-      setMaterials(mapped);
-    } catch (err) {
-      console.error("Failed to fetch documents:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      await Promise.all([fetchLookups(), fetchMyDocuments()]);
+    } catch (error) {
+      console.error("Error fetching lookups:", error);
+    } finally {
       setIsLoading(false);
-    };
-    load();
-  }, [fetchLookups, fetchMyDocuments]);
+    }
+  };
 
-  const prevMaterialsRef = useRef<Material[]>([]);
+  const fetchMaterials = async () => {
+    try {
+      const res = await ragApi.get("/documents/my");
+      const list = res.data.documents || [];
+      
+      const mappedMaterials: Material[] = list.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        visibility: m.visibility,
+        document_type_name: m.document_type?.name,
+        language_name: m.language?.name,
+        document_source_name: m.document_source?.name,
+        created_at: m.created_at,
+        original_file_name: m.original_file_name,
+        file_url: m.file_url,
+        status: m.status,
+        subject_id: m.subject_id,
+      }));
+      setMaterials(mappedMaterials);
+    } catch (error) {
+      console.error("Error fetching materials:", error);
+    }
+  };
 
   useEffect(() => {
-    // Check for transitions from Processing to Ready/Failed
-    const prevMaterials = prevMaterialsRef.current;
-    
-    materials.forEach(material => {
-      const prevMaterial = prevMaterials.find(m => m.id === material.id);
-      if (prevMaterial && prevMaterial.status === "Processing") {
-        if (material.status === "Ready") {
-          notify.success("Phân đoạn hoàn tất", `Tài liệu "${material.resource}" đã sẵn sàng!`);
-        } else if (material.status === "Failed") {
-          notify.error("Phân đoạn thất bại", `Tài liệu "${material.resource}" đã gặp lỗi trong quá trình xử lý.`);
-        }
-      }
-    });
-
-    prevMaterialsRef.current = materials;
-  }, [materials]);
-
-  useEffect(() => {
-    const hasProcessing = materials.some(m => m.status === "Processing");
-    if (!hasProcessing) return;
-
-    const intervalId = setInterval(() => {
-      fetchMyDocuments();
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [materials, fetchMyDocuments]);
-  const filteredMaterials = useMemo(
-    () => (selectedSubject ? materials.filter((m) => m.subjectId === selectedSubject.id) : []),
-    [materials, selectedSubject]
-  );
-
-  const activeMaterial = useMemo(
-    () => materials.find((m) => m.id === selectedMaterialId),
-    [materials, selectedMaterialId]
-  );
+    fetchMaterials();
+  }, []);
 
   const handleSaveSubject = () => {
-    notify.info("Tính năng thêm môn học chỉ dành cho Admin.", "Vui lòng liên hệ quản trị viên để thêm môn học mới.");
-    setNewSubjectName("");
-    setIsAddSubjectModalOpen(false);
-  };
-
-  const handleDelete = async () => {
-    if (currentMaterial?.id) {
-      try {
-        await ragApi.post(`/documents/${currentMaterial.slug}/delete`);
-        await fetchMyDocuments();
-        notify.success("Đã xóa tài liệu thành công.");
-      } catch (err: any) {
-        console.error(err);
-        const errMsg = err.response?.data?.error || err.message || "Xóa thất bại";
-        notify.error("Xóa thất bại", errMsg);
-      }
-      setIsDeleteModalOpen(false);
-      setCurrentMaterial(null);
+    if (newSubjectName.trim()) {
+      setIsAddSubjectModalOpen(false);
+      setNewSubjectName("");
     }
   };
 
-  const handleSave = async () => {
-    if (currentMaterial?.id && !selectedFile) {
-      setMaterials(
-        materials.map((m) => (m.id === currentMaterial.id ? ({ ...m, ...currentMaterial } as Material) : m))
-      );
-      setIsEditModalOpen(false);
-      return;
-    }
-
-    if (!selectedFile) {
-      notify.error("Vui lòng chọn một tệp để tải lên.");
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      if (currentMaterial?.resource) {
-        formData.append("title", currentMaterial.resource);
+  const handleDelete = () => {
+    if (currentMaterial) {
+      setMaterials(materials.filter((m) => m.id !== currentMaterial.id));
+      if (selectedMaterialId === currentMaterial.id) {
+        setSelectedMaterialId(null);
       }
-      if (selectedSubject) {
-        formData.append("subject_id", selectedSubject.id);
-      }
-
-      const term = subjects.find((s) => s.id === selectedSubject?.id)?.termId;
-      if (term) {
-        formData.append("academic_term_id", term);
-      }
-
-      const res = await ragApi.post("/documents/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      const data = res.data;
-
-      await fetchMyDocuments();
-      notify.success("Tải lên thành công!", "Tài liệu của bạn đang được hệ thống RAG xử lý ngầm.");
-      setIsUploadModalOpen(false);
-      setSelectedFile(null);
-      setCurrentMaterial(null);
-    } catch (err: any) {
-      console.error(err);
-      notify.error("Tải lên thất bại", err.message || "Đã xảy ra lỗi, vui lòng thử lại.");
-    } finally {
-      setIsUploading(false);
     }
+    setIsDeleteModalOpen(false);
+    setCurrentMaterial(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleSave = () => {
+    if (currentMaterial) {
+      setMaterials(materials.map((m) => (m.id === currentMaterial.id ? currentMaterial : m)));
+    }
+    setIsEditModalOpen(false);
+    setCurrentMaterial(null);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setCurrentMaterial((prev) => ({
-        ...prev,
-        resource: file.name.split(".").slice(0, -1).join(".") || file.name,
-        format: file.name.split(".").pop()?.toUpperCase() || "PDF",
-        chapters: [
-          {
-            id: "C" + Math.random().toString(36).substr(2, 4),
-            name: "Chương 1: Tổng quan tài liệu",
-            items: [
-              { id: "I" + Math.random().toString(36).substr(2, 4), name: "Giới thiệu chung" },
-              { id: "I" + Math.random().toString(36).substr(2, 4), name: "Mục tiêu bài học" },
-            ],
-          },
-          {
-            id: "C" + Math.random().toString(36).substr(2, 4),
-            name: "Chương 2: Nội dung chi tiết",
-            items: [
-              { id: "I" + Math.random().toString(36).substr(2, 4), name: "Kiến thức cơ bản" },
-              { id: "I" + Math.random().toString(36).substr(2, 4), name: "Ví dụ minh họa" },
-            ],
-          },
-          {
-            id: "C" + Math.random().toString(36).substr(2, 4),
-            name: "Chương 3: Câu hỏi ôn tập",
-            items: [{ id: "I" + Math.random().toString(36).substr(2, 4), name: "Bài tập tự luyện" }],
-          },
-        ],
-      }));
+      setIsUploadModalOpen(true);
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   const handleBack = () => {
-    if (step === "viewing") setStep("chapters");
-    else if (step === "chapters") setStep("documents");
-    else if (selectedSubject) {
+    if (step === "viewing") {
+      setStep("chapters");
+    } else if (step === "chapters") {
+      setStep("documents");
+    } else if (step === "documents") {
       setSelectedSubject(null);
       setStep("subject");
-    } else if (selectedTerm) {
-      setSelectedTerm(null);
-      setStep("term");
     }
   };
+
+  // Filter materials based on selected subject
+  const filteredMaterials = materials.filter(
+    (m) => m.subject_id === selectedSubject?.id
+  );
+
+  const activeMaterial = materials.find((m) => m.id === selectedMaterialId);
 
   return {
     step,
     setStep,
-    selectedTerm,
-    setSelectedTerm,
     selectedSubject,
     setSelectedSubject,
     selectedMaterialId,
@@ -356,7 +175,6 @@ export function useLecturerDocuments() {
     setSelectedItemIds,
     materials,
     subjects,
-    terms,
     isLoading,
     isUploadModalOpen,
     setIsUploadModalOpen,
@@ -374,7 +192,6 @@ export function useLecturerDocuments() {
     setSelectedFile,
     fileInputRef,
     isUploading,
-    groupedTerms,
     filteredMaterials,
     activeMaterial,
     handleSaveSubject,

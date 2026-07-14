@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
+
 import { useCurriculum } from "@/hooks/admin/use-curriculum";
 import {
   ActionIcon,
@@ -32,7 +32,7 @@ import {
 type SubjectSortMode = "access-desc" | "name-asc" | "name-desc";
 
 const sortOptions = [
-  { label: "Lượt xem nhiều", value: "access-desc" },
+  { label: "Lượt Xem Nhiều", value: "access-desc" },
   { label: "A-Z", value: "name-asc" },
   { label: "Z-A", value: "name-desc" },
 ];
@@ -89,23 +89,33 @@ export function AdminCurriculumView() {
   );
 
   return (
-    <AdminPageShell
-      eyebrow="DANH MỤC ĐÀO TẠO"
-      title="Môn Học."
-      description="Tạo, chỉnh sửa và theo dõi danh sách môn học trong hệ thống."
-      actions={
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={() => setAddingStandaloneSubject(true)}
-          disabled={savingAction !== null}
-          radius="xl"
-          color="dark"
-          className="h-11 px-6"
-        >
-          Tạo môn học
-        </Button>
-      }
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <IconBook size={20} stroke={1.5} className="text-zinc-900" />
+            <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+              Quản Lý Môn Học
+            </h1>
+          </div>
+          <Button
+            leftSection={<IconPlus size={14} />}
+            onClick={() => setAddingStandaloneSubject(true)}
+            disabled={savingAction !== null}
+            variant="filled"
+            color="dark"
+            size="xs"
+            radius="md"
+            className="!h-8 !text-[12px] !px-4 !font-semibold !rounded-lg"
+          >
+            Tạo Môn Học
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Stack gap="xl">
         {error && (
           <Alert
@@ -118,22 +128,22 @@ export function AdminCurriculumView() {
           </Alert>
         )}
 
-        <Paper withBorder radius={24} p="lg" className="bg-white shadow-sm">
+        <div className="bg-white border border-zinc-200/60 rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
           <Group justify="space-between" align="center" gap="md">
-            <Group gap="lg">
+            <Group gap="xl">
               <div>
-                <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
-                  Tổng môn học
+                <Text size="xs" className="font-sans text-[11px] font-bold tracking-wider text-zinc-400 uppercase">
+                  Tổng Môn Học
                 </Text>
-                <Text fw={800} className="font-serif text-[28px] leading-none text-zinc-900">
+                <Text fw={850} className="font-sans text-[24px] leading-none text-zinc-900 mt-1.5">
                   {subjects.length}
                 </Text>
               </div>
-              <div>
-                <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
-                  Tổng lượt xem
+              <div className="border-l border-zinc-150 pl-6 h-8 flex flex-col justify-center">
+                <Text size="xs" className="font-sans text-[11px] font-bold tracking-wider text-zinc-400 uppercase">
+                  Tổng Lượt Xem
                 </Text>
-                <Text fw={800} className="font-serif text-[28px] leading-none text-zinc-900">
+                <Text fw={850} className="font-sans text-[24px] leading-none text-zinc-900 mt-1.5">
                   {totalAccess}
                 </Text>
               </div>
@@ -148,7 +158,7 @@ export function AdminCurriculumView() {
               classNames={{ root: "bg-zinc-100", label: "font-medium" }}
             />
           </Group>
-        </Paper>
+        </div>
 
         {loading ? (
           <Group justify="center" py="xl">
@@ -180,9 +190,9 @@ export function AdminCurriculumView() {
                 <Paper
                   key={subject.id}
                   withBorder
-                  radius={24}
+                  radius="lg"
                   p="lg"
-                  className="flex min-h-[178px] flex-col bg-white shadow-sm transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)]"
+                  className="flex min-h-[178px] flex-col bg-white border-zinc-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:border-zinc-400 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)]"
                 >
                   {isEditingSubject ? (
                     <Stack gap="md" className="flex-1">
@@ -256,7 +266,7 @@ export function AdminCurriculumView() {
                         </Text>
                         <Text
                           fw={800}
-                          className="line-clamp-2 font-serif text-[24px] leading-tight text-zinc-900"
+                          className="line-clamp-2 font-sans text-[18px] text-zinc-900"
                         >
                           {subject.name}
                         </Text>
@@ -268,7 +278,7 @@ export function AdminCurriculumView() {
                             <IconEye size={14} />
                           </ThemeIcon>
                           <Text size="sm" fw={700} className="text-zinc-700">
-                            {accessCount} lượt xem
+                            {accessCount} Lượt Xem
                           </Text>
                         </Group>
 
@@ -304,6 +314,7 @@ export function AdminCurriculumView() {
           </div>
         )}
       </Stack>
+      </div>
 
       <Modal
         opened={addingStandaloneSubject}
@@ -342,7 +353,7 @@ export function AdminCurriculumView() {
               Hủy
             </Button>
             <Button
-              onClick={() => handleCreateSubject(null)}
+              onClick={() => handleCreateSubject()}
               disabled={
                 !newSubjectCode.trim() ||
                 !newSubjectName.trim() ||
@@ -357,6 +368,6 @@ export function AdminCurriculumView() {
           </Group>
         </Stack>
       </Modal>
-    </AdminPageShell>
+    </div>
   );
 }

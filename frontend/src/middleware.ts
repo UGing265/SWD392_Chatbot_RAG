@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const ADMIN_HOME = "/admin";
 const LECTURER_HOME = "/lecturer/documents/my";
-const STUDENT_HOME = "/student/documents/shared";
+const STUDENT_HOME = "/student/explore";
 
 function getHomePath(role: string) {
   if (role === "admin") return ADMIN_HOME;

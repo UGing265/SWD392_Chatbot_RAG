@@ -7,6 +7,7 @@ import {
   IconBrain,
   IconDownload,
   IconEye,
+  IconFolder,
 } from "@tabler/icons-react";
 import {
   Modal,
@@ -35,42 +36,47 @@ export function StudentDocumentsView() {
   } = useStudentDocuments();
 
   return (
-    <div className="flex-1 bg-zinc-50 relative font-sans w-full">
-      <div className="container mx-auto max-w-6xl p-6 py-12">
-        {/* Header Section */}
-        <div className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between animate-in fade-in slide-in-from-top-4 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]">
-          <div>
-            <Text size="xs" fw={600} className="text-zinc-500 tracking-[0.15em] mb-3 uppercase font-mono text-[11px]">
-              TÀI LIỆU SINH VIÊN
-            </Text>
-            <h1 className="font-serif text-[40px] tracking-[-0.03em] text-zinc-900 leading-none mb-0 select-none">
-              Kho Học Liệu.
-            </h1>
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <IconFolder size={20} className="text-zinc-900" stroke={1.5} />
+            <h1 className="font-bold text-zinc-900 tracking-tight text-lg">Kho Học Liệu</h1>
           </div>
           
-          <div className="flex bg-white p-1 rounded-full border border-zinc-200 shadow-sm">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-bold tracking-widest uppercase transition-all duration-300 font-mono",
-                viewMode === "grid" ? "bg-zinc-900 text-white shadow-md" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-              )}
-            >
-              <IconGridPattern size={16} stroke={2} />
-              Lưới
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-bold tracking-widest uppercase transition-all duration-300 font-mono",
-                viewMode === "list" ? "bg-zinc-900 text-white shadow-md" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-              )}
-            >
-              <IconList size={16} stroke={2} />
-              Danh sách
-            </button>
+          <div
+            className="flex items-center gap-2 overflow-x-auto py-1 w-full min-w-0 sm:w-auto sm:justify-end"
+            style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+          >
+            <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-full p-1 shadow-sm transition-all">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-bold tracking-widest uppercase transition-all duration-300 font-mono",
+                  viewMode === "grid" ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/80" : "text-zinc-500 hover:text-zinc-900"
+                )}
+              >
+                <IconGridPattern size={14} stroke={2} />
+                Lưới
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-bold tracking-widest uppercase transition-all duration-300 font-mono",
+                  viewMode === "list" ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/80" : "text-zinc-500 hover:text-zinc-900"
+                )}
+              >
+                <IconList size={14} stroke={2} />
+                Danh sách
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
 
         {/* Filter Section */}
         <div className="mb-10 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-100">

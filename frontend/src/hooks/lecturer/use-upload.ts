@@ -5,12 +5,6 @@ export interface Subject {
   id: string;
   name: string;
   code: string;
-  academicTermId?: string;
-}
-
-export interface AcademicTerm {
-  id: string;
-  name: string;
 }
 
 export interface DocumentType {
@@ -28,13 +22,12 @@ export interface DocumentSource {
   name: string;
 }
 
-export function useUpload() {
+export function useUpload({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   
   const [subjectId, setSubjectIdRaw] = useState("");
-  const [termId, setTermIdRaw] = useState("");
   const [documentTypeId, setDocumentTypeId] = useState("");
   const [languageId, setLanguageId] = useState("");
   const [documentSourceId, setDocumentSourceId] = useState("");
@@ -44,7 +37,6 @@ export function useUpload() {
   const [uploaded, setUploaded] = useState(false);
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [terms, setTerms] = useState<AcademicTerm[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [documentSources, setDocumentSources] = useState<DocumentSource[]>([]);
@@ -55,37 +47,24 @@ export function useUpload() {
         const res = await ragApi.get("/documents/lookups");
         const data = res.data;
 
-
         // 1. Get assigned subjects for the lecturer
         const apiSubjects = data.subjects || [];
         const mappedSubjects: Subject[] = apiSubjects.map((s: any) => ({
           id: s.id,
           name: `${s.code} - ${s.name}`,
           code: s.code || "",
-          academicTermId: s.academic_term_id || "",
         }));
         setSubjects(mappedSubjects);
 
-        // 2. Filter terms: only include terms associated with the assigned subjects
-        const assignedTermIds = new Set(apiSubjects.map((s: any) => s.academic_term_id).filter(Boolean));
-        const apiTerms = data.academicTerms || [];
-        const mappedTerms: AcademicTerm[] = apiTerms
-          .filter((t: any) => assignedTermIds.has(t.id))
-          .map((t: any) => ({
-            id: t.id,
-            name: t.name,
-          }));
-        setTerms(mappedTerms);
-
-        // 3. Document Types
+        // 2. Document Types
         const apiDocTypes = data.documentTypes || [];
         setDocumentTypes(apiDocTypes.map((dt: any) => ({ id: dt.id, name: dt.name })));
 
-        // 4. Languages
+        // 3. Languages
         const apiLanguages = data.languages || [];
         setLanguages(apiLanguages.map((l: any) => ({ id: l.id, name: l.name })));
 
-        // 5. Document Sources
+        // 4. Document Sources
         const apiSources = data.documentSources || [];
         setDocumentSources(apiSources.map((ds: any) => ({ id: ds.id, name: ds.name })));
 
@@ -96,25 +75,7 @@ export function useUpload() {
     fetchLookups();
   }, []);
 
-  const setSubjectId = (id: string) => {
-    setSubjectIdRaw(id);
-    if (id) {
-      const sub = subjects.find((s) => s.id === id);
-      if (sub && sub.academicTermId) {
-        setTermIdRaw(sub.academicTermId);
-      }
-    }
-  };
-
-  const setTermId = (id: string) => {
-    setTermIdRaw(id);
-    if (id && subjectId) {
-      const sub = subjects.find((s) => s.id === subjectId);
-      if (sub && sub.academicTermId !== id) {
-        setSubjectIdRaw("");
-      }
-    }
-  };
+  const setSubjectId = (id: string) => setSubjectIdRaw(id);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -131,7 +92,6 @@ export function useUpload() {
     setTitle("");
     setDescription("");
     setSubjectIdRaw("");
-    setTermIdRaw("");
     setDocumentTypeId("");
     setLanguageId("");
     setDocumentSourceId("");
@@ -156,7 +116,6 @@ export function useUpload() {
     formData.append("description", description);
     
     if (subjectId) formData.append("subject_id", subjectId);
-    if (termId) formData.append("academic_term_id", termId);
     if (documentTypeId) formData.append("document_type_id", documentTypeId);
     if (languageId) formData.append("language_id", languageId);
     if (documentSourceId) formData.append("document_source_id", documentSourceId);
@@ -173,8 +132,12 @@ export function useUpload() {
       setTimeout(() => {
         setUploaded(false);
         resetForm();
-        const role = window.location.pathname.split("/")[1] || "lecturer";
-        window.location.href = `/${role}/documents/my`;
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          const role = window.location.pathname.split("/")[1] || "lecturer";
+          window.location.href = `/${role}/progress`;
+        }
       }, 2000);
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -194,8 +157,6 @@ export function useUpload() {
     setDescription,
     subjectId,
     setSubjectId,
-    termId,
-    setTermId,
     documentTypeId,
     setDocumentTypeId,
     languageId,
@@ -207,7 +168,6 @@ export function useUpload() {
     uploading,
     uploaded,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,

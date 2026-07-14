@@ -9,6 +9,7 @@ export interface ChatSession {
   status: string;
   created_at: string;
   updated_at: string;
+  document_ids?: string[];
 }
 
 export interface Citation {
@@ -39,10 +40,11 @@ export const chatApi = {
     return response.data;
   },
 
-  createSession: async (courseId: string, title?: string): Promise<ChatSession> => {
+  createSession: async (courseId: string, title?: string, documentIds?: string[]): Promise<ChatSession> => {
     const response = await ragApi.post<ChatSession>("/chat/sessions", {
       course_id: courseId,
       title,
+      document_ids: documentIds,
     });
     return response.data;
   },

@@ -7,6 +7,7 @@ import (
 	chat_usecase "swd392-chatbot-rag/internal/application/chat-usecase"
 	document_usecase "swd392-chatbot-rag/internal/application/document-usecase"
 	lookup_usecase "swd392-chatbot-rag/internal/application/lookup-usecase"
+	quiz_usecase "swd392-chatbot-rag/internal/application/quiz-usecase"
 	"swd392-chatbot-rag/internal/infrastructure/embedding"
 	"swd392-chatbot-rag/internal/infrastructure/filestorage"
 	"swd392-chatbot-rag/internal/infrastructure/llm"
@@ -58,7 +59,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	chunkRepo := postgres.NewChunkRepository(db)
 	chapterRepo := postgres.NewChapterRepository(db)
 	subjectRepo := postgres.NewSubjectRepository(db)
-	termRepo := postgres.NewAcademicTermRepository(db)
+
 	typeRepo := postgres.NewDocumentTypeRepository(db)
 	langRepo := postgres.NewLanguageRepository(db)
 	sourceRepo := postgres.NewDocumentSourceRepository(db)
@@ -68,7 +69,8 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	auditRepo := postgres.NewAuditLogRepository(db)
 	assignRepo := postgres.NewLecturerSubjectRepository(db)
 	bookmarkRepo := postgres.NewBookmarkRepository(db)
-
+	quizRepo := postgres.NewQuizRepository(db)
+	
 	embedClient := embedding.NewEmbeddingClient(cfg.GEMINI_API_KEY)
 	llmClient := llm.NewGeminiLLMClient(cfg.GEMINI_API_KEY, cfg.GEMINI_CHAT_MODEL)
 
@@ -77,11 +79,12 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		docRepo, fileRepo, chunkRepo, chapterRepo, jobRepo, bookmarkRepo, s3Storage, llmClient, reportRepo, subjectRepo, assignRepo,
 	)
 	lookupUseCase := lookup_usecase.NewLookupUseCase(
-		subjectRepo, termRepo, typeRepo, langRepo, sourceRepo, assignRepo, userRepo,
+		subjectRepo, typeRepo, langRepo, sourceRepo, assignRepo, userRepo,
 	)
 	adminUseCase := admin_usecase.NewAdminUseCase(
 		docRepo, reportRepo, userRepo, auditRepo, jobRepo, chunkRepo, fileRepo, docUseCase,
 	)
+	quizUseCase := quiz_usecase.NewUsecase(quizRepo, docRepo, chunkRepo, llmClient)
 
 	// Initialize Chat module
 	chatSessionRepo := postgres.NewChatSessionRepository(db)
@@ -93,6 +96,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	documentHandler := handler.NewDocumentHandler(docUseCase, lookupUseCase, adminUseCase)
 	adminHandler := handler.NewAdminHandler(adminUseCase, lookupUseCase, docUseCase)
 	chatHandler := handler.NewChatHandler(chatUseCase)
+	quizHandler := handler.NewQuizHandler(quizUseCase)
 
 	// Health check (public)
 	r.GET("/api/health", healthHandler.Health)
@@ -140,6 +144,28 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 		protected.POST("/chat/sessions/:id/messages/stream", middleware.RequireRoles(2, 3), chatHandler.StreamMessage)
 		protected.DELETE("/chat/sessions/:id", middleware.RequireRoles(2, 3), chatHandler.DeleteSession)
 
+		// Quiz routes
+		quizGroup := protected.Group("/quizzes")
+		{
+			// Shared
+			quizGroup.GET("/subjects", middleware.RequireRoles(2, 3), quizHandler.GetSubjectsWithQuizzes)
+			quizGroup.GET("/:quiz_id/detail", middleware.RequireRoles(2, 3), quizHandler.GetQuizDetail)
+			
+			// Lecturer
+			lecturerQuiz := quizGroup.Group("/lecturer", middleware.RequireRoles(2))
+			lecturerQuiz.POST("/generate", quizHandler.GenerateQuiz)
+			lecturerQuiz.GET("/jobs/:job_id", quizHandler.GetJobStatus)
+			lecturerQuiz.POST("/:quiz_id/publish", quizHandler.PublishQuiz)
+			lecturerQuiz.GET("/subject/:subject_id", quizHandler.ListQuizzesForLecturer)
+			
+			// Student
+			studentQuiz := quizGroup.Group("/student", middleware.RequireRoles(3))
+			studentQuiz.GET("/subject/:subject_id", quizHandler.ListQuizzesForStudent)
+			studentQuiz.POST("/:quiz_id/attempt", quizHandler.StartAttempt)
+			studentQuiz.POST("/attempt/submit", quizHandler.SubmitAttempt)
+			studentQuiz.GET("/:quiz_id/attempts", quizHandler.GetAttemptHistory)
+		}
+
 		// Admin routes (requires Admin role: 1)
 		admin := protected.Group("/admin")
 		admin.Use(middleware.RequireRoles(1))
@@ -185,10 +211,7 @@ func SetupRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 			admin.PUT("/document-sources/:id", adminHandler.UpdateDocumentSource)
 			admin.DELETE("/document-sources/:id", adminHandler.DeleteDocumentSource)
 
-			// Metadata Academic Terms CRUD
-			admin.POST("/academic-terms", adminHandler.CreateAcademicTerm)
-			admin.PUT("/academic-terms/:id", adminHandler.UpdateAcademicTerm)
-			admin.DELETE("/academic-terms/:id", adminHandler.DeleteAcademicTerm)
+
 		}
 
 		// Audit Logs

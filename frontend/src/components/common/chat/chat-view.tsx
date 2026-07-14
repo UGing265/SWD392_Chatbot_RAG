@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { useSearchParams, useParams, useRouter } from "next/navigation";
 import {
   IconSparkles,
   IconSend,
   IconFileText,
-  IconCircleCheck,
   IconPlus,
-  IconRotate2,
   IconCopy,
   IconThumbUp,
   IconThumbDown,
-  IconChevronDown,
-  IconArrowLeft,
   IconBook,
+  IconMessage,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
   Button,
@@ -26,6 +25,10 @@ import {
   ActionIcon,
   Loader,
   Textarea,
+  Modal,
+  Select,
+  TextInput,
+  UnstyledButton,
 } from "@mantine/core";
 import { chatApi, type ChatMessage, type ChatSession } from "@/api/chat";
 import { curriculumApi } from "@/api/curriculum";
@@ -38,9 +41,9 @@ function RichInputBox({
   handleKeyDown,
   textareaRef,
   placeholder,
-  scopeOpen,
-  setScopeOpen,
-  hasDocuments,
+  setSearchModalOpen,
+  role = "student",
+  isNewChat = true,
 }: {
   input: string;
   setInput: (val: string) => void;
@@ -48,10 +51,11 @@ function RichInputBox({
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   placeholder: string;
-  scopeOpen: boolean;
-  setScopeOpen: (val: boolean) => void;
-  hasDocuments: boolean;
+  setSearchModalOpen: (val: boolean) => void;
+  role?: string;
+  isNewChat?: boolean;
 }) {
+  const isLecturer = role === "lecturer";
   return (
     <Paper
       withBorder
@@ -59,125 +63,66 @@ function RichInputBox({
       radius="lg"
       className="shadow-sm hover:shadow-md transition-shadow bg-white"
     >
-      <Textarea
-        ref={textareaRef}
-        value={input}
-        onChange={(e) => setInput(e.currentTarget.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        autosize
-        minRows={1}
-        maxRows={6}
-        variant="unstyled"
-        styles={{
-          input: {
-            fontSize: "16px",
-            lineHeight: "1.6",
-            padding: 0,
-            color: "var(--mantine-color-gray-9)",
-          },
-        }}
-      />
-      <Group justify="space-between" align="center" mt="md" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}>
-        <Group gap="xs">
-          {hasDocuments && (
-            <Button
-              onClick={() => setScopeOpen(!scopeOpen)}
-              variant={scopeOpen ? "light" : "subtle"}
-              color={scopeOpen ? "blue" : "gray"}
-              radius="xl"
-              size="xs"
-              leftSection={<IconBook size={14} />}
-              rightSection={<IconChevronDown size={12} style={{ transform: scopeOpen ? "rotate(180deg)" : "none", transition: "transform 150ms ease" }} />}
-            >
-              {scopeOpen ? "Đóng chọn tài liệu" : "Chọn tài liệu môn học"}
-            </Button>
-          )}
-        </Group>
-        <Group gap="sm">
+      <div className="flex items-center gap-3">
+        {isNewChat ? (
           <ActionIcon
-            onClick={handleSend}
-            disabled={!input.trim()}
+            onClick={() => setSearchModalOpen(true)}
+            title="Thêm tài liệu"
+            variant="light"
             color="dark"
             radius="xl"
-            size="md"
+            size="lg"
+            className="shrink-0 transition-all"
           >
-            <IconSend size={16} />
+            <IconPlus size={20} />
           </ActionIcon>
-        </Group>
-      </Group>
+        ) : (
+          <ActionIcon
+            disabled
+            variant="light"
+            color="gray"
+            radius="xl"
+            size="lg"
+            className="shrink-0 cursor-not-allowed"
+            title="Tài liệu của phiên này đã được cố định"
+          >
+            <IconBook size={20} />
+          </ActionIcon>
+        )}
+
+        <Textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          autosize
+          minRows={1}
+          maxRows={6}
+          variant="unstyled"
+          className="flex-grow"
+          styles={{
+            input: {
+              fontSize: "15px",
+              lineHeight: "1.5",
+              padding: 0,
+              color: "var(--mantine-color-gray-9)",
+            },
+          }}
+        />
+
+        <ActionIcon
+          onClick={handleSend}
+          disabled={!input.trim()}
+          color="dark"
+          radius="xl"
+          size="lg"
+          className="shrink-0"
+        >
+          <IconSend size={18} />
+        </ActionIcon>
+      </div>
     </Paper>
-  );
-}
-
-function DocumentSelector({
-  documents,
-  scopedDocs,
-  toggleDoc,
-}: {
-  documents: any[];
-  scopedDocs: string[];
-  toggleDoc: (id: string) => void;
-}) {
-  return (
-    <div className="w-full">
-      <Group justify="space-between" align="center" mb="sm">
-        <Text size="xs" fw={700} c="dimmed" className="tracking-wider uppercase">
-          Tài liệu môn học (RAG Scope)
-        </Text>
-        <Badge variant="light" color="gray">
-          Đã chọn {documents.filter((d) => scopedDocs.includes(d.id)).length}/{documents.length}
-        </Badge>
-      </Group>
-
-      {documents.length === 0 ? (
-        <Paper withBorder p="md" radius="lg" style={{ borderStyle: "dashed" }} bg="zinc-50/50" className="text-center">
-          <Text size="sm" c="dimmed">Không có tài liệu nào thuộc môn học này.</Text>
-        </Paper>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {documents.map((doc) => {
-            const selected = scopedDocs.includes(doc.id);
-            return (
-              <Paper
-                key={doc.id}
-                onClick={() => toggleDoc(doc.id)}
-                withBorder
-                p="sm"
-                radius="lg"
-                className={`cursor-pointer transition-all ${
-                  selected
-                    ? "border-blue-500 bg-blue-50/10 text-blue-600"
-                    : "border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-800 bg-white"
-                }`}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      selected ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {selected ? (
-                      <IconCircleCheck size={16} />
-                    ) : (
-                      <IconFileText size={16} />
-                    )}
-                  </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <Text size="xs" fw={700} className="truncate leading-tight text-gray-900">
-                      {doc.title}
-                    </Text>
-                    <Text size="10px" className="tracking-wider uppercase opacity-70 mt-0.5">
-                      {doc.document_type_name || "TÀI LIỆU"}
-                    </Text>
-                  </div>
-                </Group>
-              </Paper>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -193,44 +138,76 @@ export function ChatView() {
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const isCreatingSessionRef = useRef(false);
 
-  // Scoped documents state
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [scopedDocs, setScopedDocs] = useState<string[]>([]);
-  const [scopeOpen, setScopeOpen] = useState(false);
+  // Sidebar Sessions list
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
 
-  // Landing page subjects state
+  const fetchSessions = () => {
+    chatApi.listSessions()
+      .then((data) => {
+        setSessions(data);
+      })
+      .catch((err) => console.error("Error fetching sessions in ChatView:", err));
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    if (confirm("Bạn có chắc chắn muốn xóa phiên hội thoại này không?")) {
+      try {
+        await chatApi.deleteSession(id);
+        fetchSessions();
+        if (sessionId === id) {
+          router.replace(`/${role}/chat`);
+        }
+      } catch (err) {
+        console.error("Error deleting session:", err);
+      }
+    }
+  };
+
+  // Search & Attach Documents State
+  const [allDocs, setAllDocs] = useState<any[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterSubject, setFilterSubject] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<string | null>(null);
+
+  // Lookups data for filters
   const [subjects, setSubjects] = useState<{ id: string; name: string; code: string }[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [docTypes, setDocTypes] = useState<{ id: string; name: string }[]>([]);
+  const [loadingLookups, setLoadingLookups] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // If no session is specified, redirect to the most recent one
+  // Load subjects, doc types, and all available approved documents on mount
   useEffect(() => {
-    if (!sessionId) {
-      chatApi.listSessions()
-        .then((list) => {
-          if (list.length > 0) {
-            router.replace(`/${role}/chat?session=${list[0].id}`);
-          } else {
-            // Load subjects for landing page
-            setLoadingSubjects(true);
-            curriculumApi.getLookups()
-              .then((data) => {
-                setSubjects(data.subjects || []);
-              })
-              .catch((err) => console.error("Error loading subjects:", err))
-              .finally(() => setLoadingSubjects(false));
-          }
-        })
-        .catch((err) => console.error("Error checking sessions:", err));
-    }
-  }, [sessionId, role, router]);
+    setLoadingLookups(true);
+    Promise.all([
+      curriculumApi.getLookups(),
+      ragApi.get("/documents?pageSize=100")
+    ])
+      .then(([lookupData, docData]) => {
+        setSubjects(lookupData.subjects || []);
+        setDocTypes(lookupData.documentTypes || []);
+        
+        const docs = docData.data.documents || [];
+        setAllDocs(docs);
+        fetchSessions();
+      })
+      .catch((err) => console.error("Error loading chat metadata:", err))
+      .finally(() => setLoadingLookups(false));
+  }, []);
 
-  // Load session, history, and documents when sessionId changes
+  // Load session & history when sessionId changes
   useEffect(() => {
     if (sessionId) {
+      if (isCreatingSessionRef.current) {
+        isCreatingSessionRef.current = false;
+        return;
+      }
       setLoading(true);
       Promise.all([
         chatApi.getSession(sessionId),
@@ -239,13 +216,6 @@ export function ChatView() {
         .then(([sessionData, historyData]) => {
           setSession(sessionData);
           setMessages(historyData);
-
-          // Fetch documents for the subject
-          ragApi.get(`/documents?subjectId=${sessionData.course_id}&pageSize=100`)
-            .then((res) => {
-              setDocuments(res.data.documents || []);
-            })
-            .catch((err) => console.error("Error loading course documents:", err));
         })
         .catch((err) => {
           console.error("Error loading session:", err);
@@ -255,23 +225,73 @@ export function ChatView() {
     } else {
       setSession(null);
       setMessages([]);
-      setDocuments([]);
+      setSelectedDocs([]);
     }
-    setScopedDocs([]);
-    setScopeOpen(false);
   }, [sessionId, role, router]);
 
-  const toggleDoc = (id: string) => {
-    setScopedDocs((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
-  };
+  // Set selectedDocs to match active session documents when they load
+  useEffect(() => {
+    if (session && allDocs.length > 0) {
+      const sessionDocIds = session.document_ids || [];
+      const attached = allDocs.filter(d => sessionDocIds.includes(d.id));
+      setSelectedDocs(attached);
+    }
+  }, [session, allDocs]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  const toggleAttach = (doc: any) => {
+    setSelectedDocs((prev) => {
+      const exists = prev.some((d) => d.id === doc.id);
+      if (exists) {
+        return prev.filter((d) => d.id !== doc.id);
+      } else {
+        return [...prev, doc];
+      }
+    });
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || !sessionId) return;
-    
+    if (!input.trim()) return;
+
+    let activeSessionId = sessionId;
+
+    // Check if we need to create a new session
+    if (!activeSessionId) {
+      if (selectedDocs.length === 0) {
+        alert("Vui lòng chọn ít nhất một tài liệu (bằng nút + bên trái) để bắt đầu trò chuyện.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const firstDoc = selectedDocs[0];
+        const subjectId = firstDoc.subject_id;
+        const docIds = selectedDocs.map((d) => d.id);
+        const title = input.length > 30 ? input.substring(0, 30) + "..." : input;
+        
+        isCreatingSessionRef.current = true;
+        
+        // Create the session with attached document IDs
+        const newSession = await chatApi.createSession(subjectId, title, docIds);
+        activeSessionId = newSession.id;
+        
+        // Push session to router history so that sidebar state matches
+        router.replace(`/${role}/chat?session=${activeSessionId}`);
+        setSession(newSession);
+        fetchSessions();
+      } catch (err) {
+        console.error("Error creating session:", err);
+        alert("Không thể khởi tạo phiên chat. Vui lòng thử lại.");
+        isCreatingSessionRef.current = false;
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+    }
+
     // Add user message optimistically
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -280,8 +300,7 @@ export function ChatView() {
       out_of_scope: false,
       created_at: new Date().toISOString(),
     };
-    
-    // Create an empty bot message
+
     const botMsgId = (Date.now() + 1).toString();
     const initialBotMsg: ChatMessage = {
       id: botMsgId,
@@ -290,18 +309,19 @@ export function ChatView() {
       out_of_scope: false,
       created_at: new Date().toISOString(),
     };
-    
+
     setMessages((prev) => [...prev, userMsg, initialBotMsg]);
     setInput("");
     setIsTyping(true);
-    setScopeOpen(false); // Close document selector when sending
+    setStreamingMessageId(botMsgId);
 
     try {
       await chatApi.streamMessage(
-        sessionId,
+        activeSessionId,
         userMsg.content,
         (token) => {
-          setIsTyping(false); // Stop typing pulse once we receive first token
+          setIsTyping(false);
+          setStreamingMessageId(botMsgId);
           setMessages((prev) => {
             const updated = [...prev];
             const botIdx = updated.findIndex((m) => m.id === botMsgId);
@@ -317,19 +337,23 @@ export function ChatView() {
         (err) => {
           console.error("Stream error:", err);
           setIsTyping(false);
+          setStreamingMessageId(null);
           alert("Đã xảy ra lỗi khi nhận dữ liệu từ server.");
         },
         () => {
           setIsTyping(false);
+          setStreamingMessageId(null);
           // Stream completed, fetch history to get citations
-          chatApi.getHistory(sessionId).then((historyData) => {
+          chatApi.getHistory(activeSessionId!).then((historyData) => {
             setMessages(historyData);
+            fetchSessions();
           }).catch((err) => console.error("Error refreshing history:", err));
         }
       );
     } catch (err) {
       console.error("Error initiating stream:", err);
       setIsTyping(false);
+      setStreamingMessageId(null);
       alert("Đã xảy ra lỗi kết nối. Vui lòng thử lại.");
     }
   };
@@ -344,272 +368,470 @@ export function ChatView() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-zinc-50">
-        <Loader size="md" color="blue" />
+        <Loader size="md" color="dark" />
       </div>
     );
   }
 
-  // Case 1: No active session (Landing Page)
-  if (!sessionId) {
-    return (
-      <div className="flex h-full flex-col bg-zinc-50 overflow-y-auto">
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-          <div className="mb-10 text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-              StudyMate AI
-            </h1>
-            <Text size="sm" c="dimmed" className="mt-2 max-w-md mx-auto">
-              Chào mừng bạn đến với StudyMate AI! Hãy chọn một môn học dưới đây để bắt đầu hỏi đáp và ôn luyện tài liệu học tập.
-            </Text>
-          </div>
-
-          <div className="w-full max-w-[800px]">
-            {loadingSubjects ? (
-              <div className="flex justify-center py-12">
-                <Loader size="md" color="blue" />
-              </div>
-            ) : subjects.length === 0 ? (
-              <Paper withBorder p="xl" radius="lg" className="text-center bg-white shadow-sm">
-                <Text size="sm" c="dimmed">
-                  Chưa có môn học nào được tạo trên hệ thống.
-                </Text>
-              </Paper>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {subjects.map((sub) => (
-                  <Paper
-                    key={sub.id}
-                    onClick={async () => {
-                      try {
-                        const newSession = await chatApi.createSession(sub.id, `Trò chuyện môn ${sub.code}`);
-                        router.push(`/${role}/chat?session=${newSession.id}`);
-                      } catch (err) {
-                        console.error("Error creating session:", err);
-                      }
-                    }}
-                    withBorder
-                    p="md"
-                    radius="lg"
-                    className="cursor-pointer hover:border-blue-500/40 hover:bg-blue-50/10 group transition-all shadow-sm"
-                  >
-                    <Group gap="sm" wrap="nowrap">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                        <IconBook size={20} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Text size="sm" fw={700} className="truncate text-gray-800 group-hover:text-blue-600 transition-colors">
-                          {sub.code}
-                        </Text>
-                        <Text size="xs" c="dimmed" className="truncate">
-                          {sub.name}
-                        </Text>
-                      </div>
-                    </Group>
-                  </Paper>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Filter documents in modal
+  const filteredDocs = allDocs.filter((doc) => {
+    const matchesQuery = (doc.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSubject = !filterSubject || doc.subject_id === filterSubject;
+    const matchesType = !filterType || doc.document_type_id === filterType;
+    return matchesQuery && matchesSubject && matchesType;
+  });
 
   const isHome = messages.length === 0;
 
   return (
-    <div className="flex h-full flex-col bg-zinc-50">
-      {/* Case 2: Active Session but Empty (Initial Chat State) */}
-      {isHome && (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 text-center">
-              {session?.title || "StudyMate AI"}
-            </h1>
-            <Text size="sm" c="dimmed" className="mt-1">
-              Đặt câu hỏi để tìm kiếm thông tin trong giáo trình môn học.
-            </Text>
-          </div>
+    <div className="flex h-full w-full overflow-hidden bg-zinc-50">
+      {/* ── SESSIONS SIDEBAR ── */}
+      <aside className="w-[260px] shrink-0 border-r border-zinc-200/80 bg-white h-full flex flex-col">
+        {/* Gradient accent line */}
+        <div className="h-[2px] shrink-0" style={{
+          background: "linear-gradient(90deg, #27272a 0%, #a1a1aa 100%)"
+        }} />
 
-          <div className="w-full max-w-[800px]">
-            <RichInputBox
-              input={input}
-              setInput={setInput}
-              handleSend={handleSend}
-              handleKeyDown={handleKeyDown}
-              textareaRef={textareaRef}
-              placeholder="Hỏi bất cứ điều gì về tài liệu môn học..."
-              scopeOpen={scopeOpen}
-              setScopeOpen={setScopeOpen}
-              hasDocuments={documents.length > 0}
-            />
-
-            {scopeOpen && (
-              <div className="mt-4">
-                <DocumentSelector
-                  documents={documents}
-                  scopedDocs={scopedDocs}
-                  toggleDoc={toggleDoc}
-                />
-              </div>
-            )}
-          </div>
+        {/* Sidebar Header */}
+        <div className="px-4 py-3.5 border-b border-zinc-100 flex items-center justify-between shrink-0">
+          <Text fw={700} size="xs" c="dimmed" className="tracking-wider uppercase">
+            Lịch Sử Phiên
+          </Text>
+          <Button
+            onClick={() => router.push(`/${role}/chat`)}
+            variant="light"
+            color="dark"
+            size="xs"
+            radius="xl"
+            leftSection={<IconPlus size={14} />}
+            className="!h-7 !px-3 !text-[11px] !font-bold"
+          >
+            Phiên Mới
+          </Button>
         </div>
-      )}
 
-      {/* Case 3: Thread has messages */}
-      {!isHome && (
-        <div className="flex-1 overflow-y-auto px-4 pt-10 pb-48">
-          <div className="mx-auto max-w-[800px] space-y-10">
-            {messages.map((msg, idx) => (
-              <div
-                key={msg.id}
-                className={`flex w-full mb-6 ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                {msg.role === "user" ? (
-                  <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-blue-600 text-white px-5 py-3 shadow-sm text-sm leading-relaxed fw-500">
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div className="flex gap-3 w-full max-w-[95%]">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm mt-1">
-                      <IconSparkles size={16} />
-                    </div>
-                    <Paper
-                      withBorder
-                      p="lg"
-                      radius="lg"
-                      className="flex-1 space-y-6 rounded-tl-sm bg-white shadow-sm"
+        {/* Sessions List */}
+        <div className="flex-grow overflow-y-auto p-2.5 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
+          {sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 mb-3">
+                <IconMessage size={18} className="text-zinc-400" />
+              </div>
+              <Text size="xs" c="dimmed" fw={500}>
+                Chưa Có Phiên Chat
+              </Text>
+              <Text size="xs" c="dimmed" className="mt-1">
+                Bấm "Phiên Mới" để bắt đầu
+              </Text>
+            </div>
+          ) : (
+            sessions.map((s) => {
+              const isActive = sessionId === s.id;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => router.push(`/${role}/chat?session=${s.id}`)}
+                  className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 text-[13px] ${
+                    isActive
+                      ? `bg-zinc-900 text-white font-semibold shadow-sm`
+                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
+                  }`}
+                >
+                  <IconMessage size={15} className={isActive
+                    ? "text-zinc-300"
+                    : "text-zinc-400"
+                  } />
+                  <span className="truncate flex-1 pr-5">{s.title}</span>
+                  
+                  {/* Delete button shown on hover */}
+                  <UnstyledButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSession(s.id);
+                    }}
+                    className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-all p-1 flex items-center justify-center rounded ${
+                      isActive
+                        ? "text-zinc-400 hover:text-red-300"
+                        : "text-zinc-400 hover:text-red-500"
+                    }`}
+                  >
+                    <IconTrash size={13} />
+                  </UnstyledButton>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
+
+      {/* ── MAIN CHAT WINDOW ── */}
+      <div className="flex-1 h-full flex flex-col min-w-0 bg-zinc-50 relative overflow-hidden">
+        {/* Case 1: No active session (Landing Page / New Chat) */}
+        {isHome && (
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
+            {/* Compact Hero */}
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl"
+                style={{
+                  background: "linear-gradient(135deg, #27272a 0%, #52525b 100%)",
+                }}>
+                <IconSparkles size={20} className="text-white" />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+                StudyMate AI
+              </h1>
+              <Text size="xs" c="dimmed" className="mt-1.5 max-w-sm mx-auto leading-relaxed">
+                Gắn tài liệu bằng nút <strong>(+)</strong> rồi đặt câu hỏi để bắt đầu.
+              </Text>
+            </div>
+
+            {/* Composer */}
+            <div className="w-full max-w-[640px]">
+              <RichInputBox
+                input={input}
+                setInput={setInput}
+                handleSend={handleSend}
+                handleKeyDown={handleKeyDown}
+                textareaRef={textareaRef}
+                placeholder="Hỏi điều gì đó về tài liệu môn học..."
+                setSearchModalOpen={setSearchModalOpen}
+                role={role}
+              />
+
+              {/* Attached documents list below composer */}
+              {selectedDocs.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {selectedDocs.map((d) => (
+                    <span
+                      key={d.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-zinc-200 rounded-full text-[11px] font-semibold text-zinc-700 shadow-sm transition-all hover:border-zinc-300"
                     >
-                      {/* Sources Section - Card grid */}
-                      {msg.citations && msg.citations.length > 0 && (
-                        <div className="space-y-3">
-                          <Group gap="xs" align="center" className="text-gray-400">
-                            <IconBook size={16} />
-                            <Text size="xs" fw={700} className="tracking-wider uppercase">
-                              Nguồn tham khảo
-                            </Text>
-                          </Group>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                            {msg.citations.map((cite, i) => (
-                              <Paper
-                                key={i}
-                                withBorder
-                                p="xs"
-                                radius="md"
-                                className="flex flex-col gap-2 hover:border-blue-500/30 transition-all cursor-pointer shadow-sm bg-white"
-                                title={cite.excerpt}
-                              >
-                                <Group gap="xs" wrap="nowrap">
-                                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-50 text-gray-500">
-                                    <IconFileText size={12} />
-                                  </div>
-                                  <Text size="xs" fw={700} c="dimmed">
-                                    {idx}.{i + 1}
-                                  </Text>
-                                </Group>
-                                <Text size="xs" fw={600} className="line-clamp-2 leading-tight text-gray-900">
-                                  {cite.file_name}
-                                </Text>
-                                <Text size="10px" c="dimmed" mt="auto">
-                                  {cite.page_label ? `Trang ${cite.page_label}` : "Tài liệu"}
-                                </Text>
-                              </Paper>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Bot Message Content */}
-                      <div className="flex gap-4">
-                        <div className="flex-1 space-y-4">
-                          <div className="text-[15px] leading-[1.6] text-gray-900 font-normal whitespace-pre-wrap">
-                            {msg.content}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <Group
-                        justify="space-between"
-                        align="center"
-                        pt="md"
-                        style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}
+                      <IconFileText size={11} className="text-zinc-900" />
+                      <span className="max-w-[120px] truncate">{d.title}</span>
+                      <UnstyledButton
+                        onClick={() => toggleAttach(d)}
+                        className="hover:text-red-500 font-bold ml-0.5 flex items-center justify-center rounded-full w-3 h-3 text-[10px] transition-colors"
                       >
-                        <Group gap="xs">
-                          <Button
-                            variant="subtle"
-                            color="gray"
-                            size="xs"
-                            leftSection={<IconCopy size={14} />}
-                            onClick={() => {
-                              navigator.clipboard.writeText(msg.content);
-                            }}
+                        ✕
+                      </UnstyledButton>
+                    </span>
+                  ))}
+                  <UnstyledButton
+                    onClick={() => setSelectedDocs([])}
+                    className="text-[11px] text-red-500 hover:underline font-semibold self-center ml-1.5"
+                  >
+                    Xóa Tất Cả
+                  </UnstyledButton>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Case 2: Thread has messages */}
+        {!isHome && (
+          <div className="flex-1 overflow-y-auto px-4 pt-10 pb-44">
+            <div className="mx-auto max-w-[800px] space-y-10">
+              {messages.map((msg, idx) => (
+                <div
+                  key={msg.id}
+                  className={`flex w-full mb-6 transition-all duration-350 ease-out animate-in fade-in slide-in-from-bottom-4 ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  {msg.role === "user" ? (
+                    <div className={`max-w-[80%] rounded-2xl rounded-tr-sm px-5 py-3 shadow-sm text-sm leading-relaxed fw-500 bg-zinc-900 text-white`}>
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 w-full max-w-[95%]">
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm mt-1 bg-zinc-900`}>
+                        <IconSparkles size={16} />
+                      </div>
+                      <Paper
+                        withBorder
+                        p="lg"
+                        radius="lg"
+                        className="flex-1 space-y-6 rounded-tl-sm bg-white shadow-sm"
+                      >
+                        {/* Bot Message Content */}
+                        <div className="flex gap-4">
+                          <div className="flex-1 space-y-4">
+                            <div className="max-w-none text-[14px] leading-[1.7] text-gray-900 [&_p]:my-1.5 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-0.5 [&_strong]:font-semibold [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px] [&_code]:font-mono [&_pre]:bg-zinc-900 [&_pre]:text-zinc-100 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:text-[13px] [&_pre]:my-2 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-zinc-300 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-zinc-600 [&_blockquote]:italic [&_a]:text-blue-600 [&_a]:underline relative">
+                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                              {(msg.id === streamingMessageId || (!msg.content && isTyping && idx === messages.length - 1)) && (
+                                <span className={`inline-block w-[6px] h-[15px] ml-1 align-middle animate-pulse rounded-[1px] bg-zinc-800`} style={{ animationDuration: "0.8s" }} />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        {msg.content && msg.id !== streamingMessageId && (
+                          <Group
+                            justify="space-between"
+                            align="center"
+                            pt="md"
+                            className="animate-in fade-in duration-300"
+                            style={{ borderTop: "1px solid var(--mantine-color-gray-1)" }}
                           >
-                            Sao chép
-                          </Button>
-                        </Group>
-                        <Group gap={4}>
-                          <ActionIcon variant="subtle" color="gray">
-                            <IconThumbUp size={16} />
-                          </ActionIcon>
-                          <ActionIcon variant="subtle" color="gray">
-                            <IconThumbDown size={16} />
-                          </ActionIcon>
-                        </Group>
-                      </Group>
-                    </Paper>
+                            <Group gap="xs">
+                              <Button
+                                variant="subtle"
+                                color="gray"
+                                size="xs"
+                                leftSection={<IconCopy size={14} />}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(msg.content);
+                                }}
+                              >
+                                Sao chép
+                              </Button>
+                            </Group>
+                            <Group gap={4}>
+                              <ActionIcon variant="subtle" color="gray">
+                                <IconThumbUp size={16} />
+                              </ActionIcon>
+                              <ActionIcon variant="subtle" color="gray">
+                                <IconThumbDown size={16} />
+                              </ActionIcon>
+                            </Group>
+                          </Group>
+                        )}
+                      </Paper>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div ref={messagesEndRef} className="h-2" />
+            </div>
+          </div>
+        )}
+
+        {/* Input Area (Pinned to bottom of the Main Chat Window, NOT fixed to screen) */}
+        {!isHome && (
+          <div className="bg-gradient-to-t from-zinc-50 via-zinc-50 to-transparent px-4 pb-6 pt-4 shrink-0 z-10">
+            <div className="mx-auto max-w-[800px]">
+              <RichInputBox
+                input={input}
+                setInput={setInput}
+                handleSend={handleSend}
+                handleKeyDown={handleKeyDown}
+                textareaRef={textareaRef}
+                placeholder="Đặt câu hỏi tiếp theo..."
+                setSearchModalOpen={setSearchModalOpen}
+                role={role}
+                isNewChat={!sessionId}
+              />
+
+              {/* Attached documents list below composer */}
+              <div className="mt-3">
+                {selectedDocs.length === 0 ? (
+                  <Text size="xs" c="dimmed" fs="italic">
+                    Chưa có tài liệu đính kèm.
+                  </Text>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDocs.map((d) => (
+                      <span
+                        key={d.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-zinc-200 rounded-full text-xs font-semibold text-zinc-700 shadow-sm transition-colors"
+                      >
+                        <IconFileText size={12} className="text-zinc-900" />
+                        <span className="max-w-[150px] truncate">{d.title}</span>
+                        {!sessionId && (
+                          <UnstyledButton
+                            onClick={() => toggleAttach(d)}
+                            className="hover:text-red-500 font-bold ml-1 flex items-center justify-center rounded-full w-3.5 h-3.5"
+                          >
+                            ✕
+                          </UnstyledButton>
+                        )}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-            ))}
-
-            {isTyping && (
-              <Stack gap="xs" className="animate-pulse">
-                <div className="h-4 w-24 bg-gray-200 rounded-full" />
-                <Stack gap="xs">
-                  <div className="h-4 w-full bg-gray-200 rounded-full" />
-                  <div className="h-4 w-[90%] bg-gray-200 rounded-full" />
-                  <div className="h-4 w-[70%] bg-gray-200 rounded-full" />
-                </Stack>
-              </Stack>
-            )}
-
-            <div ref={messagesEndRef} className="h-2" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Input Area (Pinned to bottom in thread) */}
-      {!isHome && (
-        <div className="fixed bottom-0 left-0 right-0 md:left-[240px] bg-gradient-to-t from-zinc-50 via-zinc-50/95 to-transparent px-4 pb-6 pt-10 z-10">
-          <div className="mx-auto max-w-[800px]">
-            {scopeOpen && (
-              <Paper withBorder p="md" radius="lg" className="mb-4 shadow-xl bg-white animate-in fade-in slide-in-from-bottom-2">
-                <DocumentSelector
-                  documents={documents}
-                  scopedDocs={scopedDocs}
-                  toggleDoc={toggleDoc}
-                />
-              </Paper>
-            )}
-
-            <RichInputBox
-              input={input}
-              setInput={setInput}
-              handleSend={handleSend}
-              handleKeyDown={handleKeyDown}
-              textareaRef={textareaRef}
-              placeholder="Đặt câu hỏi tiếp theo..."
-              scopeOpen={scopeOpen}
-              setScopeOpen={setScopeOpen}
-              hasDocuments={documents.length > 0}
+      {/* Search & Attach Modal */}
+      <Modal
+        opened={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        title={
+          <Group gap="sm" align="center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+              style={{
+                background: role === "lecturer"
+                  ? "linear-gradient(135deg, #27272a, #52525b)"
+                  : "linear-gradient(135deg, #3b82f6, #6366f1)",
+              }}>
+              <IconFileText size={16} className="text-white" />
+            </div>
+            <div>
+              <Text fw={700} size="sm">Gắn Tài Liệu</Text>
+              {selectedDocs.length > 0 && (
+                <Text size="xs" c="dimmed">{selectedDocs.length} tài liệu đã chọn</Text>
+              )}
+            </div>
+          </Group>
+        }
+        size="lg"
+        radius="lg"
+        centered
+      >
+        <Stack gap="sm">
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <TextInput
+              placeholder="Tìm tài liệu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              radius="md"
+              size="xs"
+              styles={{ input: { height: 36 } }}
+            />
+            <Select
+              placeholder="Tất Cả Môn Học"
+              data={[
+                { value: "", label: "Tất Cả Môn Học" },
+                ...subjects.map(s => ({ value: s.id, label: `${s.code} - ${s.name}` }))
+              ]}
+              value={filterSubject}
+              onChange={setFilterSubject}
+              radius="md"
+              size="xs"
+              styles={{ input: { height: 36 } }}
+            />
+            <Select
+              placeholder="Tất Cả Loại"
+              data={[
+                { value: "", label: "Tất Cả Loại" },
+                ...docTypes.map(t => ({ value: t.id, label: t.name }))
+              ]}
+              value={filterType}
+              onChange={setFilterType}
+              radius="md"
+              size="xs"
+              styles={{ input: { height: 36 } }}
             />
           </div>
-        </div>
-      )}
+
+          {/* Selected docs chips */}
+          {selectedDocs.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 py-1">
+              {selectedDocs.map((d) => (
+                <span
+                  key={d.id}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
+                    role === "lecturer"
+                      ? "bg-zinc-900 text-white"
+                      : "bg-blue-50 text-blue-700 border border-blue-200"
+                  }`}
+                >
+                  {d.title?.length > 20 ? d.title.slice(0, 20) + "…" : d.title}
+                  <UnstyledButton
+                    onClick={() => toggleAttach(d)}
+                    className={`ml-0.5 flex items-center justify-center rounded-full w-3.5 h-3.5 text-[10px] transition-colors ${
+                      role === "lecturer" ? "hover:text-red-300" : "hover:text-red-500"
+                    }`}
+                  >
+                    ✕
+                  </UnstyledButton>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <Text size="10px" fw={700} c="dimmed" className="tracking-wider uppercase">
+            KẾT QUẢ ({filteredDocs.length})
+          </Text>
+
+          {/* Document list */}
+          <div className="max-h-[300px] overflow-y-auto space-y-1.5 pr-1" style={{ scrollbarWidth: 'thin' }}>
+            {filteredDocs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 mb-2">
+                  <IconFileText size={18} className="text-zinc-400" />
+                </div>
+                <Text size="xs" c="dimmed">Không tìm thấy tài liệu nào.</Text>
+              </div>
+            ) : (
+              filteredDocs.map((doc) => {
+                const isAttached = selectedDocs.some(x => x.id === doc.id);
+                return (
+                  <div
+                    key={doc.id}
+                    onClick={() => toggleAttach(doc)}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all duration-150 border ${
+                      isAttached
+                        ? (role === "lecturer"
+                          ? "bg-zinc-50 border-zinc-300 ring-1 ring-zinc-300"
+                          : "bg-blue-50/50 border-blue-200 ring-1 ring-blue-200")
+                        : "bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200"
+                    }`}
+                  >
+                    {/* Checkbox indicator */}
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                      isAttached
+                        ? (role === "lecturer"
+                          ? "bg-zinc-900 border-zinc-900 text-white"
+                          : "bg-blue-600 border-blue-600 text-white")
+                        : "border-zinc-300 bg-white"
+                    }`}>
+                      {isAttached && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Doc info */}
+                    <div className="min-w-0 flex-1">
+                      <Text size="xs" fw={600} className={`truncate ${
+                        isAttached ? "text-zinc-900" : "text-zinc-700"
+                      }`}>{doc.title}</Text>
+                      <Text size="10px" c="dimmed">
+                        {doc.document_type_name || "Tài liệu"} · {doc.subject_code || "N/A"}
+                      </Text>
+                    </div>
+
+                    {/* Status badge */}
+                    {isAttached && (
+                      <Badge size="xs" variant="light" color={role === "lecturer" ? "dark" : "blue"} radius="sm">
+                        Đã Chọn
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <Group justify="flex-end" pt="xs" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+            <Button
+              variant="subtle"
+              color="gray"
+              size="xs"
+              onClick={() => setSearchModalOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              radius="md"
+              size="xs"
+              color={role === "lecturer" ? "dark" : "blue"}
+              onClick={() => setSearchModalOpen(false)}
+            >
+              Xong ({selectedDocs.length})
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 }

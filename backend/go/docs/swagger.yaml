@@ -1,15 +1,4 @@
 definitions:
-  application.AcademicTermDto:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      order:
-        type: integer
-    type: object
   application.ComparisonResultDto:
     properties:
       commonThemes:
@@ -150,10 +139,6 @@ definitions:
     type: object
   application.DocumentDetailsDto:
     properties:
-      academic_term_id:
-        type: string
-      academic_term_name:
-        type: string
       approved_at:
         type: string
       chapters:
@@ -215,8 +200,6 @@ definitions:
     type: object
   application.DocumentEditInput:
     properties:
-      academic_term_id:
-        type: string
       description:
         type: string
       document_source_id:
@@ -259,8 +242,6 @@ definitions:
     type: object
   application.DocumentListItemDto:
     properties:
-      academic_term_name:
-        type: string
       chunk_count:
         type: integer
       created_at:
@@ -398,8 +379,6 @@ definitions:
     type: object
   application.SubjectDto:
     properties:
-      academic_term_id:
-        type: string
       code:
         type: string
       created_at:
@@ -430,14 +409,24 @@ definitions:
       updated_at:
         type: string
     type: object
-  handler.AcademicTermInput:
+  auditlog.AuditLog:
     properties:
-      name:
+      action:
         type: string
-      order:
-        type: integer
-    required:
-    - name
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      ip_address:
+        type: string
+      target_id:
+        type: string
+      target_table:
+        type: string
+      user_id:
+        type: string
     type: object
   handler.CompareDocumentsRequest:
     properties:
@@ -468,6 +457,28 @@ definitions:
     required:
     - name
     type: object
+  handler.GenerateQuizReq:
+    properties:
+      document_ids:
+        items:
+          type: string
+        type: array
+      multiple_choice_count:
+        type: integer
+      single_choice_count:
+        type: integer
+      subject_id:
+        type: string
+      total_questions:
+        minimum: 1
+        type: integer
+      true_false_count:
+        type: integer
+    required:
+    - document_ids
+    - subject_id
+    - total_questions
+    type: object
   handler.LanguageInput:
     properties:
       code:
@@ -494,8 +505,6 @@ definitions:
     type: object
   handler.SubjectInput:
     properties:
-      academic_term_id:
-        type: string
       code:
         type: string
       name:
@@ -504,6 +513,111 @@ definitions:
     - code
     - name
     type: object
+  handler.SubmitAttemptReq:
+    properties:
+      answers:
+        items:
+          properties:
+            question_id:
+              type: string
+            selected_option_ids:
+              items:
+                type: string
+              type: array
+          required:
+          - question_id
+          - selected_option_ids
+          type: object
+        type: array
+      attempt_id:
+        type: string
+    required:
+    - answers
+    - attempt_id
+    type: object
+  quiz.Attempt:
+    properties:
+      completedAt:
+        type: string
+      id:
+        type: string
+      isPreview:
+        type: boolean
+      quizID:
+        type: string
+      score:
+        type: number
+      startedAt:
+        type: string
+      totalCorrect:
+        type: integer
+      userID:
+        type: string
+    type: object
+  quiz.GenerationJob:
+    properties:
+      createdAt:
+        type: string
+      errorMessage:
+        type: string
+      id:
+        type: string
+      lecturerID:
+        type: string
+      progress:
+        type: integer
+      resultQuizID:
+        type: string
+      status:
+        $ref: '#/definitions/quiz.JobStatus'
+      subjectID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  quiz.JobStatus:
+    enum:
+    - pending
+    - processing
+    - completed
+    - failed
+    type: string
+    x-enum-varnames:
+    - JobStatusPending
+    - JobStatusProcessing
+    - JobStatusCompleted
+    - JobStatusFailed
+  quiz.Quiz:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      lecturerID:
+        type: string
+      status:
+        $ref: '#/definitions/quiz.QuizStatus'
+      subjectID:
+        type: string
+      title:
+        type: string
+      totalQuestions:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  quiz.QuizStatus:
+    enum:
+    - draft
+    - published
+    - archived
+    type: string
+    x-enum-varnames:
+    - StatusDraft
+    - StatusPublished
+    - StatusArchived
   request.CreateSessionRequest:
     properties:
       course_id:
@@ -582,6 +696,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  uploadjob.UploadJob:
+    properties:
+      created_at:
+        type: string
+      document_id:
+        type: string
+      file_name:
+        type: string
+      file_size_bytes:
+        type: integer
+      id:
+        type: string
+      is_notified:
+        type: boolean
+      message:
+        type: string
+      owner_user_id:
+        type: string
+      progress_percent:
+        type: integer
+      status:
+        type: string
+      storage_path:
+        type: string
+      updated_at:
+        type: string
+    type: object
   user.User:
     properties:
       created_at:
@@ -622,99 +763,38 @@ info:
   title: SWD392 Chatbot RAG API
   version: "1.0"
 paths:
-  /api/admin/academic-terms:
-    post:
-      consumes:
-      - application/json
-      description: Add a new academic term (Admin only)
+  /api/admin/audit-logs:
+    get:
+      description: Get system audit logs with pagination (Admin only)
       parameters:
-      - description: Term details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.AcademicTermInput'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/application.AcademicTermDto'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Create academic term
-      tags:
-      - admin-metadata
-  /api/admin/academic-terms/{id}:
-    delete:
-      description: Remove academic term by ID (Admin only)
-      parameters:
-      - description: Term ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
+            items:
+              $ref: '#/definitions/auditlog.AuditLog'
+            type: array
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - BearerAuth: []
-      summary: Delete academic term
+      summary: Get audit logs
       tags:
-      - admin-metadata
-    put:
-      consumes:
-      - application/json
-      description: Update academic term name/order by ID (Admin only)
-      parameters:
-      - description: Term ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Term details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.AcademicTermInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/application.AcademicTermDto'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Update academic term
-      tags:
-      - admin-metadata
+      - admin
   /api/admin/document-sources:
     post:
       consumes:
@@ -1692,6 +1772,34 @@ paths:
       summary: Get document details by slug
       tags:
       - documents
+  /api/documents/{slug}/bookmark:
+    post:
+      description: Add or remove a document from bookmarks
+      parameters:
+      - description: Document Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Toggle bookmark
+      tags:
+      - documents
   /api/documents/{slug}/delete:
     post:
       description: Delete document from database and S3 (only owner lecturer can delete)
@@ -1839,6 +1947,29 @@ paths:
       summary: Report document violation
       tags:
       - documents
+  /api/documents/bookmarks:
+    get:
+      description: Get a list of documents bookmarked by the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/application.DocumentDetailsDto'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List bookmarked documents
+      tags:
+      - documents
   /api/documents/compare:
     post:
       consumes:
@@ -1873,6 +2004,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Compare documents
+      tags:
+      - documents
+  /api/documents/compare/export:
+    post:
+      consumes:
+      - application/json
+      description: Compare multiple documents and export the result as a PDF
+      parameters:
+      - description: Comparison Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CompareDocumentsRequest'
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: ComparisonResult.pdf
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Export document comparison to PDF
       tags:
       - documents
   /api/documents/dashboard:
@@ -1916,20 +2083,7 @@ paths:
       - metadata
   /api/documents/my:
     get:
-      description: Get a list of documents owned by the logged-in lecturer
       parameters:
-      - description: Search query
-        in: query
-        name: q
-        type: string
-      - description: Filter by subject ID (UUID)
-        in: query
-        name: subjectId
-        type: string
-      - description: Filter by term ID (UUID)
-        in: query
-        name: termId
-        type: string
       - description: Filter by document type ID (UUID)
         in: query
         name: documentTypeId
@@ -1954,8 +2108,6 @@ paths:
         in: query
         name: pageSize
         type: integer
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
@@ -1967,42 +2119,9 @@ paths:
             additionalProperties:
               type: string
             type: object
-      security:
-      - BearerAuth: []
-      summary: List owned documents
-      tags:
-      - documents
   /api/documents/upload:
     post:
-      consumes:
-      - multipart/form-data
-      description: Upload a document file (PDF/DOC/DOCX/PPT/PPTX) and start indexing
       parameters:
-      - description: Document file
-        in: formData
-        name: file
-        required: true
-        type: file
-      - description: Title
-        in: formData
-        name: title
-        type: string
-      - description: Description
-        in: formData
-        name: description
-        type: string
-      - description: Subject ID (UUID)
-        in: formData
-        name: subject_id
-        type: string
-      - description: Document Type ID (UUID)
-        in: formData
-        name: document_type_id
-        type: string
-      - description: Academic Term ID (UUID)
-        in: formData
-        name: academic_term_id
-        type: string
       - description: Language ID (UUID)
         in: formData
         name: language_id
@@ -2015,8 +2134,6 @@ paths:
         in: formData
         name: visibility
         type: string
-      produces:
-      - application/json
       responses:
         "201":
           description: Created
@@ -2034,9 +2151,27 @@ paths:
             additionalProperties:
               type: string
             type: object
+  /api/documents/upload-jobs:
+    get:
+      description: Get recent upload jobs for current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/uploadjob.UploadJob'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
-      summary: Upload document file
+      summary: List upload jobs
       tags:
       - documents
   /api/health:
@@ -2053,6 +2188,325 @@ paths:
       summary: Health check
       tags:
       - health
+  /api/quizzes/{quiz_id}/detail:
+    get:
+      description: Get quiz detail with questions and options
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Quiz Detail
+      tags:
+      - quizzes
+  /api/quizzes/lecturer/{quiz_id}/publish:
+    post:
+      description: Change quiz status to published
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Publish Quiz
+      tags:
+      - quizzes
+  /api/quizzes/lecturer/generate:
+    post:
+      consumes:
+      - application/json
+      description: Start background job to generate a quiz from documents
+      parameters:
+      - description: Generate Quiz Request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/handler.GenerateQuizReq'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Generate Quiz
+      tags:
+      - quizzes
+  /api/quizzes/lecturer/jobs/{job_id}:
+    get:
+      description: Check the status of a quiz generation job
+      parameters:
+      - description: Job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/quiz.GenerationJob'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Job Status
+      tags:
+      - quizzes
+  /api/quizzes/lecturer/subject/{subject_id}:
+    get:
+      description: List quizzes created by lecturer for a subject
+      parameters:
+      - description: Subject ID
+        in: path
+        name: subject_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/quiz.Quiz'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List Quizzes for Lecturer
+      tags:
+      - quizzes
+  /api/quizzes/student/{quiz_id}/attempt:
+    post:
+      description: Start a new quiz attempt for student or preview for lecturer
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      - description: Is Preview
+        in: query
+        name: preview
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/quiz.Attempt'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Start Quiz Attempt
+      tags:
+      - quizzes
+  /api/quizzes/student/{quiz_id}/attempts:
+    get:
+      description: Get list of past attempts for a quiz
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: quiz_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/quiz.Attempt'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Attempt History
+      tags:
+      - quizzes
+  /api/quizzes/student/attempt/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit an attempt with answers and auto-grade
+      parameters:
+      - description: Submit Attempt Request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubmitAttemptReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/quiz.Attempt'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit Quiz Attempt
+      tags:
+      - quizzes
+  /api/quizzes/student/subject/{subject_id}:
+    get:
+      description: List published quizzes for a subject
+      parameters:
+      - description: Subject ID
+        in: path
+        name: subject_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/quiz.Quiz'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List Quizzes for Student
+      tags:
+      - quizzes
+  /api/quizzes/subjects:
+    get:
+      description: Returns a list of subjects that contain at least one published
+        quiz.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all subjects that have published quizzes
+      tags:
+      - Quiz
   /api/subjects/public:
     get:
       description: Get a list of subjects that are public

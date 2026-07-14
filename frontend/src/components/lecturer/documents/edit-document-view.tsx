@@ -24,7 +24,6 @@ export function EditDocumentView({ slug }: { slug: string }) {
     loading,
     saving,
     subjects,
-    terms,
     documentTypes,
     languages,
     documentSources,
@@ -32,8 +31,7 @@ export function EditDocumentView({ slug }: { slug: string }) {
     title, setTitle,
     description, setDescription,
     subjectId, setSubjectId,
-    termId, setTermId,
-    documentTypeId, setDocumentTypeId,
+        documentTypeId, setDocumentTypeId,
     languageId, setLanguageId,
     documentSourceId, setDocumentSourceId,
     visibility, setVisibility,
@@ -108,11 +106,13 @@ export function EditDocumentView({ slug }: { slug: string }) {
               <Group grow align="flex-start" gap="lg">
                 <Select
                   label="Môn học"
-                  placeholder="Chọn môn học"
+                  placeholder={subjects.length === 0 ? "Chưa được phân công môn học" : "Chọn môn học"}
                   value={subjectId}
                   onChange={setSubjectId}
                   data={subjects.map(s => ({ value: s.id, label: `${s.code} - ${s.name}` }))}
+                  disabled={subjects.length === 0}
                   searchable
+                  nothingFoundMessage="Không tìm thấy môn học"
                   clearable
                   radius="lg"
                   size="md"
@@ -196,3 +196,4 @@ export function EditDocumentView({ slug }: { slug: string }) {
     </div>
   );
 }
+
