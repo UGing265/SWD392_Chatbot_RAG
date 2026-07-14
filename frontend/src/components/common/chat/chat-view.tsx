@@ -69,7 +69,7 @@ function RichInputBox({
             onClick={() => setSearchModalOpen(true)}
             title="Thêm tài liệu"
             variant="light"
-            color={isLecturer ? "dark" : "blue"}
+            color="dark"
             radius="xl"
             size="lg"
             className="shrink-0 transition-all"
@@ -114,7 +114,7 @@ function RichInputBox({
         <ActionIcon
           onClick={handleSend}
           disabled={!input.trim()}
-          color={isLecturer ? "dark" : "blue"}
+          color="dark"
           radius="xl"
           size="lg"
           className="shrink-0"
@@ -368,7 +368,7 @@ export function ChatView() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-zinc-50">
-        <Loader size="md" color={role === "lecturer" ? "dark" : "blue"} />
+        <Loader size="md" color="dark" />
       </div>
     );
   }
@@ -389,9 +389,7 @@ export function ChatView() {
       <aside className="w-[260px] shrink-0 border-r border-zinc-200/80 bg-white h-full flex flex-col">
         {/* Gradient accent line */}
         <div className="h-[2px] shrink-0" style={{
-          background: role === "lecturer"
-            ? "linear-gradient(90deg, #27272a 0%, #a1a1aa 100%)"
-            : "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
+          background: "linear-gradient(90deg, #27272a 0%, #a1a1aa 100%)"
         }} />
 
         {/* Sidebar Header */}
@@ -402,7 +400,7 @@ export function ChatView() {
           <Button
             onClick={() => router.push(`/${role}/chat`)}
             variant="light"
-            color={role === "lecturer" ? "dark" : "blue"}
+            color="dark"
             size="xs"
             radius="xl"
             leftSection={<IconPlus size={14} />}
@@ -435,12 +433,12 @@ export function ChatView() {
                   onClick={() => router.push(`/${role}/chat?session=${s.id}`)}
                   className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 text-[13px] ${
                     isActive
-                      ? `${role === "lecturer" ? "bg-zinc-900 text-white" : "bg-blue-50 text-blue-700"} font-semibold shadow-sm`
+                      ? `bg-zinc-900 text-white font-semibold shadow-sm`
                       : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 font-medium"
                   }`}
                 >
                   <IconMessage size={15} className={isActive
-                    ? (role === "lecturer" ? "text-zinc-300" : "text-blue-500")
+                    ? "text-zinc-300"
                     : "text-zinc-400"
                   } />
                   <span className="truncate flex-1 pr-5">{s.title}</span>
@@ -453,7 +451,7 @@ export function ChatView() {
                     }}
                     className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-all p-1 flex items-center justify-center rounded ${
                       isActive
-                        ? (role === "lecturer" ? "text-zinc-400 hover:text-red-300" : "text-blue-400 hover:text-red-500")
+                        ? "text-zinc-400 hover:text-red-300"
                         : "text-zinc-400 hover:text-red-500"
                     }`}
                   >
@@ -475,9 +473,7 @@ export function ChatView() {
             <div className="mb-6 text-center">
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl"
                 style={{
-                  background: role === "lecturer"
-                    ? "linear-gradient(135deg, #27272a 0%, #52525b 100%)"
-                    : "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                  background: "linear-gradient(135deg, #27272a 0%, #52525b 100%)",
                 }}>
                 <IconSparkles size={20} className="text-white" />
               </div>
@@ -510,7 +506,7 @@ export function ChatView() {
                       key={d.id}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-zinc-200 rounded-full text-[11px] font-semibold text-zinc-700 shadow-sm transition-all hover:border-zinc-300"
                     >
-                      <IconFileText size={11} className={role === "lecturer" ? "text-zinc-900" : "text-blue-600"} />
+                      <IconFileText size={11} className="text-zinc-900" />
                       <span className="max-w-[120px] truncate">{d.title}</span>
                       <UnstyledButton
                         onClick={() => toggleAttach(d)}
@@ -544,16 +540,12 @@ export function ChatView() {
                   }`}
                 >
                   {msg.role === "user" ? (
-                    <div className={`max-w-[80%] rounded-2xl rounded-tr-sm px-5 py-3 shadow-sm text-sm leading-relaxed fw-500 ${
-                      role === "lecturer" ? "bg-zinc-900 text-white" : "bg-blue-600 text-white"
-                    }`}>
+                    <div className={`max-w-[80%] rounded-2xl rounded-tr-sm px-5 py-3 shadow-sm text-sm leading-relaxed fw-500 bg-zinc-900 text-white`}>
                       {msg.content}
                     </div>
                   ) : (
                     <div className="flex gap-3 w-full max-w-[95%]">
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm mt-1 ${
-                        role === "lecturer" ? "bg-zinc-900" : "bg-blue-600"
-                      }`}>
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm mt-1 bg-zinc-900`}>
                         <IconSparkles size={16} />
                       </div>
                       <Paper
@@ -568,9 +560,7 @@ export function ChatView() {
                             <div className="max-w-none text-[14px] leading-[1.7] text-gray-900 [&_p]:my-1.5 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-0.5 [&_strong]:font-semibold [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px] [&_code]:font-mono [&_pre]:bg-zinc-900 [&_pre]:text-zinc-100 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:text-[13px] [&_pre]:my-2 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-zinc-300 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-zinc-600 [&_blockquote]:italic [&_a]:text-blue-600 [&_a]:underline relative">
                               <ReactMarkdown>{msg.content}</ReactMarkdown>
                               {(msg.id === streamingMessageId || (!msg.content && isTyping && idx === messages.length - 1)) && (
-                                <span className={`inline-block w-[6px] h-[15px] ml-1 align-middle animate-pulse rounded-[1px] ${
-                                  role === "lecturer" ? "bg-zinc-800" : "bg-blue-600"
-                                }`} style={{ animationDuration: "0.8s" }} />
+                                <span className={`inline-block w-[6px] h-[15px] ml-1 align-middle animate-pulse rounded-[1px] bg-zinc-800`} style={{ animationDuration: "0.8s" }} />
                               )}
                             </div>
                           </div>
@@ -648,7 +638,7 @@ export function ChatView() {
                         key={d.id}
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-zinc-200 rounded-full text-xs font-semibold text-zinc-700 shadow-sm transition-colors"
                       >
-                        <IconFileText size={12} className={role === "lecturer" ? "text-zinc-900" : "text-blue-600"} />
+                        <IconFileText size={12} className="text-zinc-900" />
                         <span className="max-w-[150px] truncate">{d.title}</span>
                         {!sessionId && (
                           <UnstyledButton
