@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
+
 import { useMetadata } from "@/hooks/admin/use-metadata";
 import { useState } from "react";
 import {
@@ -27,6 +27,7 @@ import {
   IconPlus,
   IconTrash,
   IconX,
+  IconClipboardList,
 } from "@tabler/icons-react";
 
 type MetadataTab = "types" | "languages" | "sources";
@@ -90,11 +91,19 @@ export function AdminMetadataView() {
   } = useMetadata();
 
   return (
-    <AdminPageShell
-      eyebrow="DỮ LIỆU DANH MỤC"
-      title="Danh Mục."
-      description="Thêm, sửa, xóa các loại học liệu, ngôn ngữ và nguồn tài liệu."
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex items-center gap-2.5">
+          <IconClipboardList size={20} stroke={1.5} className="text-zinc-900" />
+          <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+            Danh Mục Khác
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Stack gap="xl">
         {error && (
           <Alert
@@ -136,7 +145,7 @@ export function AdminMetadataView() {
             >
               <Stack gap="md">
                 <Group justify="space-between">
-                  <Text fw={700} className="font-serif text-[20px] text-zinc-900">
+                  <Text fw={700} className="font-sans text-[16px] text-zinc-900">
                     Danh sách loại học liệu
                   </Text>
                   <Button
@@ -237,7 +246,7 @@ export function AdminMetadataView() {
             >
               <Stack gap="md">
                 <Group justify="space-between">
-                  <Text fw={700} className="font-serif text-[20px] text-zinc-900">
+                  <Text fw={700} className="font-sans text-[16px] text-zinc-900">
                     Danh sách ngôn ngữ
                   </Text>
                   <Button
@@ -339,7 +348,7 @@ export function AdminMetadataView() {
             >
               <Stack gap="md">
                 <Group justify="space-between">
-                  <Text fw={700} className="font-serif text-[20px] text-zinc-900">
+                  <Text fw={700} className="font-sans text-[16px] text-zinc-900">
                     Danh sách nguồn tài liệu
                   </Text>
                   <Button
@@ -541,7 +550,8 @@ export function AdminMetadataView() {
           </Group>
         </Stack>
       </Modal>
-    </AdminPageShell>
+      </div>
+    </div>
   );
 }
 

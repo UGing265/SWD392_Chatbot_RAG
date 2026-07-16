@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { Loader, Center } from "@mantine/core";
 import { AppLayout } from "@/components/layout/app-layout";
-import { AdminLayout } from "@/components/layout/admin-layout";
 import { useAuth } from "@/hooks/use-auth";
 
 export function RoleShell({ children }: { children: ReactNode }) {
@@ -36,9 +35,6 @@ export function RoleShell({ children }: { children: ReactNode }) {
     );
   }
 
-  if (role === "admin") {
-    return <AdminLayout>{children}</AdminLayout>;
-  }
-
   return <AppLayout>{children}</AppLayout>;
 }
+

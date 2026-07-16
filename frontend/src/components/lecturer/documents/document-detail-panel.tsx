@@ -102,7 +102,7 @@ export function DocumentDetailPanel({ documentId, role }: { documentId: string, 
         <div className="flex gap-2 shrink-0">
           <Button 
             component={Link} 
-            href={`/${role}/documents/${doc.slug || doc.id}`} 
+            href={`/${role}/documents/${documentId}`} 
             target="_blank"
             variant="default" 
             size="sm" 

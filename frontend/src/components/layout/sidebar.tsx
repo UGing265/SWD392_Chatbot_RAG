@@ -13,7 +13,7 @@ import {
   IconDatabaseImport,
   IconUser,
   IconLogout,
-  IconBrain,
+  IconSparkles,
   IconPlus,
   IconSquarePlus,
   IconDiscountCheckFilled,
@@ -21,12 +21,46 @@ import {
   IconSettings,
   IconLayoutSidebar,
   IconGitCompare,
+  IconLayoutDashboard,
+  IconUsers,
+  IconBook,
+  IconTerminal2,
+  IconClipboardList,
+  IconShieldCheck,
+  IconFileText,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button, Menu, Tooltip, UnstyledButton } from "@mantine/core";
 
 const getNavGroups = (basePath: string, role: string) => {
   const isStudent = role === "student";
+  const isAdmin = role === "admin";
+
+  if (isAdmin) {
+    return [
+      {
+        label: "Tổng Quan",
+        items: [
+          { label: "Bảng Điều Khiển", icon: IconLayoutDashboard, href: `${basePath}` },
+        ],
+      },
+      {
+        label: "Quản Lý",
+        items: [
+          { label: "Quản Lý Tài Khoản", icon: IconUsers, href: `${basePath}/users` },
+          { label: "Quản Lý Môn Học", icon: IconBook, href: `${basePath}/curriculum` },
+          { label: "Phân Công Môn Học", icon: IconTerminal2, href: `${basePath}/assignment` },
+          { label: "Danh Mục Khác", icon: IconClipboardList, href: `${basePath}/metadata` },
+        ],
+      },
+      {
+        label: "Kiểm Duyệt",
+        items: [
+          { label: "Tài Liệu Hệ Thống", icon: IconFileText, href: `${basePath}/documents` },
+        ],
+      },
+    ];
+  }
 
   const groups = [
     {
@@ -57,6 +91,7 @@ const getNavGroups = (basePath: string, role: string) => {
   return groups.filter(Boolean) as any[];
 };
 
+
 export function Sidebar({ session, signOut, children, basePath = "/lecturer", navItems, collapsed, onToggleCollapse, showCollapseButton }: { session?: any, signOut?: any, children?: React.ReactNode, basePath?: string, navItems?: any[], collapsed?: boolean, onToggleCollapse?: () => void, showCollapseButton?: boolean }) {
   const pathname = usePathname();
   const user = session?.user;
@@ -72,11 +107,12 @@ export function Sidebar({ session, signOut, children, basePath = "/lecturer", na
       <div className={cn("flex items-center gap-2 border-b border-zinc-100 h-[52px] shrink-0", collapsed ? "justify-center px-0" : "px-4")}>
         {!collapsed && (
           <>
-            <div className="bg-zinc-900 text-white rounded-md flex items-center justify-center w-7 h-7 shrink-0">
-              <IconBrain size={18} stroke={2} />
+            <div className="rounded-md flex items-center justify-center w-7 h-7 shrink-0 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #27272a 0%, #52525b 100%)" }}>
+              <IconSparkles size={16} stroke={2} className="text-white" />
             </div>
-            <span className="font-bold text-zinc-900 tracking-tight text-[15px] truncate flex-1">
-              EduRAG
+            <span className="font-bold text-zinc-900 tracking-tight text-[15px] truncate flex-1 select-none">
+              StudyMate
             </span>
           </>
         )}
@@ -144,10 +180,12 @@ export function Sidebar({ session, signOut, children, basePath = "/lecturer", na
         ))}
 
         {/* Divider */}
-        <div className="bg-zinc-100 h-px my-2" />
+        {basePath.replace('/', '') !== "student" && basePath.replace('/', '') !== "admin" && (
+          <div className="bg-zinc-100 h-px my-2" />
+        )}
 
         {/* New Document */}
-        {basePath.replace('/', '') !== "student" && (
+        {basePath.replace('/', '') !== "student" && basePath.replace('/', '') !== "admin" && (
           collapsed ? (
             <Tooltip label="Tài Liệu Mới" position="right" withArrow>
               <Link

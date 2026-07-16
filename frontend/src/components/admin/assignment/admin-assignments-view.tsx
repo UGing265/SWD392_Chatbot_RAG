@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAssignments } from "@/hooks/admin/use-assignments";
-import { AdminPageShell } from "@/components/layout/admin-page-shell";
 import {
   Button,
   Checkbox,
@@ -45,18 +44,26 @@ export function AdminAssignmentsView() {
   );
 
   return (
-    <AdminPageShell
-      eyebrow="PHÂN QUYỀN GIẢNG DẠY"
-      title="Phân Công."
-      description="Thiết lập danh sách môn học mà giảng viên có quyền quản lý và tải tài liệu."
-    >
+    <div className="flex-1 bg-white relative font-sans w-full min-h-screen flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-zinc-200/50 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-10 py-4 flex items-center gap-2.5">
+          <IconUserCheck size={20} stroke={1.5} className="text-zinc-900" />
+          <h1 className="font-bold text-lg tracking-tight text-zinc-900 leading-none m-0">
+            Phân Công Môn Học
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
       <Paper withBorder radius={24} p="xl" className="bg-white shadow-sm">
         <Group gap="sm" mb="xl">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-zinc-700">
             <IconUserCheck size={20} stroke={1.5} />
           </div>
           <div>
-            <Text fw={700} className="font-serif text-[20px] tracking-[-0.02em] text-zinc-900">
+            <Text fw={700} className="font-sans text-[16px] text-zinc-900">
               Phân công môn học cho giảng viên
             </Text>
             <Text size="xs" className="font-mono uppercase tracking-widest text-zinc-500">
@@ -158,7 +165,7 @@ export function AdminAssignmentsView() {
                                       className="shrink-0"
                                     />
                                     <div className="min-w-0 flex-1">
-                                      <Text size="sm" fw={700} className="font-serif text-zinc-900">
+                                      <Text size="sm" fw={700} className="font-sans text-zinc-900">
                                         {subject.code}
                                       </Text>
                                       <Text size="xs" c="dimmed" truncate className="block">
@@ -206,6 +213,7 @@ export function AdminAssignmentsView() {
           </Stack>
         )}
       </Paper>
-    </AdminPageShell>
+      </div>
+    </div>
   );
 }

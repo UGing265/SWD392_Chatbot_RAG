@@ -38,61 +38,53 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
 
   return (
     <>
-      <div className="overflow-hidden rounded-[20px] border border-zinc-200">
+      <div className="bg-white border border-zinc-200/60 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] animate-in fade-in slide-in-from-bottom-8">
         <Table.ScrollContainer minWidth={800}>
-          <Table striped highlightOnHover verticalSpacing="md" withRowBorders>
-            <Table.Thead className="bg-zinc-50">
-              <Table.Tr style={{ borderBottomWidth: 1.5 }}>
-                <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                  Tên người dùng
+          <Table highlightOnHover verticalSpacing="md" withRowBorders className="w-full">
+            <Table.Thead className="bg-zinc-50/80 border-b border-zinc-100">
+              <Table.Tr>
+                <Table.Th className="w-[30%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                  Tên Người Dùng
                 </Table.Th>
-                <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+                <Table.Th className="w-[35%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
                   Email
                 </Table.Th>
-                <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                  Vai trò
+                <Table.Th className="w-[15%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                  Vai Trò
                 </Table.Th>
-                <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
-                  Trạng thái
+                <Table.Th className="w-[19%] py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                  Trạng Thái
                 </Table.Th>
-                <Table.Th className="font-mono text-[11px] uppercase tracking-widest text-zinc-500" />
+                <Table.Th className="w-[1%] text-left py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap" />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {users.map((user) => (
-                <Table.Tr key={user.id} className="transition-colors duration-150">
-                  <Table.Td className="font-serif text-[16px] font-bold text-zinc-900">
+                <Table.Tr key={user.id} className="border-b border-zinc-50 hover:bg-zinc-50/30 transition-colors duration-150">
+                  <Table.Td className="font-sans text-sm font-semibold text-zinc-900 whitespace-nowrap">
                     {user.name}
                   </Table.Td>
-                  <Table.Td style={{ color: "var(--mantine-color-dimmed)" }}>{user.email}</Table.Td>
-                  <Table.Td>{user.role}</Table.Td>
-                  <Table.Td>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <span
-                        style={{
-                          height: 8,
-                          width: 8,
-                          borderRadius: "50%",
-                          backgroundColor: user.active ? "#22c55e" : "#ef4444",
-                          boxShadow: user.active
-                            ? "0 0 8px rgba(34,197,94,0.4)"
-                            : "0 0 8px rgba(239,68,68,0.4)",
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.5px",
-                        }}
-                      >
-                        {user.active ? "Hoạt động" : "Bị khóa"}
-                      </span>
-                    </div>
+                  <Table.Td className="font-sans text-[13px] text-zinc-500 whitespace-nowrap">
+                    {user.email}
                   </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs" justify="flex-end">
+                  <Table.Td className="font-sans text-[13px] text-zinc-600 font-medium whitespace-nowrap">
+                    {user.role}
+                  </Table.Td>
+                  <Table.Td className="whitespace-nowrap">
+                    {user.active ? (
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600 text-xs bg-emerald-50 px-2.5 py-1 rounded-md">
+                        <div className="rounded-full bg-emerald-500 w-1.5 h-1.5" />
+                        Hoạt Động
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 text-xs bg-red-50 px-2.5 py-1 rounded-md">
+                        <div className="rounded-full bg-red-500 w-1.5 h-1.5" />
+                        Bị Khóa
+                      </span>
+                    )}
+                  </Table.Td>
+                  <Table.Td className="!pl-0 whitespace-nowrap">
+                    <div className="flex justify-start">
                       <Menu shadow="md" width={190} position="bottom-end" radius="lg">
                         <Menu.Target>
                           <ActionIcon variant="subtle" color="gray">
@@ -140,7 +132,7 @@ export function UserTable({ users, onToggleBlock, onEdit, onPassword, onDelete }
                           </Menu.Item>
                         </Menu.Dropdown>
                       </Menu>
-                    </Group>
+                    </div>
                   </Table.Td>
                 </Table.Tr>
               ))}

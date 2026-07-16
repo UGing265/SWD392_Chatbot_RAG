@@ -177,7 +177,7 @@ export default function DocumentDetailPage() {
   }, [document]);
 
   const isOwner = document?.owner_user_id === currentUserId;
-  const canReport = !isOwner && (role === "student" || role === "lecturer");
+  const canReport = false;
 
   const handleDelete = async () => {
     try {
