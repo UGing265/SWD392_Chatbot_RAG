@@ -55,7 +55,6 @@ export function TeacherPracticeView() {
     isViewQuizOpen,
     setIsViewQuizOpen,
     chartData,
-    mockStudentResults,
     
     // Subjects & docs
     subjects,
@@ -119,10 +118,6 @@ export function TeacherPracticeView() {
 
       <div className="max-w-6xl mx-auto px-6 pb-12 space-y-8">
         <Tabs value={activeTab} onChange={setActiveTab} variant="outline" radius="lg">
-          <Tabs.List className="mb-6">
-            <Tabs.Tab value="dashboard" className="!font-semibold !text-xs uppercase tracking-wider">Dashboard</Tabs.Tab>
-            <Tabs.Tab value="results" className="!font-semibold !text-xs uppercase tracking-wider">Kết quả sinh viên</Tabs.Tab>
-          </Tabs.List>
 
           <Tabs.Panel value="dashboard" className="space-y-8">
             <div className="grid gap-6 lg:grid-cols-3">
@@ -434,73 +429,7 @@ export function TeacherPracticeView() {
             </div>
           </Tabs.Panel>
 
-          <Tabs.Panel value="results" className="space-y-6">
-            <Paper withBorder radius="lg" className="overflow-hidden bg-white border-zinc-200 shadow-sm">
-              <Group justify="space-between" p="md" className="border-b border-zinc-100 bg-zinc-50/50">
-                <Text fw={700} size="sm" className="text-zinc-800">
-                  Danh sách sinh viên hoàn thành Quiz
-                </Text>
-                <TextInput
-                  placeholder="Tìm sinh viên..."
-                  leftSection={<IconSearch size={14} className="text-gray-400" />}
-                  size="xs"
-                  radius="lg"
-                />
-              </Group>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm" style={{ minWidth: 800 }}>
-                  <thead className="bg-zinc-50 border-b border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                    <tr>
-                      <th className="px-6 py-3 whitespace-nowrap">Sinh viên</th>
-                      <th className="px-6 py-3 whitespace-nowrap">Điểm số</th>
-                      <th className="px-6 py-3 whitespace-nowrap">Thời gian làm</th>
-                      <th className="px-6 py-3 whitespace-nowrap">Đúng / Sai</th>
-                      <th className="px-6 py-3 whitespace-nowrap">Ngày nộp</th>
-                      <th className="px-6 py-3 text-right whitespace-nowrap">Chi tiết</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100">
-                    {mockStudentResults.map((res) => (
-                      <tr key={res.id} className="hover:bg-zinc-50/50 transition-colors group">
-                        <td className="px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">{res.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1.5 font-semibold text-xs px-2.5 py-1 rounded-md whitespace-nowrap ${
-                            res.score >= 80 ? "bg-emerald-50 text-emerald-600" :
-                            res.score >= 50 ? "bg-amber-50 text-amber-600" :
-                            "bg-red-50 text-red-600"
-                          }`}>
-                            <div className={`rounded-full w-1.5 h-1.5 ${
-                              res.score >= 80 ? "bg-emerald-500" :
-                              res.score >= 50 ? "bg-amber-500" :
-                              "bg-red-500"
-                            }`} />
-                            {res.score}/100
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-zinc-500 font-semibold whitespace-nowrap">{res.time}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Group gap="xs">
-                            <Text size="xs" fw={700} color="emerald">{res.correct}✓</Text>
-                            <Text size="xs" fw={500} c="dimmed">/</Text>
-                            <Text size="xs" fw={700} color="red">{res.wrong}✗</Text>
-                          </Group>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-semibold text-zinc-500 whitespace-nowrap">
-                          {res.date}
-                        </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <ActionIcon variant="subtle" color="gray" size="sm">
-                            <IconEye size={16} />
-                          </ActionIcon>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Paper>
-          </Tabs.Panel>
         </Tabs>
       </div>
 
